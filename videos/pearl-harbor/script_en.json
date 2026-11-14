@@ -3,25 +3,219 @@
  "gap": 0.45,
  "lead_in": 1.2,
  "tail": 3.0,
- "keywords": ["quiet", "periscope", "six", "carriers", "Ward", "first", "radar", "huge", "worry", "battleships", "attack", "Tora", "drill"],
- "segments": [
-  {"id": "s1",  "text": "December seventh, nineteen forty-one."},
-  {"id": "s2",  "text": "A quiet Sunday morning in Hawaii."},
-  {"id": "s3",  "text": "At three forty-two, a minesweeper spots a periscope near the entrance to Pearl Harbor."},
-  {"id": "s4",  "text": "Far to the north, six Japanese carriers turn into the wind."},
-  {"id": "s5",  "text": "At six o'clock, the first wave takes off. One hundred eighty-three planes."},
-  {"id": "s6",  "text": "At six forty-five, the destroyer Ward fires on a small submarine. The first American shots of the war."},
-  {"id": "s7",  "text": "The report moves slowly."},
-  {"id": "s8",  "text": "At seven oh two, a radar station on the north shore sees something huge."},
-  {"id": "s9",  "text": "More than fifty planes, a hundred and thirty miles out."},
-  {"id": "s10", "text": "The officer on duty thinks they are American bombers, due from California."},
-  {"id": "s11", "text": "Don't worry about it, he says."},
-  {"id": "s12", "text": "At seven forty, the planes reach Oahu."},
-  {"id": "s13", "text": "Below, eight battleships rest side by side. Sailors get ready for morning colors."},
-  {"id": "s14", "text": "At seven forty-nine, the signal: attack."},
-  {"id": "s15", "text": "Tora, Tora, Tora."},
-  {"id": "s16", "text": "At seven fifty-eight, a message goes out: Air raid, Pearl Harbor. This is not drill."}
+ "keywords": [
+  "quiet",
+  "periscope",
+  "six",
+  "carriers",
+  "Ward",
+  "first",
+  "radar",
+  "huge",
+  "worry",
+  "battleships",
+  "attack",
+  "Tora",
+  "drill"
  ],
- "strings": {},
- "cues": {}
+ "segments": [
+  {
+   "id": "s1",
+   "text": "December seventh, nineteen forty-one."
+  },
+  {
+   "id": "s2",
+   "text": "A quiet Sunday morning in Hawaii."
+  },
+  {
+   "id": "s3",
+   "text": "At three forty-two, a minesweeper spots a periscope near the entrance to Pearl Harbor."
+  },
+  {
+   "id": "s4",
+   "text": "Far to the north, six Japanese carriers turn into the wind."
+  },
+  {
+   "id": "s5",
+   "text": "At six o'clock, the first wave takes off. One hundred eighty-three planes."
+  },
+  {
+   "id": "s6",
+   "text": "At six forty-five, the destroyer Ward fires on a small submarine. The first American shots of the war."
+  },
+  {
+   "id": "s7",
+   "text": "The report moves slowly."
+  },
+  {
+   "id": "s8",
+   "text": "At seven oh two, a radar station on the north shore sees something huge."
+  },
+  {
+   "id": "s9",
+   "text": "More than fifty planes, a hundred and thirty miles out."
+  },
+  {
+   "id": "s10",
+   "text": "The officer on duty thinks they are American bombers, due from California."
+  },
+  {
+   "id": "s11",
+   "text": "Don't worry about it, he says."
+  },
+  {
+   "id": "s12",
+   "text": "At seven forty, the planes reach Oahu."
+  },
+  {
+   "id": "s13",
+   "text": "Below, eight battleships rest side by side. Sailors get ready for morning colors."
+  },
+  {
+   "id": "s14",
+   "text": "At seven forty-nine, the signal: attack."
+  },
+  {
+   "id": "s15",
+   "text": "Tora, Tora, Tora."
+  },
+  {
+   "id": "s16",
+   "text": "At seven fifty-eight, a message goes out: Air raid, Pearl Harbor. This is not drill."
+  }
+ ],
+ "strings": {
+  "title1": "DECEMBER 7",
+  "title2": "1941",
+  "oahu": "OAHU, HAWAII",
+  "periscope": "a periscope?",
+  "miles230": "≈ 230 MILES",
+  "carriers": "6 CARRIERS",
+  "planes183": "183 PLANES",
+  "firstShots1": "THE FIRST AMERICAN SHOTS",
+  "firstShots2": "OF THE PACIFIC WAR",
+  "nobody": "…and nobody hurries",
+  "opana": "OPANA POINT RADAR",
+  "planes50": "50+ PLANES",
+  "miles130": "~130 MILES",
+  "expected": "EXPECTED: B-17s FROM CALIFORNIA",
+  "worry1": "“DON’T WORRY",
+  "worry2": "ABOUT IT.”",
+  "bsrow": "BATTLESHIP ROW",
+  "colors": "MORNING COLORS · 8:00",
+  "to": "“to… to… to…”",
+  "attack": "ATTACK",
+  "surprise": "surprise achieved"
+ },
+ "cues": {
+  "s10_american": [
+   "s10",
+   "american"
+  ],
+  "s11_about": [
+   "s11",
+   "about"
+  ],
+  "s12_seven": [
+   "s12",
+   "seven"
+  ],
+  "s13_colors": [
+   "s13",
+   "colors"
+  ],
+  "s13_eight": [
+   "s13",
+   "eight"
+  ],
+  "s13_sailors": [
+   "s13",
+   "sailors"
+  ],
+  "s14_attack": [
+   "s14",
+   "attack"
+  ],
+  "s14_seven": [
+   "s14",
+   "seven"
+  ],
+  "s15_tora": [
+   "s15",
+   "tora"
+  ],
+  "s16_air": [
+   "s16",
+   "air"
+  ],
+  "s16_message": [
+   "s16",
+   "message"
+  ],
+  "s16_seven": [
+   "s16",
+   "seven"
+  ],
+  "s3_periscope": [
+   "s3",
+   "periscope"
+  ],
+  "s4_six": [
+   "s4",
+   "six"
+  ],
+  "s5_eighty": [
+   "s5",
+   "eighty"
+  ],
+  "s5_one": [
+   "s5",
+   "one"
+  ],
+  "s5_six": [
+   "s5",
+   "six"
+  ],
+  "s6_fires": [
+   "s6",
+   "fires"
+  ],
+  "s6_first": [
+   "s6",
+   "first"
+  ],
+  "s6_shots": [
+   "s6",
+   "shots"
+  ],
+  "s6_six": [
+   "s6",
+   "six"
+  ],
+  "s7_slowly": [
+   "s7",
+   "slowly"
+  ],
+  "s8_radar": [
+   "s8",
+   "radar"
+  ],
+  "s8_sees": [
+   "s8",
+   "sees"
+  ],
+  "s8_seven": [
+   "s8",
+   "seven"
+  ],
+  "s9_fifty": [
+   "s9",
+   "fifty"
+  ],
+  "s9_thirty": [
+   "s9",
+   "thirty"
+  ]
+ },
+ "clockFmt": "en"
 }

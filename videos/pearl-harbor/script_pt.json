@@ -1,0 +1,338 @@
+{
+ "lang": "pt",
+ "gap": 0.45,
+ "lead_in": 1.2,
+ "tail": 3.0,
+ "clockFmt": "pt",
+ "keywords": [
+  "tranquilo",
+  "periscopio",
+  "porta",
+  "misseis",
+  "torpedos",
+  "bombas",
+  "metralhadoras",
+  "zero",
+  "val",
+  "kate",
+  "aletas",
+  "lama",
+  "perfurantes",
+  "ward",
+  "primeiros",
+  "radar",
+  "enorme",
+  "preocupe",
+  "encouracados",
+  "atacar",
+  "tora",
+  "exercicio"
+ ],
+ "segments": [
+  {
+   "id": "s1",
+   "text": "Sete de dezembro de mil novecentos e quarenta e um."
+  },
+  {
+   "id": "s2",
+   "text": "Um domingo tranquilo no Havaí."
+  },
+  {
+   "id": "s3",
+   "text": "Às três e quarenta e dois da manhã, um caça-minas avista um periscópio perto da entrada de Pearl Harbor."
+  },
+  {
+   "id": "s4",
+   "text": "Bem ao norte, seis porta-aviões japoneses viram contra o vento."
+  },
+  {
+   "id": "s5",
+   "text": "Às seis horas, decola a primeira onda. Cento e oitenta e três aviões."
+  },
+  {
+   "id": "w1",
+   "text": "E não, não eram mísseis. Em mil novecentos e quarenta e um, as armas eram torpedos, bombas e metralhadoras."
+  },
+  {
+   "id": "w2",
+   "text": "Quarenta e três caças Zero, cada um com dois canhões de vinte milímetros e duas metralhadoras."
+  },
+  {
+   "id": "w3",
+   "text": "Cinquenta e um bombardeiros de mergulho Val, com uma bomba de duzentos e cinquenta quilos sob a barriga."
+  },
+  {
+   "id": "w4",
+   "text": "Quarenta torpedeiros Kate. O torpedo ganhou aletas de madeira, para não se enterrar na lama de um porto com só doze metros de fundo."
+  },
+  {
+   "id": "w5",
+   "text": "E mais quarenta e nove Kates, com bombas perfurantes de oitocentos quilos, feitas a partir de projéteis de canhão de encouraçado."
+  },
+  {
+   "id": "s6",
+   "text": "Às seis e quarenta e cinco, o contratorpedeiro Ward atira num pequeno submarino. Os primeiros tiros americanos da guerra."
+  },
+  {
+   "id": "s7",
+   "text": "O aviso anda devagar."
+  },
+  {
+   "id": "s8",
+   "text": "Às sete e dois, uma estação de radar na costa norte vê algo enorme."
+  },
+  {
+   "id": "s9",
+   "text": "Mais de cinquenta aviões, a uns duzentos quilômetros."
+  },
+  {
+   "id": "s10",
+   "text": "O oficial de plantão acha que são bombardeiros americanos, esperados da Califórnia."
+  },
+  {
+   "id": "s11",
+   "text": "Não se preocupe com isso, ele diz."
+  },
+  {
+   "id": "s12",
+   "text": "Às sete e quarenta, os aviões chegam a Oahu."
+  },
+  {
+   "id": "s13",
+   "text": "Lá embaixo, oito encouraçados descansam lado a lado. Os marinheiros se preparam para hastear a bandeira."
+  },
+  {
+   "id": "s14",
+   "text": "Às sete e quarenta e nove, o sinal: atacar."
+  },
+  {
+   "id": "s15",
+   "text": "Tora, Tora, Tora."
+  },
+  {
+   "id": "s16",
+   "text": "Às sete e cinquenta e oito, sai a mensagem: Ataque aéreo, Pearl Harbor. Isto não é um exercício."
+  }
+ ],
+ "strings": {
+  "title1": "7 DE DEZEMBRO",
+  "title2": "1941",
+  "oahu": "OAHU, HAVAÍ",
+  "periscope": "um periscópio?",
+  "miles230": "≈ 370 KM",
+  "carriers": "6 PORTA-AVIÕES",
+  "planes183": "183 AVIÕES",
+  "firstShots1": "OS PRIMEIROS TIROS",
+  "firstShots2": "AMERICANOS DA GUERRA",
+  "nobody": "…e ninguém tem pressa",
+  "opana": "RADAR DE OPANA POINT",
+  "planes50": "50+ AVIÕES",
+  "miles130": "~210 KM",
+  "expected": "ESPERADOS: B-17 DA CALIFÓRNIA",
+  "worry1": "“NÃO SE PREOCUPE",
+  "worry2": "COM ISSO.”",
+  "bsrow": "FILEIRA DOS ENCOURAÇADOS",
+  "colors": "HASTEAR DA BANDEIRA · 8:00",
+  "to": "“to… to… to…”",
+  "attack": "ATACAR",
+  "surprise": "surpresa alcançada",
+  "missiles": "MÍSSEIS?",
+  "w_torp": "TORPEDOS",
+  "w_bomb": "BOMBAS",
+  "w_mg": "METRALHADORAS",
+  "w_1941": "EM 1941:",
+  "zero": "A6M ZERO · CAÇA",
+  "zeroN": "× 43",
+  "cannon": "2 CANHÕES 20 MM",
+  "mg": "2 METRALHADORAS 7,7 MM",
+  "val": "D3A VAL · MERGULHO",
+  "valN": "× 51",
+  "bomb250": "BOMBA DE 250 KG",
+  "crutch": "BRAÇO AFASTA A BOMBA DA HÉLICE",
+  "gear": "TREM DE POUSO FIXO",
+  "kate": "B5N KATE · TORPEDEIRO",
+  "kateN": "× 40",
+  "type91": "TORPEDO TIPO 91",
+  "low": "voo rasante",
+  "fins": "ALETAS DE MADEIRA",
+  "depth": "~12 M DE FUNDO",
+  "mud": "LAMA",
+  "noFins": "sem aletas: afunda",
+  "withFins": "com aletas: nivela",
+  "kate2": "B5N KATE · BOMBARDEIRO",
+  "kate2N": "× 49",
+  "bomb800": "BOMBA PERFURANTE 800 KG",
+  "shell": "PROJÉTIL NAVAL DE 41 CM",
+  "high": "lançada do alto"
+ },
+ "cues": {
+  "s10_american": [
+   "s10",
+   "americanos"
+  ],
+  "s11_about": [
+   "s11",
+   "isso"
+  ],
+  "s12_seven": [
+   "s12",
+   "sete"
+  ],
+  "s13_colors": [
+   "s13",
+   "bandeira"
+  ],
+  "s13_eight": [
+   "s13",
+   "oito"
+  ],
+  "s13_sailors": [
+   "s13",
+   "marinheiros"
+  ],
+  "s14_attack": [
+   "s14",
+   "atacar"
+  ],
+  "s14_seven": [
+   "s14",
+   "sete"
+  ],
+  "s15_tora": [
+   "s15",
+   "tora"
+  ],
+  "s16_air": [
+   "s16",
+   "ataque"
+  ],
+  "s16_message": [
+   "s16",
+   "mensagem"
+  ],
+  "s16_seven": [
+   "s16",
+   "sete"
+  ],
+  "s3_periscope": [
+   "s3",
+   "periscopio"
+  ],
+  "s4_six": [
+   "s4",
+   "seis"
+  ],
+  "s5_eighty": [
+   "s5",
+   "oitenta"
+  ],
+  "s5_one": [
+   "s5",
+   "cento"
+  ],
+  "s5_six": [
+   "s5",
+   "seis"
+  ],
+  "s6_fires": [
+   "s6",
+   "atira"
+  ],
+  "s6_first": [
+   "s6",
+   "primeiros"
+  ],
+  "s6_shots": [
+   "s6",
+   "tiros"
+  ],
+  "s6_six": [
+   "s6",
+   "seis"
+  ],
+  "s7_slowly": [
+   "s7",
+   "devagar"
+  ],
+  "s8_radar": [
+   "s8",
+   "radar"
+  ],
+  "s8_sees": [
+   "s8",
+   "ve"
+  ],
+  "s8_seven": [
+   "s8",
+   "sete"
+  ],
+  "s9_fifty": [
+   "s9",
+   "cinquenta"
+  ],
+  "s9_thirty": [
+   "s9",
+   "duzentos"
+  ],
+  "w1_misseis": [
+   "w1",
+   "misseis"
+  ],
+  "w1_torpedos": [
+   "w1",
+   "torpedos"
+  ],
+  "w1_bombas": [
+   "w1",
+   "bombas"
+  ],
+  "w1_metralhadoras": [
+   "w1",
+   "metralhadoras"
+  ],
+  "w2_canhoes": [
+   "w2",
+   "canhoes"
+  ],
+  "w2_metralhadoras": [
+   "w2",
+   "metralhadoras"
+  ],
+  "w3_bomba": [
+   "w3",
+   "bomba"
+  ],
+  "w3_barriga": [
+   "w3",
+   "barriga"
+  ],
+  "w4_torpedo": [
+   "w4",
+   "torpedo"
+  ],
+  "w4_aletas": [
+   "w4",
+   "aletas"
+  ],
+  "w4_lama": [
+   "w4",
+   "lama"
+  ],
+  "w4_doze": [
+   "w4",
+   "doze"
+  ],
+  "w5_oitocentos": [
+   "w5",
+   "oitocentos"
+  ],
+  "w5_projeteis": [
+   "w5",
+   "projeteis"
+  ],
+  "w5_encouracado": [
+   "w5",
+   "encouracado"
+  ]
+ }
+}

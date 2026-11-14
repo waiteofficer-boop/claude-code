@@ -1,5 +1,32 @@
 # Pearl Harbor — The Last Minutes (vídeo vertical 9:16)
 
+| Versão | Arquivo | Duração | Planos | Voz |
+|---|---|---|---|---|
+| **Português** (com bloco de armamentos) | `pearl-harbor-ultimos-minutos.mp4` | 2 min 4 s | **30** | Piper `pt_BR-cadu-medium`, tom −18 % (~111 Hz), fala 15 % mais lenta, estilo `sabio` |
+| Inglês | `pearl-harbor-last-minutes.mp4` | 1 min 14 s | 23 | Piper `en_US-norman-medium`, estilo `sabio` (~107 Hz) |
+
+Os dois roteiros ficam em `script_pt.json` e `script_en.json`, com a fala, os textos da tela (`strings`) e as palavras que disparam cada animação (`cues`). O motor é o mesmo: `index.html?lang=pt` ou `?lang=en`, e no render use `VLANG=pt|en`.
+
+## Bloco de armamentos (só na versão em português, entre as 6h00 e as 6h45)
+
+Em 1941 **não existiam mísseis**. O vídeo começa esse bloco corrigindo isso e depois detalha a 1ª onda, com 183 aviões:
+
+| Plano | Técnica | O que mostra |
+|---|---|---|
+| "MÍSSEIS?" riscado | 2D | Em 1941 as armas eram torpedos, bombas e metralhadoras (um ícone para cada) |
+| **A6M Zero** · caça · ×43 | 3D | Câmera faz um arco em volta; disparos com traçantes dos **2 canhões de 20 mm** (nas asas) e das **2 metralhadoras de 7,7 mm** (sobre o motor) |
+| **D3A Val** · bombardeiro de mergulho · ×51 | 3D | Entra em mergulho; **trem de pouso fixo**; o **braço** gira a **bomba de 250 kg** para longe da hélice antes de soltá-la |
+| **B5N Kate** · torpedeiro · ×40 | 3D | Voo rasante; solta o **torpedo Tipo 91**, que bate na água e segue com rastro |
+| Torpedo em corte | 2D | **Aletas de madeira**: sem elas o torpedo afunda na **lama** de um porto com **~12 m de fundo**; com elas, nivela e segue |
+| **B5N Kate** · bombardeiro · ×49 | 3D | Formação em altitude com a **bomba perfurante de 800 kg** sob a fuselagem |
+| Projétil → bomba | 2D | A bomba de 800 kg foi feita a partir de um **projétil naval de 41 cm**, de canhão de encouraçado |
+
+Totais da 1ª onda: 43 Zeros + 51 Vals + 40 Kates com torpedo + 49 Kates com bomba = **183**.
+
+Efeitos sonoros do bloco: impacto no "mísseis", rajadas dos canhões e metralhadoras, ronco do mergulho, clique e assobio da bomba, splash do torpedo.
+
+Na versão em português, as distâncias estão em km (≈ 370 km e ~210 km) e o relógio usa o formato 06h45. Os documentos reais, a mensagem do Ward e a "AIR RAID PEARL HARBOR X THIS IS NOT DRILL", continuam no original em inglês, e a narração traduz.
+
 `pearl-harbor-last-minutes.mp4`: 1080×1920, 25 fps, 74,5 s, em inglês.
 O áudio tem narração com voz de idoso sábio (Piper `en_US-norman-medium`, tom +6 %, fala 20 % mais lenta, estilo `sabio`) e efeitos sonoros. Não tem música.
 
@@ -65,8 +92,9 @@ A distância da frota varia entre as fontes, por isso aparece como ≈ 230 milha
 ```bash
 npm i                      # three@0.149.0 (tem o build three.min.js, que funciona via file://)
 pip install piper-tts numpy
-python3 build_audio.py script_en.json en_US-norman-medium.onnx build 1.06 1.2 sabio
-node render.js frames 25 4                       # ~4 min; RANGE=t0,t1 re-renderiza só um trecho
+python3 build_audio.py script_pt.json pt_BR-cadu-medium.onnx build 0.82 1.15 sabio      # português
+python3 build_audio.py script_en.json en_US-norman-medium.onnx build 1.06 1.2 sabio   # inglês
+VLANG=pt node render.js frames 25 4                       # ~4 min; RANGE=t0,t1 re-renderiza só um trecho
 python3 build_audio.py --sfx frames/sfx_events.json build/sfx.wav <duração>
 # mixagem: narração + SFX com sidechain (ver comando no histórico do README da parábola) → build/mix_en.m4a
 ffmpeg -framerate 25 -i frames/f_%05d.jpg -i build/mix_en.m4a -c:v libx264 -crf 19 -pix_fmt yuv420p -shortest pearl-harbor-last-minutes.mp4

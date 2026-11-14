@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <title>Pearl Harbor — The Last Minutes</title>
@@ -13,7 +13,7 @@ html,body{margin:0;background:#000;overflow:hidden}
 .preview #stage{transform-origin:0 0}
 </style>
 <script src="node_modules/three/build/three.min.js"></script>
-<script src="timeline_en.js"></script>
+<script>document.write('<script src="timeline_' + (new URLSearchParams(location.search).get('lang') || 'pt') + '.js"><\/script>')</script>
 </head>
 <body>
 <div id="stage"><canvas id="gl" width="1080" height="1920"></canvas><svg id="v" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg"></svg></div>
@@ -54,6 +54,10 @@ function wt(id, needle, n = 0) {
   return hits[Math.min(n, hits.length - 1)].s;
 }
 const S = id => SEG[id].s, Ee = id => SEG[id].e;
+const T = k => { if (!(k in TL.strings)) throw new Error('texto ' + k); return TL.strings[k]; };
+const C = (k, n = 0) => { const c = TL.cues[k]; if (!c) throw new Error('cue ' + k); return wt(c[0], c[1], n); };
+const HAS_W = !!SEG.w1; // bloco de armamentos (versão PT)
+const fmtClock = (h, m) => TL.clockFmt === 'pt' ? `${String(h).padStart(2, '0')}h${String(m).padStart(2, '0')}` : `${h}:${String(m).padStart(2, '0')} AM`;
 const KEY = new Set(TL.keywords.map(norm));
 const SFX = []; const sfx = (k, t, d = 0) => SFX.push({ k, t: +t.toFixed(3), d: +d.toFixed(3) });
 
@@ -515,7 +519,7 @@ function s2_map(lt, t) {
   s += `<path d="M560 520 L560 ${f1(lerp(520, 1240, dash))}" stroke="#f2c75c" stroke-width="8" stroke-dasharray="26 18" filter="url(#glow)"/>`;
   for (let i = 0; i < 6; i++) s += g(`translate(${470 + (i % 3) * 90},${430 + Math.floor(i / 3) * 70})`, `<path d="M-30 0 L30 0 L22 14 L-22 14Z M8 -12 h10 v12 h-10z" fill="#e8e0d0" stroke="${INK}" stroke-width="4"/>`);
   s += `<text x="560" y="350" text-anchor="middle" font-family="CSC" font-size="44" fill="#efe2c2">N ↑</text>`;
-  return camWrap(s, 560, y, z) + label('≈ 230 MILES', 740, 900, t, S('s4') + .9, 3, 44) + label('6 CARRIERS', 560, 420, t, wt('s4', 'six'), -3, 44);
+  return camWrap(s, 560, y, z) + label(T('miles230'), 740, 900, t, S('s4') + .9, 3, 44) + label(T('carriers'), 560, 420, t, C('s4_six'), -3, 44);
 }
 function s2_binoc(lt, t) {
   const [hx, hy] = shake(t, 9, 3.1), zx = lerp(0, 40, clamp(lt / 2.5));
@@ -526,7 +530,7 @@ function s2_binoc(lt, t) {
   s += `<path d="M${px} 900 L${px} 760 L${px + 34} 760 L${px + 34} 790" stroke="#0a0f20" stroke-width="16" fill="none" stroke-linejoin="round"/>`;
   for (let k = 0; k < 6; k++) s += `<path d="M${f1(px - 20 - k * 46)} ${f1(905 + k * 6)} q20 -10 40 0" stroke="#d8e0ff" stroke-width="${6 - k * .7}" fill="none" opacity="${(.9 - k * .14).toFixed(2)}"/>`;
   const inner = g(`translate(${f1(hx)},${f1(hy)}) translate(540,900) scale(${(1.1 + .1 * clamp(lt / 3)).toFixed(3)}) translate(-540,-900)`, s);
-  return `<rect width="1080" height="1920" fill="#000"/><g clip-path="url(#binoc)">${inner}</g><path d="M40 900 a330 330 0 0 1 500 -283 a330 330 0 0 1 500 283 a330 330 0 0 1 -500 283 a330 330 0 0 1 -500 -283Z" fill="none" stroke="#000" stroke-width="20"/>` + italic('a periscope?', 540, 1330, t, wt('s3', 'periscope') + .1, 50);
+  return `<rect width="1080" height="1920" fill="#000"/><g clip-path="url(#binoc)">${inner}</g><path d="M40 900 a330 330 0 0 1 500 -283 a330 330 0 0 1 500 283 a330 330 0 0 1 -500 283 a330 330 0 0 1 -500 -283Z" fill="none" stroke="#000" stroke-width="20"/>` + italic(T('periscope'), 540, 1330, t, C('s3_periscope') + .1, 50);
 }
 function s2_gun(lt, t) {
   const fire = [0, .75], fl = Math.max(...fire.map(f => clamp(1 - Math.abs(lt - f - .04) / .08)));
@@ -539,7 +543,7 @@ function s2_gun(lt, t) {
   for (const f of fire) { const q = clamp((lt - f) / 1.4); if (q > 0 && q < 1) s += `<circle cx="${f1(100 - q * 120)}" cy="${f1(980 - q * 160)}" r="${f1(60 + q * 160)}" fill="#d8d0c8" opacity="${(.7 * (1 - q)).toFixed(2)}" stroke="${INK}" stroke-width="4"/>`; }
   if (fl > 0) s += glowDot(110, 990, 380 * fl, fl, 'glR') + `<path d="M120 1000 l-160 -60 l40 70 l-140 10 l140 40 l-60 70 l170 -70z" fill="#fff0b0" opacity="${fl.toFixed(2)}"/>`;
   s += g(`translate(820,1180)`, `<circle cx="0" cy="-260" r="54" fill="#e2b48a" stroke="${INK}" stroke-width="6"/><path d="M-60 -290 Q0 -340 60 -290 L60 -270 L-60 -270Z" fill="#f4f2ea" stroke="${INK}" stroke-width="5"/><path d="M-70 -200 L70 -200 L90 60 L-90 60Z" fill="#3b4a7a" stroke="${INK}" stroke-width="6"/>`);
-  return g(`translate(${f1(hx)},${f1(hy)})`, camWrap(s, lerp(560, 480, clamp(lt / 2)), 1080, lerp(1.0, 1.12, clamp(lt / 2)))) + (fl > .5 ? `<rect width="1080" height="1920" fill="#fff4d0" opacity="${((fl - .5) * .5).toFixed(2)}"/>` : '') + label('USS WARD', 540, 560, t, wt('s6', 'fires') - .3, -3, 48);
+  return g(`translate(${f1(hx)},${f1(hy)})`, camWrap(s, lerp(560, 480, clamp(lt / 2)), 1080, lerp(1.0, 1.12, clamp(lt / 2)))) + (fl > .5 ? `<rect width="1080" height="1920" fill="#fff4d0" opacity="${((fl - .5) * .5).toFixed(2)}"/>` : '') + label('USS WARD', 540, 560, t, C('s6_fires') - .3, -3, 48);
 }
 const WARD_MSG = 'WE HAVE ATTACKED FIRED UPON AND DROPPED DEPTH CHARGES UPON SUBMARINE OPERATING IN DEFENSIVE SEA AREA';
 function typedPaper(lines, chars, x0, y0, size, lh) {
@@ -555,7 +559,7 @@ function s2_teletype(lt, t) {
   s += typedPaper(lines, chars, 220, 540, 40, 66);
   s += `<path d="M120 1380 L960 1380 L1010 1700 L70 1700Z" fill="#4a4d55" stroke="${INK}" stroke-width="8"/>`;
   for (let i = 0; i < 18; i++) { const k = Math.floor(t * 12 + i * 5) % 18 === 0; s += `<circle cx="${180 + (i % 9) * 90}" cy="${1480 + Math.floor(i / 9) * 90 + (k ? 6 : 0)}" r="30" fill="#e8e0d0" stroke="${INK}" stroke-width="5"/>`; }
-  return camWrap(s, lerp(520, 560, clamp(lt / 2)), lerp(820, 760, clamp(lt / 2)), lerp(1.0, 1.15, clamp(lt / 2)), lerp(-2, 1, clamp(lt / 2))) + italic('…and nobody hurries', 540, 1320, t, wt('s7', 'slowly'), 46);
+  return camWrap(s, lerp(520, 560, clamp(lt / 2)), lerp(820, 760, clamp(lt / 2)), lerp(1.0, 1.15, clamp(lt / 2)), lerp(-2, 1, clamp(lt / 2))) + italic(T('nobody'), 540, 1320, t, C('s7_slowly'), 46);
 }
 function s2_scope(lt, t) {
   const grow = E.out(clamp((lt - .2) / 1.4));
@@ -565,7 +569,7 @@ function s2_scope(lt, t) {
   let d = 'M160 1040'; for (let x = 160; x <= 920; x += 6) { const n = (rnd(Math.floor(x * 3 + t * 30)) - .5) * 14; const b = Math.exp(-((x - 640) ** 2) / 900) * 330 * grow; d += ` L${x} ${f1(1040 - Math.abs(n) - b)}`; }
   s += `<path d="${d}" stroke="#b9ffb0" stroke-width="5" fill="none" filter="url(#glow)"/>` + glowDot(640, 1040 - 330 * grow, 120 * grow, .5 * grow, 'glG') + `</g>`;
   for (let i = 0; i < 4; i++) s += `<circle cx="${220 + i * 210}" cy="1360" r="40" fill="#2a2a28" stroke="${INK}" stroke-width="6"/><line x1="${220 + i * 210}" y1="1360" x2="${220 + i * 210 + 24}" y2="1340" stroke="#e8e0d0" stroke-width="5"/>`;
-  return camWrap(s, lerp(540, 600, clamp(lt / 3)), lerp(900, 860, clamp(lt / 3)), lerp(1.0, 1.3, E.io(clamp(lt / 3.5)))) + label('50+ PLANES', 300, 470, t, wt('s9', 'fifty'), -4, 46) + label('~130 MILES', 780, 560, t, wt('s9', 'thirty'), 3, 46);
+  return camWrap(s, lerp(540, 600, clamp(lt / 3)), lerp(900, 860, clamp(lt / 3)), lerp(1.0, 1.3, E.io(clamp(lt / 3.5)))) + label(T('planes50'), 300, 470, t, C('s9_fifty'), -4, 46) + label(T('miles130'), 780, 560, t, C('s9_thirty'), 3, 46);
 }
 function s2_phone(lt, t) {
   const hang = E.io(clamp((lt - 1.3) / .5));
@@ -578,7 +582,7 @@ function s2_phone(lt, t) {
     g('translate(120,-30)', `<path d="M0 0 Q80 -90 160 -60 L220 40 Q120 90 20 60Z" fill="#e2b48a" stroke="${INK}" stroke-width="6"/><path d="M140 -70 L280 -160 L340 -60 L210 30Z" fill="#7a6a4a" stroke="${INK}" stroke-width="6"/>`));
   if (hang > .9) s += `<path d="M540 1000 l-30 -40 M560 990 l0 -50 M580 1000 l30 -40" stroke="#fff" stroke-width="7" stroke-linecap="round"/>`;
   const z = lerp(1.05, 1.25, E.io(clamp(lt / 2)));
-  return camWrap(s, 540, lerp(1040, 1000, clamp(lt / 2)), z) + card('“DON’T WORRY', 'ABOUT IT.”', t, S('s11') - .05, wt('s11', 'about'), 540, 480, 70, S('s12') - .15);
+  return camWrap(s, 540, lerp(1040, 1000, clamp(lt / 2)), z) + card(T('worry1'), T('worry2'), t, S('s11') - .05, C('s11_about'), 540, 480, 70, S('s12') - .15);
 }
 function s2_cockpit(lt, t) {
   const [hx, hy] = shake(t, 3, 17);
@@ -593,24 +597,213 @@ function s2_cockpit(lt, t) {
   s += `<path d="M300 1920 Q300 1460 540 1420 Q780 1460 780 1920Z" fill="#3a3326" stroke="${INK}" stroke-width="8"/><path d="M380 1560 Q540 1380 700 1560 Q700 1460 540 1420 Q380 1460 380 1560Z" fill="#5a4a32" stroke="${INK}" stroke-width="6"/>`;
   const key = [0, .5, 1.0].some(k => lt > k + .2 && lt < k + .45);
   s += g(`translate(870,1680)`, `<rect x="-90" y="0" width="180" height="40" fill="#2a2a28" stroke="${INK}" stroke-width="5"/><path d="M-60 ${key ? -6 : -20} L80 ${key ? -6 : -20}" stroke="#8a6a40" stroke-width="18" stroke-linecap="round"/><path d="M40 ${key ? -60 : -76} q50 -30 90 10 l-20 40 q-40 0 -70 -20z" fill="#d8b48a" stroke="${INK}" stroke-width="5"/>`);
-  return g(`translate(${f1(hx)},${f1(hy)})`, s) + italic('“to… to… to…”', 540, 1380, t, S('s14') + .2, 52) + label('ATTACK', 540, 560, t, wt('s14', 'attack'), -3, 56);
+  return g(`translate(${f1(hx)},${f1(hy)})`, s) + italic(T('to'), 540, 1380, t, S('s14') + .2, 52) + label(T('attack'), 540, 560, t, C('s14_attack'), -3, 56);
 }
 function s2_tora(lt, t) {
-  const ts = [S('s15') + .02, wt('s15', 'tora', 1), wt('s15', 'tora', 2)];
+  const ts = [S('s15') + .02, C('s15_tora', 1), C('s15_tora', 2)];
   let s = `<rect width="1080" height="1920" fill="#1a0f12"/>` + glowDot(540, 900, 700, .25, 'glR');
   for (let i = 0; i < 6; i++) { const r = ((t * 220 + i * 160) % 960); s += `<circle cx="540" cy="900" r="${f1(r)}" fill="none" stroke="#ffb070" stroke-width="5" opacity="${(.35 * (1 - r / 960)).toFixed(2)}"/>`; }
   let sh = 0;
   ts.forEach((tt, i) => { if (t < tt) return; const sc = popS(t, tt, .25); sh = Math.max(sh, Math.exp(-(t - tt) * 9)); s += g(`translate(540,${720 + i * 240}) scale(${sc.toFixed(3)})`, `<text x="0" y="0" text-anchor="middle" font-family="CSC" font-size="190" fill="#fffaf0" letter-spacing="10" filter="url(#glow)">TORA!</text>`); });
   const [hx, hy] = shake(t, 18 * sh, 50);
-  return g(`translate(${f1(hx)},${f1(hy)})`, s) + italic('surprise achieved', 540, 1300, t, Ee('s15') - .2, 48);
+  return g(`translate(${f1(hx)},${f1(hy)})`, s) + italic(T('surprise'), 540, 1300, t, Ee('s15') - .2, 48);
 }
 function s2_message(lt, t) {
   const lines = ['FROM: CINCPAC', 'TO: ALL SHIPS', '', 'AIR RAID PEARL HARBOR X', 'THIS IS NOT DRILL'];
-  const t0 = wt('s16', 'air') - (wt('s16', 'message') - .1) - .1, chars = Math.floor(Math.max(0, lt - .3) * 9) + (lt > t0 ? 40 : 0);
+  const t0 = C('s16_air') - (C('s16_message') - .1) - .1, chars = Math.floor(Math.max(0, lt - .3) * 9) + (lt > t0 ? 40 : 0);
   let s = `<rect x="-300" y="-300" width="1680" height="2520" fill="#2a2420"/><rect x="140" y="440" width="800" height="960" fill="url(#paper)" stroke="${INK}" stroke-width="6" transform="rotate(-2 540 920)"/>`;
   s += g('rotate(-2 540 920)', `<text x="540" y="540" text-anchor="middle" font-family="CSC" font-size="44" fill="#6b4a2e">NAVAL MESSAGE</text><path d="M200 570 H880" stroke="#6b4a2e" stroke-width="4"/>` + typedPaper(lines.slice(0, 2), Math.min(chars, 26), 200, 660, 42, 70) + (lt > t0 ? typedPaper(lines.slice(3), Math.floor((lt - t0) * 14), 200, 900, 54, 100) : ''));
   const z = lerp(1.0, 1.22, E.io(clamp(lt / 5)));
   return camWrap(s, 540, lerp(900, 980, clamp(lt / 5)), z) ;
+}
+
+// ═════════════════════════ ARMAMENTOS (modelos) ═════════════════════════
+function bombMesh(len = 2, r = .26, col = 0x4a4d44) {
+  const b = new THREE.Group();
+  b.add(M(new THREE.CylinderGeometry(r, r, len * .6, 14).rotateX(Math.PI / 2), col, .03));
+  b.add(at(M(new THREE.SphereGeometry(r, 14, 10), col, .03), 0, 0, -len * .3));
+  b.add(at(M(new THREE.CylinderGeometry(r, r * .25, len * .32, 14).rotateX(Math.PI / 2), col, .03), 0, 0, len * .46));
+  for (const a of [0, Math.PI / 2]) b.add(at(M(new THREE.BoxGeometry(r * 3.2, .04, len * .22), 0x5a5d52, .02), 0, 0, len * .55, 0, 0, a));
+  b.add(at(M(new THREE.CylinderGeometry(r * 1.02, r * 1.02, .08, 14).rotateX(Math.PI / 2), 0xb8a040, 0), 0, 0, -len * .1));
+  return b;
+}
+function torpedoMesh(len = 5.4, r = .23) {
+  const t = new THREE.Group(), steel = 0x4c4f55;
+  t.add(M(new THREE.CylinderGeometry(r, r, len * .8, 16).rotateX(Math.PI / 2), steel, .03));
+  t.add(at(M(new THREE.SphereGeometry(r, 16, 10), steel, .03), 0, 0, -len * .4));
+  t.add(at(M(new THREE.CylinderGeometry(r, r * .3, len * .18, 16).rotateX(Math.PI / 2), steel, .03), 0, 0, len * .49));
+  for (const a of [0, Math.PI / 2]) t.add(at(M(new THREE.BoxGeometry(r * 3.4, .05, .5), 0x9a6a3a, .02), 0, 0, len * .5, 0, 0, a)); // aletas de madeira
+  t.add(at(M(new THREE.CylinderGeometry(.12, .12, .1, 10).rotateX(Math.PI / 2), 0xb8a040, 0), 0, 0, len * .6));
+  return t;
+}
+function makeZero() {
+  const p = makePlane(0xd6d2c2);
+  for (const sx of [-1.7, 1.7]) p.add(at(M(new THREE.CylinderGeometry(.05, .05, 1.3, 6).rotateX(Math.PI / 2), 0x2a2a2a, .02), sx, -.18, -1.4));
+  for (const sx of [-.16, .16]) p.add(at(M(new THREE.CylinderGeometry(.035, .035, .9, 6).rotateX(Math.PI / 2), 0x2a2a2a, .02), sx, .36, -1.7));
+  p.userData.cannons = [[-1.7, -.18, -2.1], [1.7, -.18, -2.1]]; p.userData.mgs = [[-.16, .36, -2.2], [.16, .36, -2.2]];
+  return p;
+}
+function makeVal() {
+  const p = new THREE.Group(), body = 0xc4c0ae, ow = .05;
+  p.add(M(new THREE.CylinderGeometry(.42, .2, 5, 12).rotateX(Math.PI / 2), body, ow));
+  p.add(at(M(new THREE.CylinderGeometry(.5, .5, .7, 14).rotateX(Math.PI / 2), 0x2e2a28, ow), 0, 0, -2.5));
+  p.add(at(M(new THREE.SphereGeometry(1, 20, 8).scale(3.7, .07, .85), body, ow), 0, -.25, -.6));
+  p.add(at(M(new THREE.BoxGeometry(2.4, .08, .7), body, ow), 0, 0, 2.2));
+  p.add(at(M(new THREE.BoxGeometry(.08, 1, .8), body, ow), 0, .5, 2.2));
+  p.add(at(M(new THREE.BoxGeometry(.6, .5, 2.4), 0x8fb4c8, .03), 0, .45, -.2));
+  for (const sx of [-1.25, 1.25]) { // trem de pouso fixo com carenagem
+    p.add(at(M(new THREE.BoxGeometry(.12, 1, .25), body, .03), sx, -.75, -1.1));
+    p.add(at(M(new THREE.SphereGeometry(.35, 12, 8).scale(.75, 1, 1.7), body, .04), sx, -1.3, -1.15));
+  }
+  for (const sx of [-2.4, 2.4]) p.add(at(new THREE.Mesh(new THREE.CircleGeometry(.4, 18), new THREE.MeshBasicMaterial({ color: 0xc23a2c })), sx, -.18, -.6, -Math.PI / 2));
+  const prop = new THREE.Mesh(new THREE.CircleGeometry(1.15, 24), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .22, side: THREE.DoubleSide, depthWrite: false }));
+  p.add(at(prop, 0, 0, -2.9)); p.userData.prop = prop;
+  const crutch = new THREE.Group(); crutch.position.set(0, -.4, -.6); p.add(crutch); // braço que afasta a bomba da hélice
+  crutch.add(at(M(new THREE.BoxGeometry(.06, .7, .06), 0x3a3a3a, .02), 0, -.35, 0));
+  const bomb = bombMesh(1.9, .27); bomb.position.set(0, -.75, 0); crutch.add(bomb);
+  p.userData.crutch = crutch; p.userData.bomb = bomb;
+  return p;
+}
+function makeKate(load = 'torpedo') {
+  const p = new THREE.Group(), body = 0xb3b7a0, ow = .05;
+  p.add(M(new THREE.CylinderGeometry(.46, .2, 6, 12).rotateX(Math.PI / 2), body, ow));
+  p.add(at(M(new THREE.CylinderGeometry(.55, .55, .7, 14).rotateX(Math.PI / 2), 0x2e2a28, ow), 0, 0, -3));
+  p.add(at(M(new THREE.BoxGeometry(8, .1, 1.5), body, ow), 0, -.3, -.6));
+  p.add(at(M(new THREE.BoxGeometry(2.8, .08, .8), body, ow), 0, 0, 2.7));
+  p.add(at(M(new THREE.BoxGeometry(.08, 1.1, .9), body, ow), 0, .55, 2.7));
+  p.add(at(M(new THREE.BoxGeometry(.62, .55, 3.4), 0x8fb4c8, .03), 0, .48, -.2));
+  for (const sx of [-2.8, 2.8]) p.add(at(new THREE.Mesh(new THREE.CircleGeometry(.42, 18), new THREE.MeshBasicMaterial({ color: 0xc23a2c })), sx, -.24, -.6, -Math.PI / 2));
+  const prop = new THREE.Mesh(new THREE.CircleGeometry(1.25, 24), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .22, side: THREE.DoubleSide, depthWrite: false }));
+  p.add(at(prop, 0, 0, -3.4)); p.userData.prop = prop;
+  const w = load === 'torpedo' ? torpedoMesh() : bombMesh(2.6, .36, 0x3f4238);
+  w.position.set(.12, -.75, -.3); p.add(w); p.userData.weapon = w;
+  return p;
+}
+const spin = p => { const pr = p.userData.prop || p.children[p.children.length - 1]; return pr; };
+function tracer(color = 0xffd27a) { const m = new THREE.Mesh(new THREE.BoxGeometry(.06, .06, 2.2), new THREE.MeshBasicMaterial({ color, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false })); m.visible = false; return m; }
+function skyStudio(stops, fog = 0xf0d6b8) {
+  const sc = newScene(stops, fog, 120, 1600, [0xfff4e0, 0x506070, .9], [0xfff0d0, 1.0, [80, 120, 60]]);
+  for (let i = 0; i < 40; i++) { const cl = cloudPuff(i * 17, 5 + rnd(i) * 4); cl.position.set(-500 + rnd(i) * 1000, -190 + rnd(i + 1) * 12, 300 - rnd(i + 2) * 1400); sc.add(cl); }
+  const sea = makeOcean('#5a7eb0', '#8eaed8', 40); sea.position.y = -320; sc.add(sea);
+  return sc;
+}
+// ═════════════════════════ ARMAMENTOS (planos) ═════════════════════════
+function sh_zero() {
+  const sc = skyStudio([[0, '#6f92c4'], [.6, '#efc6a6'], [1, '#ffdcaa']]);
+  const z = makeZero(); sc.add(z);
+  const fire = [C('w2_canhoes') + .1, C('w2_metralhadoras') + .1].map(x => x - SHOT_T0.zero);
+  const tr = []; for (let i = 0; i < 16; i++) { const m = tracer(i < 8 ? 0xffc06a : 0xfff0b0); sc.add(m); tr.push(m); }
+  const c = cam(42);
+  return { sc, c, update(lt, t) {
+    z.position.set(0, Math.sin(t * 1.4) * .25, -lt * 30); z.rotation.set(.02 * Math.sin(t), 0, .12 * Math.sin(t * .8)); spin(z).rotation.z = t * 40;
+    tr.forEach((m, i) => {
+      const grp = i < 8 ? 0 : 1, f = fire[grp], k = (i % 8), dt = lt - f - k * .07;
+      const mz = (grp ? z.userData.mgs : z.userData.cannons)[k % 2];
+      m.visible = dt > 0 && dt < .5;
+      if (m.visible) { m.position.set(mz[0] + Math.sin(k) * .05, z.position.y + mz[1], z.position.z + mz[2] - dt * 160); }
+    });
+    const a = lerp(-.5, -1.45, E.io(clamp(lt / 6))); c.position.set(Math.sin(a) * 15, 2.2 + lt * .1, z.position.z + Math.cos(a) * 15); c.lookAt(0, -.3, z.position.z - 1.5);
+  } };
+}
+function sh_val() {
+  const sc = skyStudio([[0, '#5d84ba'], [.6, '#e6c0a6'], [1, '#f6d6a6']]);
+  const v = makeVal(); sc.add(v);
+  const rel = C('w3_bomba') + .9 - SHOT_T0.val;
+  const c = cam(45);
+  return { sc, c, update(lt, t) {
+    const pitch = -lerp(.15, .95, E.io(clamp(lt / 1.6))); // entra em mergulho
+    const dir = new THREE.Vector3(0, Math.sin(pitch), -Math.cos(pitch));
+    v.position.copy(dir.clone().multiplyScalar(lt * 28)); v.rotation.set(pitch, 0, .05 * Math.sin(t * 2)); spin(v).rotation.z = t * 40;
+    const cr = v.userData.crutch, b = v.userData.bomb;
+    cr.rotation.x = -1.1 * E.out(clamp((lt - rel + .45) / .45)); // o braço gira a bomba para fora do arco da hélice
+    if (lt > rel) { if (b.parent !== sc) { sc.attach(b); b.userData.t0 = lt; b.userData.p0 = b.position.clone(); } const d = lt - b.userData.t0; b.position.copy(b.userData.p0).add(dir.clone().multiplyScalar(d * 30)).add(new THREE.Vector3(0, -4.9 * d * d, 0)); }
+    else if (b.parent === sc) { cr.add(b); b.position.set(0, -.75, 0); b.rotation.set(0, 0, 0); }
+    const side = lerp(1, .55, clamp(lt / 5));
+    c.position.copy(v.position).add(new THREE.Vector3(9 * side, 2.2 + lt * .2, 6)); c.lookAt(v.position.clone().add(new THREE.Vector3(0, -1.2, -1)));
+  } };
+}
+function sh_kate() {
+  const sc = newScene([[0, '#7aa0cc'], [1, '#f2dcb4']], 0xe6d8bc, 150, 1600, [0xfff8e8, 0x506070, .9], [0xfff0d0, 1, [100, 160, 80]]);
+  const sea = makeOcean('#3f7f8f', '#82bcc4', 70); sc.add(sea);
+  const hills = terrain(1600, 400, 40, (x, z) => 60 * Math.exp(-((z + 200) ** 2) / 9000) * (.6 + .4 * Math.sin(x * .01)) - 2, 0x6f9a52, 0); hills.position.set(0, 0, -900); sc.add(hills);
+  const k = makeKate('torpedo'); sc.add(k);
+  const drop = C('w4_torpedo') + .35 - SHOT_T0.kate;
+  const splash = layer(256, 512, (x) => { P2(x, 'M40 512 Q60 300 100 200 Q128 60 156 200 Q196 300 216 512Z', '#f4f0ea', INK, 6); }, 4, 0, 0, 0); sc.add(splash); splash.visible = false;
+  const wake = new THREE.Mesh(new THREE.PlaneGeometry(.8, 1), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .7 })); wake.rotation.x = -Math.PI / 2; sc.add(wake); wake.visible = false;
+  const c = cam(45);
+  return { sc, c, update(lt, t) {
+    k.position.set(0, 7 + Math.sin(t * 1.6) * .2, -lt * 40); k.rotation.set(-.03, 0, .05 * Math.sin(t)); spin(k).rotation.z = t * 40;
+    const w = k.userData.weapon;
+    if (lt > drop) {
+      if (w.parent !== sc) { sc.attach(w); w.userData.t0 = lt; w.userData.p0 = w.position.clone(); }
+      const d = lt - w.userData.t0, yy = w.userData.p0.y - 4.9 * d * d;
+      const zz = w.userData.p0.z - d * 36;
+      if (yy > -.5) { w.position.set(w.userData.p0.x, yy, zz); w.rotation.x = -.15 - d * .3; }
+      else { const tw = d - Math.sqrt((w.userData.p0.y + .5) / 4.9); w.position.set(w.userData.p0.x, -1.2, zz); w.rotation.x = 0;
+        splash.visible = tw < .9; splash.position.set(w.userData.p0.x, -1 + Math.sin(clamp(tw / .9) * Math.PI) * 2.5, w.userData.p0.z - (Math.sqrt((w.userData.p0.y + .5) / 4.9)) * 36); splash.scale.set(1, Math.sin(clamp(tw / .9) * Math.PI) + .01, 1);
+        wake.visible = true; const L = tw * 20; wake.scale.set(1, L + .01, 1); wake.position.set(w.userData.p0.x, .05, zz + L / 2); }
+    } else if (w.parent === sc) { k.add(w); w.position.set(.12, -.75, -.3); w.rotation.set(0, 0, 0); splash.visible = wake.visible = false; }
+    const p = clamp(lt / 2.6); c.position.set(lerp(-30, -26, p), lerp(9, 6.5, p), k.position.z + lerp(3, -2, E.io(p))); c.lookAt(0, lerp(6, 3, p), k.position.z - lerp(1, 4, E.io(p)));
+  } };
+}
+function sh_kate2() {
+  const sc = skyStudio([[0, '#5c7fb4'], [.6, '#e0bca2'], [1, '#f4d2a2']]);
+  const ks = []; for (let i = 0; i < 5; i++) { const k = makeKate('bomb'); const side = (i % 2 ? -1 : 1) * Math.ceil(i / 2); k.userData.base = new THREE.Vector3(side * 11, -Math.abs(side) * 1.5, Math.abs(side) * 9); sc.add(k); ks.push(k); }
+  const c = cam(45);
+  return { sc, c, update(lt, t) {
+    ks.forEach((k, i) => { const b = k.userData.base; k.position.set(b.x, b.y + Math.sin(t * 1.2 + i) * .3, b.z - lt * 30); k.rotation.z = .04 * Math.sin(t + i); spin(k).rotation.z = t * 40; });
+    const p = clamp(lt / 4); c.position.set(lerp(16, 10, p), lerp(-7, -4, p), ks[0].position.z + lerp(26, 16, E.io(p))); c.lookAt(0, -1, ks[0].position.z + 2);
+  } };
+}
+// 2D
+function s2_noMissiles(lt, t) {
+  const tm = C('w1_misseis') + .35, strike = E.out(clamp((t - tm) / .35));
+  let s = `<rect x="-300" y="-300" width="1680" height="2520" fill="#1c1418"/>` + rays(540, 640, t * 4, 16, 1100, .1);
+  s += `<text x="540" y="600" text-anchor="middle" font-family="CSC" font-size="150" fill="#fffaf0" letter-spacing="6" opacity="${(1 - .5 * strike).toFixed(2)}">${esc(T('missiles'))}</text>`;
+  if (strike > 0) s += `<path d="M150 570 L${f1(150 + 780 * strike)} ${f1(570 - 60 * strike)}" stroke="#c23a2c" stroke-width="22" stroke-linecap="round" filter="url(#glow)"/>`;
+  const items = [['w1_torpedos', T('w_torp'), 'torp'], ['w1_bombas', T('w_bomb'), 'bomb'], ['w1_metralhadoras', T('w_mg'), 'mg']];
+  if (t > C('w1_torpedos') - .8) s += `<text x="540" y="770" text-anchor="middle" font-family="EBGI" font-size="56" fill="#efe2c2" opacity="${prog(t, C('w1_torpedos') - .8, .3).toFixed(2)}">${esc(T('w_1941'))}</text>`;
+  items.forEach(([cue, txt, kind], i) => {
+    const t0 = C(cue); if (t < t0) return; const sc = popS(t, t0, .35), y = 900 + i * 140;
+    let icon = '';
+    if (kind === 'torp') icon = `<path d="M-120 0 Q-130 -18 -100 -18 L80 -18 L110 -30 L110 30 L80 18 L-100 18 Q-130 18 -120 0Z" fill="#4c4f55" stroke="${INK}" stroke-width="5"/><path d="M80 -18 L100 -40 L110 -40 L110 40 L100 40 L80 18" fill="#9a6a3a" stroke="${INK}" stroke-width="4"/>`;
+    if (kind === 'bomb') icon = `<ellipse cx="-10" cy="0" rx="80" ry="26" fill="#4a4d44" stroke="${INK}" stroke-width="5"/><path d="M60 -10 L110 -34 L110 34 L60 10Z" fill="#5a5d52" stroke="${INK}" stroke-width="4"/><rect x="-40" y="-26" width="10" height="52" fill="#b8a040"/>`;
+    if (kind === 'mg') icon = [0, 1, 2].map(k => `<path d="M${-90 + k * 70} -12 h40 q20 12 0 24 h-40z" fill="#c9a24a" stroke="${INK}" stroke-width="4"/>`).join('');
+    s += g(`translate(540,${y}) scale(${sc.toFixed(3)})`, `<rect x="-400" y="-60" width="800" height="120" rx="12" fill="#efe2c2" stroke="#6b4a2e" stroke-width="4" filter="url(#shadow)"/>` + g('translate(-230,0)', icon) + `<text x="90" y="18" text-anchor="middle" font-family="CSC" font-size="54" fill="#3b2a1e" letter-spacing="2">${esc(txt)}</text>`);
+  });
+  return camWrap(s, 540, lerp(860, 900, clamp(lt / 7)), lerp(1.06, .98, E.out(clamp(lt / 2))) + .02 * lt / 7);
+}
+function s2_torpedo(lt, t) {
+  const ta = C('w4_aletas'), tl = C('w4_lama'), td = C('w4_doze');
+  const z = kf(t, [[ta - .2, 1.55], [tl - .2, 1.55, 'sine'], [tl + .8, 1.0, 'io'], [Ee('w4') + .5, 1.04, 'sine']]), cy = kf(t, [[ta - .2, 560], [tl - .2, 560], [tl + .8, 880, 'io']]);
+  let s = `<rect x="-400" y="-400" width="1880" height="2720" fill="#b9d2e0"/><rect x="-400" y="700" width="1880" height="1600" fill="#3d6f86"/>`;
+  s += `<path d="M-400 700 Q-200 690 0 700 T400 700 T800 700 T1200 700 T1600 700" stroke="#e6f2f8" stroke-width="6" fill="none"/>`;
+  s += `<path d="M-400 1180 Q200 1160 540 1176 T1480 1170 L1480 2300 L-400 2300Z" fill="#5a4630" stroke="${INK}" stroke-width="6"/>`;
+  for (let i = 0; i < 40; i++) s += `<circle cx="${f1(-300 + rnd(i) * 1700)}" cy="${f1(1210 + rnd(i + 3) * 200)}" r="${f1(4 + rnd(i) * 6)}" fill="#3e301f"/>`;
+  s += `<text x="900" y="1260" text-anchor="middle" font-family="CSC" font-size="40" fill="#efe2c2">${esc(T('mud'))}</text>`;
+  // trajetórias
+  const pr = E.io(clamp((t - tl) / 1.2)), pg = E.io(clamp((t - tl - .5) / 1.4));
+  if (pr > 0) s += `<path d="M120 700 Q260 880 360 1180" stroke="#c23a2c" stroke-width="9" fill="none" stroke-dasharray="24 16" pathLength="1" style="stroke-dasharray:${pr} 1"/>` + (pr > .95 ? `<text x="380" y="1120" font-family="EBGI" font-size="38" fill="#ffd0c8">✗ ${esc(T('noFins'))}</text>` : '');
+  if (pg > 0) s += `<path d="M120 700 Q220 820 340 840 L1000 840" stroke="#7dde8a" stroke-width="9" fill="none" pathLength="1" style="stroke-dasharray:${pg} 1"/>` + (pg > .95 ? `<text x="560" y="810" font-family="EBGI" font-size="38" fill="#d8ffd8">✓ ${esc(T('withFins'))}</text>` : '');
+  // régua de profundidade
+  const dp = prog(t, td - .1, .5);
+  if (dp > 0) s += `<g opacity="${dp.toFixed(2)}"><path d="M960 706 V1170 M940 706 H980 M940 1170 H980" stroke="#fffaf0" stroke-width="6"/></g>`;
+  // torpedo em destaque com aletas de madeira
+  const ts = popS(t, SHOT_T0.torpedo + .1, .4);
+  s += g(`translate(540,500) scale(${(ts * 1).toFixed(3)})`, `<path d="M-330 0 Q-360 -40 -300 -40 L230 -40 L290 -50 L290 50 L230 40 L-300 40 Q-360 40 -330 0Z" fill="#4c4f55" stroke="${INK}" stroke-width="7"/><rect x="-150" y="-40" width="14" height="80" fill="#b8a040"/>` +
+    `<g filter="${t > ta ? 'url(#glow)' : ''}"><path d="M220 -40 L270 -110 L300 -110 L300 110 L270 110 L220 40Z" fill="#a8743e" stroke="${INK}" stroke-width="6"/><path d="M235 -60 L290 -60 M235 60 L290 60" stroke="#7a4e24" stroke-width="5"/></g><circle cx="310" cy="0" r="18" fill="#b8a040" stroke="${INK}" stroke-width="5"/>`);
+  return camWrap(s, 540, cy, z) + label(T('fins'), 640, 330, t, ta + .1, 3, 44) + label(T('depth'), 760, 1050, t, td, -3, 40);
+}
+function s2_apbomb(lt, t) {
+  const ts = C('w5_projeteis'), tb = SHOT_T0.apbomb;
+  let s = `<rect x="-300" y="-300" width="1680" height="2520" fill="#2a2e3a"/>`;
+  for (let i = 0; i < 14; i++) s += `<path d="M${-300 + i * 140} -300 V2300" stroke="#343a4a" stroke-width="2"/>`;
+  const shellIn = popS(t, tb + .1, .4), arrow = E.out(clamp((t - ts - .4) / .6)), bombIn = popS(t, ts + .9, .4);
+  s += g(`translate(300,860) scale(${(shellIn * .8).toFixed(3)})`, `<path d="M-70 380 L-70 -150 Q-70 -330 0 -380 Q70 -330 70 -150 L70 380Z" fill="#8a8c84" stroke="${INK}" stroke-width="7"/><rect x="-74" y="250" width="148" height="40" fill="#b8a040" stroke="${INK}" stroke-width="5"/><path d="M-70 -150 Q0 -170 70 -150" stroke="${INK}" stroke-width="5" fill="none"/>`);
+  if (arrow > 0) s += `<path d="M420 860 L${f1(420 + 220 * arrow)} 860" stroke="#f2c75c" stroke-width="14" stroke-linecap="round"/><path d="M${f1(400 + 240 * arrow)} 830 l40 30 l-40 30" stroke="#f2c75c" stroke-width="14" fill="none" stroke-linecap="round" opacity="${arrow.toFixed(2)}"/>`;
+  s += g(`translate(800,860) scale(${(bombIn * .8).toFixed(3)})`, `<path d="M-70 280 L-70 -150 Q-70 -330 0 -380 Q70 -330 70 -150 L70 280Z" fill="#4a4d44" stroke="${INK}" stroke-width="7"/><path d="M-70 280 L-110 420 L110 420 L70 280Z" fill="#5a5d52" stroke="${INK}" stroke-width="6"/><path d="M0 280 L0 420" stroke="${INK}" stroke-width="6"/><rect x="-74" y="-60" width="148" height="30" fill="#b8a040" stroke="${INK}" stroke-width="5"/>`);
+  const z = lerp(1.15, 1.0, E.out(clamp(lt / 1.5))) + .03 * clamp(lt / 6);
+  return camWrap(s, 550, 900, z) + label(T('shell'), 320, 1270, t, ts, -3, 34) + label(T('bomb800'), 770, 1190, t, C('w5_oitocentos'), 3, 34) + italic(T('high'), 540, 420, t, C('w5_encouracado') + .3, 46);
 }
 
 // ═════════════════════════ LISTA DE PLANOS ═════════════════════════
@@ -619,52 +812,73 @@ function shot(kind, t0, f, name) { SHOTS.push({ kind, t0, f, name }); }
 shot('3d', 0, sh_ocean, 'ocean');
 shot('25d', S('s2') - .15, sh_oahuNight, 'oahu-night');
 shot('25d', S('s3') + .05, sh_condor, 'condor');
-shot('2d', wt('s3', 'periscope') - .25, s2_binoc, 'binoculars');
+shot('2d', C('s3_periscope') - .25, s2_binoc, 'binoculars');
 shot('2d', S('s4') - .05, s2_map, 'map');
-shot('3d', wt('s4', 'six') - .1, sh_fleet, 'fleet');
+shot('3d', C('s4_six') - .1, sh_fleet, 'fleet');
 shot('3d', S('s5') - .05, sh_deck, 'deck');
-shot('3d', wt('s5', 'one') - .15, sh_formation, 'formation');
+shot('3d', C('s5_one') - .15, sh_formation, 'formation');
+if (HAS_W) {
+  shot('2d', S('w1') - .1, s2_noMissiles, 'no-missiles');
+  shot('3d', S('w2') - .1, sh_zero, 'zero');
+  shot('3d', S('w3') - .1, sh_val, 'val');
+  shot('3d', S('w4') - .1, sh_kate, 'kate');
+  shot('2d', C('w4_aletas') - .25, s2_torpedo, 'torpedo');
+  shot('3d', S('w5') - .1, sh_kate2, 'kate-bombers');
+  shot('2d', C('w5_projeteis') - .25, s2_apbomb, 'apbomb');
+}
 shot('25d', S('s6') - .05, sh_ward, 'ward');
-shot('2d', wt('s6', 'fires') - .05, s2_gun, 'gun');
-shot('25d', wt('s6', 'first') - .2, sh_splash, 'splash');
+shot('2d', C('s6_fires') - .05, s2_gun, 'gun');
+shot('25d', C('s6_first') - .2, sh_splash, 'splash');
 shot('2d', S('s7') - .1, s2_teletype, 'teletype');
 shot('3d', S('s8') - .1, sh_radar, 'radar');
-shot('2d', wt('s8', 'sees') - .05, s2_scope, 'scope');
+shot('2d', C('s8_sees') - .05, s2_scope, 'scope');
 shot('25d', S('s10') - .1, sh_info, 'info-center');
 shot('2d', S('s11') - .1, s2_phone, 'phone');
 shot('3d', S('s12') - .1, sh_clouds, 'clouds');
 shot('3d', S('s13') - .1, sh_harbor, 'harbor');
-shot('25d', wt('s13', 'sailors') - .1, sh_colors, 'colors');
+shot('25d', C('s13_sailors') - .1, sh_colors, 'colors');
 shot('2d', S('s14') - .1, s2_cockpit, 'cockpit');
 shot('2d', S('s15') - .25, s2_tora, 'tora');
 shot('3d', Ee('s15') + .25, sh_dive, 'dive');
-shot('2d', wt('s16', 'message') - .1, s2_message, 'message');
+shot('2d', C('s16_message') - .1, s2_message, 'message');
 SHOTS.forEach((s, i) => s.t1 = SHOTS[i + 1] ? SHOTS[i + 1].t0 : TL.duration);
+const SHOT_T0 = Object.fromEntries(SHOTS.map(s => [s.name.split('-')[0] === 'kate' && s.name === 'kate-bombers' ? 'kate2' : s.name, s.t0]));
 CLOCKS = [
-  { t: S('s3') + .2, label: '3:42 AM', h: 3, m: 42 },
-  { t: wt('s5', 'six'), label: '6:00 AM', h: 6, m: 0 },
-  { t: wt('s6', 'six'), label: '6:45 AM', h: 6, m: 45 },
-  { t: wt('s8', 'seven'), label: '7:02 AM', h: 7, m: 2 },
-  { t: wt('s12', 'seven'), label: '7:40 AM', h: 7, m: 40 },
-  { t: wt('s14', 'seven'), label: '7:49 AM', h: 7, m: 49 },
-  { t: Ee('s15') + .3, label: '7:55 AM', h: 7, m: 55 },
-  { t: wt('s16', 'seven'), label: '7:58 AM', h: 7, m: 58 },
+  { t: S('s3') + .2, label: fmtClock(3, 42), h: 3, m: 42 },
+  { t: C('s5_six'), label: fmtClock(6, 0), h: 6, m: 0 },
+  { t: C('s6_six'), label: fmtClock(6, 45), h: 6, m: 45 },
+  { t: C('s8_seven'), label: fmtClock(7, 2), h: 7, m: 2 },
+  { t: C('s12_seven'), label: fmtClock(7, 40), h: 7, m: 40 },
+  { t: C('s14_seven'), label: fmtClock(7, 49), h: 7, m: 49 },
+  { t: Ee('s15') + .3, label: fmtClock(7, 55), h: 7, m: 55 },
+  { t: C('s16_seven'), label: fmtClock(7, 58), h: 7, m: 58 },
 ];
 CLOCKS.forEach((c, i) => c.until = CLOCKS[i + 1] ? CLOCKS[i + 1].t : TL.duration);
-CLOCKS[0].until = S('s4') - .05; // 3:42 não vale para a cena da frota (≈ 6h)
+CLOCKS[0].until = S('s4') - .05; if (HAS_W) CLOCKS[1].until = S('w1') - .1; // 3:42 não vale para a cena da frota (≈ 6h)
 // sobreposições por plano (texto em tela)
 function overlays(t) {
-  return title(['DECEMBER 7', '1941'], 540, 760, t, S('s1') - .1, Ee('s1') + .6, 120) +
-    (t < S('s3') ? tag('OAHU, HAWAII', t, S('s2') + .2) : '') +
-    label('6 CARRIERS', 540, 1180, t, wt('s4', 'six') + .2, 3, 46, S('s5') - .1) +
-    label('183 PLANES', 540, 640, t, wt('s5', 'eighty'), -3, 52, S('s6') - .1) +
-    card('THE FIRST AMERICAN SHOTS', 'OF THE PACIFIC WAR', t, wt('s6', 'first') - .1, wt('s6', 'shots'), 540, 520, 54, S('s7') - .15) +
-    label('OPANA POINT RADAR', 540, 560, t, wt('s8', 'radar'), -3, 44, wt('s8', 'sees') - .1) +
-    label('EXPECTED: B-17s FROM CALIFORNIA', 540, 1250, t, wt('s10', 'american'), 2, 36, S('s11') - .1) +
-    label('BATTLESHIP ROW', 540, 560, t, wt('s13', 'eight'), -3, 50, wt('s13', 'sailors') - .1) +
-    label('MORNING COLORS · 8:00', 540, 1250, t, wt('s13', 'colors'), 3, 40, S('s14') - .1);
+  return title([T('title1'), T('title2')], 540, 760, t, S('s1') - .1, Ee('s1') + .6, 120) +
+    (t < S('s3') ? tag(T('oahu'), t, S('s2') + .2) : '') +
+    label(T('carriers'), 540, 1180, t, C('s4_six') + .2, 3, 46, S('s5') - .1) +
+    label(T('planes183'), 540, 640, t, C('s5_eighty'), -3, 52, (HAS_W ? S('w1') : S('s6')) - .1) +
+    card(T('firstShots1'), T('firstShots2'), t, C('s6_first') - .1, C('s6_shots'), 540, 520, 50, S('s7') - .15) +
+    label(T('opana'), 540, 560, t, C('s8_radar'), -3, 44, C('s8_sees') - .1) +
+    label(T('expected'), 540, 1250, t, C('s10_american'), 2, 36, S('s11') - .1) +
+    label(T('bsrow'), 540, 560, t, C('s13_eight'), -3, 50, C('s13_sailors') - .1) +
+    (HAS_W ? weaponOverlays(t) : '') +
+    label(T('colors'), 540, 1250, t, C('s13_colors'), 3, 40, S('s14') - .1);
 }
 
+function weaponOverlays(t) {
+  const sh = n => SHOTS.find(s => s.name === n), on = n => t >= sh(n).t0 && t < sh(n).t1;
+  let o = '';
+  if (on('zero')) o += tag(T('zero'), t, sh('zero').t0 + .1) + label(T('zeroN'), 540, 400, t, sh('zero').t0 + .4, -3, 70) + label(T('cannon'), 540, 1150, t, C('w2_canhoes'), 3, 42) + label(T('mg'), 540, 1260, t, C('w2_metralhadoras'), -2, 42);
+  if (on('val')) o += tag(T('val'), t, sh('val').t0 + .1) + label(T('valN'), 540, 400, t, sh('val').t0 + .4, -3, 70) + label(T('gear'), 300, 560, t, sh('val').t0 + 1.2, 3, 34) + label(T('bomb250'), 540, 1150, t, C('w3_bomba'), 3, 44) + label(T('crutch'), 540, 1260, t, C('w3_barriga') + .2, -2, 30);
+  if (on('kate')) o += tag(T('kate'), t, sh('kate').t0 + .1) + label(T('kateN'), 540, 400, t, sh('kate').t0 + .4, -3, 70) + label(T('type91'), 540, 1180, t, C('w4_torpedo') + .3, 3, 44) + italic(T('low'), 540, 1300, t, sh('kate').t0 + 1, 46);
+  if (on('kate-bombers') || on('apbomb')) o += tag(T('kate2'), t, sh('kate-bombers').t0 + .1) + label(T('kate2N'), 540, 400, t, sh('kate-bombers').t0 + .4, -3, 70, sh('apbomb').t0 - .1);
+  if (on('kate-bombers')) o += label(T('bomb800'), 540, 1180, t, C('w5_oitocentos'), 3, 44);
+  return o;
+}
 // ═════════════════════════ montagem do quadro ═════════════════════════
 const BUILT = {};
 const svg = document.getElementById('v');
@@ -705,10 +919,18 @@ function collectSFX() {
   sfx('engines', sh('clouds').t0, sh('harbor').t0 - sh('clouds').t0 + .5); sfx('wind', ...span('clouds'));
   sfx('waves', sh('harbor').t0, sh('cockpit').t0 - sh('harbor').t0); sfx('bugle', sh('colors').t0 + .6);
   sfx('engines', ...span('cockpit')); [0, .5, 1.0].forEach(k => sfx('morse', sh('cockpit').t0 + k + .2));
-  [S('s15') + .02, wt('s15', 'tora', 1), wt('s15', 'tora', 2)].forEach(x => sfx('impact', x));
+  [S('s15') + .02, C('s15_tora', 1), C('s15_tora', 2)].forEach(x => sfx('impact', x));
   sfx('dive', sh('dive').t0, sh('dive').t1 - sh('dive').t0); sfx('siren', sh('dive').t0 + .8, TL.duration - sh('dive').t0 - .8);
-  sfx('teletype', sh('message').t0, 2.5); sfx('impact', wt('s16', 'air'));
+  sfx('teletype', sh('message').t0, 2.5); sfx('impact', C('s16_air'));
   for (let k = 0; S('s3') + k < TL.duration - 2; k++) sfx('tock', S('s3') + k);
+  if (HAS_W) {
+    sfx('impact', C('w1_misseis') + .35); ['w1_torpedos', 'w1_bombas', 'w1_metralhadoras'].forEach(k => sfx('pop', C(k)));
+    sfx('engines', sh('zero').t0, sh('torpedo').t0 - sh('zero').t0); sfx('wind', sh('zero').t0, sh('torpedo').t0 - sh('zero').t0);
+    sfx('gunburst', C('w2_canhoes') + .1); sfx('gunburst', C('w2_metralhadoras') + .1);
+    sfx('dive', sh('val').t0, sh('val').t1 - sh('val').t0); sfx('click', C('w3_bomba') + .5); sfx('whistle', C('w3_bomba') + .9);
+    sfx('click', C('w4_torpedo') + .35); sfx('splash', C('w4_torpedo') + 1.05);
+    sfx('waves', ...span('torpedo')); sfx('engines', ...span('kate-bombers')); sfx('wind', ...span('kate-bombers')); sfx('roomtone', ...span('apbomb'));
+  }
   return SFX;
 }
 window.renderAt = renderAt; window.getSFX = collectSFX; window.DURATION = TL.duration;

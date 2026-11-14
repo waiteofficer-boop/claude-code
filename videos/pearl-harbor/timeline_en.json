@@ -921,6 +921,138 @@
    ]
   }
  ],
- "strings": {},
- "cues": {}
+ "strings": {
+  "title1": "DECEMBER 7",
+  "title2": "1941",
+  "oahu": "OAHU, HAWAII",
+  "periscope": "a periscope?",
+  "miles230": "≈ 230 MILES",
+  "carriers": "6 CARRIERS",
+  "planes183": "183 PLANES",
+  "firstShots1": "THE FIRST AMERICAN SHOTS",
+  "firstShots2": "OF THE PACIFIC WAR",
+  "nobody": "…and nobody hurries",
+  "opana": "OPANA POINT RADAR",
+  "planes50": "50+ PLANES",
+  "miles130": "~130 MILES",
+  "expected": "EXPECTED: B-17s FROM CALIFORNIA",
+  "worry1": "“DON’T WORRY",
+  "worry2": "ABOUT IT.”",
+  "bsrow": "BATTLESHIP ROW",
+  "colors": "MORNING COLORS · 8:00",
+  "to": "“to… to… to…”",
+  "attack": "ATTACK",
+  "surprise": "surprise achieved"
+ },
+ "cues": {
+  "s10_american": [
+   "s10",
+   "american"
+  ],
+  "s11_about": [
+   "s11",
+   "about"
+  ],
+  "s12_seven": [
+   "s12",
+   "seven"
+  ],
+  "s13_colors": [
+   "s13",
+   "colors"
+  ],
+  "s13_eight": [
+   "s13",
+   "eight"
+  ],
+  "s13_sailors": [
+   "s13",
+   "sailors"
+  ],
+  "s14_attack": [
+   "s14",
+   "attack"
+  ],
+  "s14_seven": [
+   "s14",
+   "seven"
+  ],
+  "s15_tora": [
+   "s15",
+   "tora"
+  ],
+  "s16_air": [
+   "s16",
+   "air"
+  ],
+  "s16_message": [
+   "s16",
+   "message"
+  ],
+  "s16_seven": [
+   "s16",
+   "seven"
+  ],
+  "s3_periscope": [
+   "s3",
+   "periscope"
+  ],
+  "s4_six": [
+   "s4",
+   "six"
+  ],
+  "s5_eighty": [
+   "s5",
+   "eighty"
+  ],
+  "s5_one": [
+   "s5",
+   "one"
+  ],
+  "s5_six": [
+   "s5",
+   "six"
+  ],
+  "s6_fires": [
+   "s6",
+   "fires"
+  ],
+  "s6_first": [
+   "s6",
+   "first"
+  ],
+  "s6_shots": [
+   "s6",
+   "shots"
+  ],
+  "s6_six": [
+   "s6",
+   "six"
+  ],
+  "s7_slowly": [
+   "s7",
+   "slowly"
+  ],
+  "s8_radar": [
+   "s8",
+   "radar"
+  ],
+  "s8_sees": [
+   "s8",
+   "sees"
+  ],
+  "s8_seven": [
+   "s8",
+   "seven"
+  ],
+  "s9_fifty": [
+   "s9",
+   "fifty"
+  ],
+  "s9_thirty": [
+   "s9",
+   "thirty"
+  ]
+ },
+ "clockFmt": "en"
 }

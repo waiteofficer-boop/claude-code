@@ -239,6 +239,14 @@ def sfx(total, events):
         elif kind == "impact":
             n = int(2.0 * SR); tt = np.arange(n) / SR
             s = (np.sin(2 * np.pi * (48 * np.exp(-tt * 1.5) + 28) * tt) * 1.1 + _noise(rng, n, 30) * np.exp(-tt * 6)) * np.exp(-tt * 2.2) * .5
+        elif kind == "gunburst":  # rajada: estampidos curtos em sequência
+            s = np.zeros(int(1.3 * SR))
+            for k in range(14):
+                m = int(.07 * SR); u = np.arange(m) / SR; o = int(k * .075 * SR)
+                s[o:o + m] += (_noise(rng, m, 3) * 1.2 + np.sin(2 * np.pi * 110 * u)) * np.exp(-u * 55) * .35
+        elif kind == "whistle":  # bomba caindo
+            n = int(1.8 * SR); tt = np.arange(n) / SR; f = 1500 - 700 * tt / tt[-1]
+            s = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.clip(tt / .3, 0, 1) * np.clip((tt[-1] - tt) / .2, 0, 1) * .07
         elif kind == "tock":
             n = int(.06 * SR); tt = np.arange(n) / SR
             s = np.sin(2 * np.pi * 2400 * tt) * np.exp(-tt * 120) * .05
