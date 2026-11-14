@@ -25,6 +25,7 @@ Copie o exemplo mais próximo para `src/<nome>.jsx` e troque cenas, letreiros, c
 9. **Gancho de curiosidade** nos 3 primeiros segundos e promessa curta ("me dá X segundos"), depois etapas numeradas (etiqueta azul "01 Título" + contador "01 / 05") e fechamento com pergunta para comentar.
 10. **Paleta:** padrão é fundo papel claro + azul `#2c5bd8`. Se o usuário der uma marca, extraia a paleta da imagem e aplique em tudo (fundo, destaques, etiquetas, letreiros), mantendo o mesmo estilo de animação. Letreiro "de marca": tarja amarela com texto azul (frase curta) + tarja azul com texto branco em caixa alta (Montserrat 900), palavra-chave em amarelo, as tarjas entram com wipe da esquerda.
 11. **Fotos e gráficos** quando pedidos: fotos como recortes colados (borda branca, fita amarela, zoom lento); gráficos SVG animados com a fonte escrita no card.
+12. **Memes** quando pedidos: foto engraçada de licença livre do bicho do tema com texto clássico de meme (Anton, branco com contorno preto, em cima e embaixo), entra com `hit` por ~1,5–2,5 s num momento de piada e sai antes da próxima informação (`MEMES` no exemplo dos porcos). Nunca usar personagens com direitos autorais (ex.: Peppa) nem templates de meme com pessoas reais.
 
 ## Setup (sessão nova)
 

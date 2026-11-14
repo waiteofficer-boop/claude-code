@@ -5,6 +5,7 @@ import '@fontsource/manrope/700.css';
 import '@fontsource/manrope/800.css';
 import '@fontsource/montserrat/800.css';
 import '@fontsource/montserrat/900.css';
+import '@fontsource/anton/400.css';
 import T from './timeline-porcos.json';
 
 // ---------- paleta (marca) ----------
@@ -493,6 +494,38 @@ const Letreiro = ({k}) => {
   );
 };
 
+
+// ---------- memes de porquinho ----------
+const MEMES = () => ({
+  hook: [{src: 'img/meme-leitao.jpg', top: 'EU NUNCA SUEI', bottom: 'NA MINHA VIDA', at: sAt(1) + 26, out: sAt(2) - 2, x: 190, y: 1180, w: 700, h: 420, rot: 3}],
+  temp: [{src: 'img/meme-dormindo.jpg', top: 'EU NO VERÃO', bottom: 'ÀS 14H', at: sAt(9) + 34, out: stF('feed') - 12, x: 170, y: 1060, w: 740, h: 500, rot: -3}],
+  feed: [{src: 'img/meme-capim.jpg', top: 'SÓ UMA SALADINHA', bottom: 'HOJE TÁ CALOR', at: sAt(11) + 14, out: sAt(12) + 4, x: 170, y: 760, w: 740, h: 500, rot: 3}],
+  help: [{src: 'img/meme-focinho.jpg', top: 'SOMBRA E ÁGUA FRESCA', bottom: 'O RESTO É LUXO', at: sAt(13) + 48, out: stF('end') - 12, x: 170, y: 900, w: 740, h: 520, rot: -2.5}],
+});
+const MEME = MEMES();
+const MemeText = ({children, size}) => (
+  <div style={{fontFamily: 'Anton, Impact, sans-serif', fontSize: size, color: '#fff', textAlign: 'center', lineHeight: 1.02, letterSpacing: 1, WebkitTextStroke: '3px #000', paintOrder: 'stroke fill', textShadow: '0 0 6px #000, 3px 3px 0 #000, -3px 3px 0 #000, 3px -3px 0 #000, -3px -3px 0 #000'}}>{children}</div>
+);
+const Meme = ({m}) => {
+  const f = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  if (f < m.at || f > m.out + 8) return null;
+  const pin = spring({frame: f - m.at, fps, config: {damping: 16, stiffness: 200}});
+  const pout = interpolate(f, [m.out, m.out + 8], [1, 0], {...clamp, easing: Easing.in(Easing.cubic)});
+  const kb = interpolate(f, [m.at, m.out], [1.05, 1.15], clamp);
+  return (
+    <div style={{position: 'absolute', left: m.x, top: m.y, transform: `rotate(${m.rot}deg) scale(${(0.6 + 0.4 * pin) * pout})`, opacity: Math.min(1, pin * 2) * pout}}>
+      <div style={{background: '#fff', padding: 12, borderRadius: 8, boxShadow: '0 30px 60px rgba(0,0,0,.35)'}}>
+        <div style={{position: 'relative', width: m.w, height: m.h, overflow: 'hidden', background: '#000'}}>
+          <Img src={staticFile(m.src)} style={{width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${kb})`}} />
+          <div style={{position: 'absolute', top: 14, left: 16, right: 16}}><MemeText size={m.w * 0.105}>{m.top}</MemeText></div>
+          <div style={{position: 'absolute', bottom: 14, left: 16, right: 16}}><MemeText size={m.w * 0.105}>{m.bottom}</MemeText></div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ---------- efeitos sonoros ----------
 const buildSfx = () => {
   const E = [];
@@ -528,6 +561,7 @@ const buildSfx = () => {
   add('tape', stF('end'), 0.45); add('stamp', sAt(15) + 6, 0.7); add('oink', sAt(15) + 20, 0.55); add('sparkle', sAt(15) + 10, 0.3);
   // cta
   add('oink', stF('cta') + 2, 0.55); add('pop', sAt(16) + 8, 0.45); add('pop', sAt(16) + 40, 0.45); add('ding', sAt(16) + 50, 0.35);
+  Object.values(MEME).forEach((L) => L.forEach((m) => { add('hit', m.at, 0.55); add('pop_c', m.at, 0.4); add('whoosh', m.out - 2, 0.15); }));
   return E;
 };
 const SFX = buildSfx();
@@ -601,6 +635,7 @@ const SceneOnPaper = ({k}) => {
     <div style={{position: 'absolute', left: OFF[k][0], top: OFF[k][1], width: 1080, height: 1920}}>
       <Scene />
       <Letreiro k={k} />
+      {(MEME[k] || []).map((m, i) => <Meme key={i} m={m} />)}
       {chip && (
         <>
           <Pop at={st} style={{position: 'absolute', left: 70, top: 470}}>
