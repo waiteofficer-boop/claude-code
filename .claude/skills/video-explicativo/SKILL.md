@@ -5,7 +5,12 @@ description: Cria vídeos verticais (9:16, Shorts/TikTok/Reels) de curiosidade e
 
 # Vídeo explicativo animado (estilo "papel + letreiros")
 
-Pipeline 100% local, sem programas de edição. Exemplo completo e funcional: `template/src/exemplo-galinha.jsx` (vídeo "Por que a galinha cacareja depois de botar ovo?"). Copie-o e troque cenas, letreiros, câmera e sons.
+Pipeline 100% local, sem programas de edição. Dois exemplos completos e funcionais:
+
+- `template/src/exemplo-galinha.jsx`: "Por que a galinha cacareja depois de botar ovo?" (paleta padrão, personagem animado, ovo com física).
+- `template/src/exemplo-porcos-marca.jsx`: "Sabia que os porcos não suam?" (paleta de marca azul/amarelo, fotos coladas no papel, gráficos animados, letreiro em tarjas). Use este como base quando houver marca, fotos ou gráficos.
+
+Copie o exemplo mais próximo para `src/<nome>.jsx` e troque cenas, letreiros, câmera e sons.
 
 ## Regras de estilo (pedidas pelo usuário, não quebrar)
 
@@ -18,7 +23,8 @@ Pipeline 100% local, sem programas de edição. Exemplo completo e funcional: `t
 7. **Objetos com física.** Ex.: ovo caindo com gravidade, amassando no impacto, quique pequeno e sombra (`FallingEgg`).
 8. **Efeito sonoro em tudo que aparece:** pop em 4 tons nas bolinhas e cards, `popk` na palavra-chave, `whoosh` na passagem de cena, `hit`/`stamp` em impactos, `ding`/`sparkle` em conclusões, `type` em listas e sons do personagem (ex.: `cacarejo`, `co`, `cluck`).
 9. **Gancho de curiosidade** nos 3 primeiros segundos e promessa curta ("me dá X segundos"), depois etapas numeradas (etiqueta azul "01 Título" + contador "01 / 05") e fechamento com pergunta para comentar.
-10. **Paleta:** padrão é fundo papel claro + azul `#2c5bd8`. Se o usuário der uma marca, extraia a paleta da imagem e aplique em tudo (fundo, destaques, etiquetas, letreiros), mantendo o mesmo estilo de animação.
+10. **Paleta:** padrão é fundo papel claro + azul `#2c5bd8`. Se o usuário der uma marca, extraia a paleta da imagem e aplique em tudo (fundo, destaques, etiquetas, letreiros), mantendo o mesmo estilo de animação. Letreiro "de marca": tarja amarela com texto azul (frase curta) + tarja azul com texto branco em caixa alta (Montserrat 900), palavra-chave em amarelo, as tarjas entram com wipe da esquerda.
+11. **Fotos e gráficos** quando pedidos: fotos como recortes colados (borda branca, fita amarela, zoom lento); gráficos SVG animados com a fonte escrita no card.
 
 ## Setup (sessão nova)
 
@@ -27,7 +33,7 @@ P=<scratchpad>/studio && mkdir -p $P/src $P/public/sfx && cp -r .claude/skills/v
 cd $P && npm i --silent
 pip install -q faster-whisper yt-dlp piper-tts
 mkdir -p $P/voice && cd $P/voice && for f in pt_BR-faber-medium.onnx pt_BR-faber-medium.onnx.json; do curl -sSL -o $f "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/faber/medium/$f"; done
-python3 -I $P/scripts/sfx_base.py $P/public/sfx && python3 -I $P/scripts/sfx_extra.py $P/public/sfx
+for s in sfx_base sfx_extra sfx_animais; do python3 -I $P/scripts/$s.py $P/public/sfx; done
 ```
 
 - Navegador para renderizar: `--browser-executable=/opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell` (veja `ls /opt/pw-browsers`).
@@ -36,16 +42,16 @@ python3 -I $P/scripts/sfx_base.py $P/public/sfx && python3 -I $P/scripts/sfx_ext
 ## Fluxo
 
 1. **Pesquisar o tema** (WebSearch) e só afirmar o que tem fonte. Se a ciência não tem resposta fechada, dizer "hipóteses".
-2. **Roteiro** em frases curtas, cada uma com o id da cena: editar a lista `S` em `scripts/narracao.py` (`*palavra*` marca destaque). Rodar `python3 -I scripts/narracao.py <voz.onnx> <studio>/public` → gera `public/voz.wav` e `src/timeline.json` com o tempo de cada frase.
+2. **Roteiro** em frases curtas, cada uma com o id da cena, num JSON (veja `scripts/roteiro-exemplo-porcos.json`; `*palavra*` marca destaque). Rodar `python3 -I scripts/narracao.py <voz.onnx> roteiro.json public/<nome>/voz.wav src/timeline-<nome>.json` → gera a voz e o tempo de cada frase (imprime o índice e o início de cada frase para usar em `sAt(i)`).
 3. **Cenas**: um componente por cena (`SceneXxx`), posicionado em coordenadas 1080×1920; elementos entram com `<Pop at={frame}>`. Use `sAt(i)` (início da frase i) para sincronizar com a fala.
 4. **Letreiros** em `LETS`, **câmera** em `camKeys` + `OFF`, **sons** em `buildSfx`.
 5. **Prévia antes do render completo**: renderize quadros soltos (`npx remotion still ... --frame=N --scale=0.3`) e junte com `ffmpeg ... tile=6x2` para revisar. Corrija sobreposições e cortes.
-6. **Render completo em segundo plano** (`run_in_background`): `npx remotion render src/index.jsx <Id> out/video.mp4 --crf=22 --browser-executable=...` (~3 min para 50 s).
+6. **Render completo em segundo plano** (`run_in_background`): `npx remotion render src/<nome>.jsx <Id> out/video.mp4 --crf=22 --browser-executable=...` (~3 min para 50 s).
 7. Confira duração e alguns quadros com ffmpeg e envie o MP4 com SendUserFile.
 
 ## Fotos e gráficos
 
-- Fotos só de fontes com licença livre (Openverse/Wikimedia: CC0, domínio público ou CC BY com crédito). Guarde em `public/img/` e anote a licença; dê os créditos ao usuário.
+- Fotos só de fontes com licença livre. A API do Openverse funciona sem chave: `curl -s -A "edu-video-script/1.0" "https://api.openverse.org/v1/images/?q=<termo>&license=cc0,pdm,by&page_size=12"` (campos `url`, `license`, `creator`). As do USDA no Flickr são domínio público. Baixe numa pasta própria, monte uma folha de contato com ffmpeg para escolher, copie para `public/img/` e passe os créditos ao usuário. A API da Wikimedia costuma bloquear (429) por IP compartilhado.
 - Fotos entram como "recortes colados no papel" (borda branca, sombra, leve rotação) e podem ter zoom lento (Ken Burns).
 - Gráficos animados em SVG (barras crescendo, linha desenhando), só com números que tenham fonte.
 
