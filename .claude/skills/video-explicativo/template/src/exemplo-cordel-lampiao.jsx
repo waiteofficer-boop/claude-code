@@ -118,15 +118,62 @@ const Casa = ({x, y, s = 1}) => (
     <line x1="63" y1="-95" x2="63" y2="-61" stroke={INK} strokeWidth="4" />
   </g>
 );
-// chapéu de couro meia-lua com estrela
-const Hat = ({x = 0, y = 0, s = 1, color = INK}) => (
-  <g transform={`translate(${x} ${y}) scale(${s})`}>
-    <path d="M-185 40 Q-150 -150 0 -165 Q150 -150 185 40 Q130 -60 0 -70 Q-130 -60 -185 40 Z" fill={color} />
-    <path d="M-160 20 Q-125 -125 0 -140 Q125 -125 160 20" fill="none" stroke={PAPER} strokeWidth="5" strokeDasharray="14 8" />
-    <path d="M0 -128 L12 -98 L44 -98 L18 -80 L28 -50 L0 -68 L-28 -50 L-18 -80 L-44 -98 L-12 -98 Z" fill={PAPER} />
-    <path d="M-110 30 Q0 -10 110 30 L95 55 Q0 25 -95 55 Z" fill={color} />
-  </g>
-);
+// chapéu de couro meia-lua (origem = centro do rosto): copa + aba dobrada presa na frente + estrela
+const star = (cx, cy, r) => [...Array(10)].map((_, k) => {
+  const a = -Math.PI / 2 + (k * Math.PI) / 5, rr = k % 2 ? r * 0.42 : r;
+  return `${k ? 'L' : 'M'}${(cx + rr * Math.cos(a)).toFixed(1)} ${(cy + rr * Math.sin(a)).toFixed(1)}`;
+}).join(' ') + ' Z';
+const Hat = ({x = 0, y = 0, s = 1, color = INK}) => {
+  const det = color === INK ? PAPER : INK;
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      <path d="M-84 -34 Q-94 -150 0 -160 Q94 -150 84 -34 Q0 -56 -84 -34 Z" fill={color} />
+      <path d="M-166 -24 Q-150 -196 0 -212 Q150 -196 166 -24 Q120 -108 0 -118 Q-120 -108 -166 -24 Z" fill={color} />
+      <path d="M-166 -24 Q-120 -108 0 -118 Q120 -108 166 -24" fill="none" stroke={det} strokeWidth="7" />
+      <path d="M-145 -40 Q-130 -178 0 -192 Q130 -178 145 -40" fill="none" stroke={det} strokeWidth="5" strokeDasharray="14 8" />
+      {[-0.8, -0.45, 0.45, 0.8].map((t) => <circle key={t} cx={t * 130} cy={-146 + Math.abs(t) * 66} r="6" fill={det} />)}
+      <path d={star(0, -158, 28)} fill={det} />
+      <path d="M-88 -42 Q0 -66 88 -42 L86 -26 Q0 -50 -86 -26 Z" fill={color} stroke={det} strokeWidth="2" />
+      {[-60, -30, 0, 30, 60].map((cx) => <circle key={cx} cx={cx} cy={-45 + Math.abs(cx) * 0.12} r="4" fill={det} />)}
+    </g>
+  );
+};
+// sanfona em xilogravura: fole abre e fecha no ritmo da trilha (~96 BPM)
+const BEAT = 0.627;
+const Sanfona = ({x, y, s = 1, f, notes = false}) => {
+  const t = f / 30;
+  const open = 0.5 + 0.5 * Math.sin((2 * Math.PI * t) / (2 * BEAT));
+  const folds = 9, W = 120 + 90 * open, H = 220;
+  const fw = W / folds;
+  const tilt = (open - 0.5) * 6;
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      {notes && [0, 1, 2].map((i) => {
+        const ph = ((t / BEAT + i * 0.66) % 2) / 2;
+        return <text key={i} x={-40 + i * 50 + Math.sin(ph * 6 + i) * 18} y={-H / 2 - 30 - ph * 160} fontSize={56} fontFamily="serif" fill={i === 1 ? RED : INK} opacity={Math.sin(ph * Math.PI)} textAnchor="middle">{i % 2 ? '♫' : '♪'}</text>;
+      })}
+      <g transform={`rotate(${-tilt})`}>
+        <rect x={-W / 2 - 115} y={-H / 2} width="115" height={H} rx="10" fill={INK} />
+        <rect x={-W / 2 - 92} y={-H / 2 + 18} width="44" height={H - 36} fill={PAPER} />
+        {[...Array(9)].map((_, k) => <line key={k} x1={-W / 2 - 92} y1={-H / 2 + 18 + (k + 1) * ((H - 36) / 10)} x2={-W / 2 - 48} y2={-H / 2 + 18 + (k + 1) * ((H - 36) / 10)} stroke={INK} strokeWidth="3" />)}
+        {[...Array(5)].map((_, k) => <rect key={k} x={-W / 2 - 92} y={-H / 2 + 26 + k * 36} width="26" height="14" fill={INK} />)}
+        <path d={star(-W / 2 - 24, -H / 2 + 34, 14)} fill={RED} />
+      </g>
+      {[...Array(folds)].map((_, k) => (
+        <g key={k}>
+          <rect x={-W / 2 + k * fw} y={-H / 2 + 6} width={fw + 0.5} height={H - 12} fill={k % 2 ? RED : INK} />
+          <path d={`M${-W / 2 + k * fw} ${-H / 2 + 6} l${fw / 2} -10 l${fw / 2} 10 M${-W / 2 + k * fw} ${H / 2 - 6} l${fw / 2} 10 l${fw / 2} -10`} stroke={INK} strokeWidth="4" fill="none" />
+          <line x1={-W / 2 + k * fw} y1={-H / 2 + 6} x2={-W / 2 + k * fw} y2={H / 2 - 6} stroke={PAPER} strokeWidth="2.5" />
+        </g>
+      ))}
+      <g transform={`rotate(${tilt})`}>
+        <rect x={W / 2} y={-H / 2} width="100" height={H} rx="10" fill={INK} />
+        {[...Array(12)].map((_, k) => <circle key={k} cx={W / 2 + 28 + (k % 3) * 22} cy={-H / 2 + 34 + Math.floor(k / 3) * 44} r="8" fill={PAPER} />)}
+      </g>
+      <path d={`M${-W / 2 - 100} ${-H / 2} Q0 ${-H / 2 - 50} ${W / 2 + 90} ${-H / 2}`} stroke={OCHRE} strokeWidth="8" fill="none" />
+    </g>
+  );
+};
 const Lampiao = ({x, y, s = 1, f}) => {
   const blink = (Math.floor(f / 2) % 70) < 3;
   return (
@@ -147,7 +194,8 @@ const Lampiao = ({x, y, s = 1, f}) => {
       <path d="M0 5 L-10 35 L8 35" stroke={INK} strokeWidth="6" fill="none" />
       <path d="M-28 55 Q0 66 28 55" stroke={INK} strokeWidth="7" fill="none" />
       {[...Array(9)].map((_, i) => <circle key={i} cx={-40 + i * 10} cy={70 + (i % 2) * 6} r="2.5" fill={INK} />)}
-      <Hat x={0} y={-80} s={0.95} />
+      <path d="M-74 -28 Q-70 70 0 96 Q70 70 74 -28" stroke={INK} strokeWidth="4" fill="none" />
+      <Hat />
     </g>
   );
 };
@@ -326,7 +374,7 @@ const IlluE5 = ({f}) => {
       {bangs.map((t, i) => st2(f) >= t && st2(f) < t + 6 ? <Burst key={i} x={i % 2 ? 330 : 580} y={540} r={45} /> : null)}
       {f >= sAt(15) + 6 && (
         <g opacity={popIn(f, sAt(15) + 6)}>
-          <Hat x={360} y={720} s={0.38} color={PAPER} />
+          <Hat x={360} y={790} s={0.42} color={PAPER} />
           <g transform="translate(540 720)">{[0, 72, 144, 216, 288].map((r) => <ellipse key={r} cx="0" cy="-14" rx="10" ry="15" fill={RED} transform={`rotate(${r})`} />)}<circle r="7" fill={OCHRE} /></g>
         </g>
       )}
@@ -364,7 +412,7 @@ const IlluE6 = ({f}) => {
             <g key={i} transform={`translate(${130 + i * 215} ${548 + Math.abs(i - 1.5) * -12}) rotate(${Math.sin(st2(f) / 12 + i) * 4})`} opacity={popIn(f, sAt(18) + i * 5)}>
               <rect x="-8" y="-16" width="16" height="32" fill={OCHRE} stroke={INK} strokeWidth="3" />
               <rect x="-80" y="10" width="160" height="230" fill={PAPER_D} stroke={INK} strokeWidth="6" />
-              <Hat x={0} y={150} s={0.32} />
+              <Hat x={0} y={170} s={0.36} />
               <text y="215" textAnchor="middle" fontFamily={TITLE} fontSize="22" fill={INK}>{['LAMPIÃO', 'CANGAÇO', 'SERTÃO', 'MARIA'][i]}</text>
             </g>
           ))}
@@ -406,7 +454,12 @@ const Page = ({k, f}) => {
   return (
     <div style={{position: 'absolute', inset: 0}}>
       <div style={{position: 'absolute', left: 30, right: 30, top: 34, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', borderTop: `6px solid ${INK}`, borderBottom: `6px solid ${INK}`}}>
-        <span style={{fontFamily: TITLE, fontSize: 64, color: INK, transform: `scale(${1.6 - 0.6 * popIn(f, a + 4, 6)})`, opacity: popIn(f, a + 4, 6), display: 'inline-block'}}>{PAGES[k]}</span>
+        {[0, 1].map((side) => (
+          <svg key={side} width="96" height="80" viewBox="-240 -180 480 360" style={{position: 'absolute', top: 18, [side ? 'right' : 'left']: 4}}>
+            <Sanfona x={0} y={0} s={1} f={f + side * 9} />
+          </svg>
+        ))}
+        <span style={{fontFamily: TITLE, fontSize: PAGES[k].length > 15 ? 54 : 64, color: INK, transform: `scale(${1.6 - 0.6 * popIn(f, a + 4, 6)})`, opacity: popIn(f, a + 4, 6), display: 'inline-block'}}>{PAGES[k]}</span>
       </div>
       <svg width="880" height="821" viewBox="0 0 900 840" style={{position: 'absolute', left: 30, top: 175, border: `6px solid ${INK}`, background: PAPER}}>
         <Ink f={f}><Illu f={f} /></Ink>
@@ -423,7 +476,7 @@ const Capa = ({f}) => (
         <Sun cx={450} cy={330} r={150} rot={st2(f) * 0.3} />
         <Ground y={760} h={920} />
         <Mandacaru x={110} y={790} s={0.9} />
-        <Mandacaru x={800} y={800} s={0.7} />
+        <Sanfona x={725} y={700} s={0.8} f={f} notes />
         <g transform={`translate(0 ${(1 - popIn(f, 6, 12)) * 200})`}><Lampiao x={450} y={470} s={1.0} f={f} /></g>
       </Ink>
     </svg>
@@ -440,8 +493,9 @@ const Cta = ({f}) => {
     <div style={{position: 'absolute', inset: 0}}>
       <svg width="880" height="700" viewBox="0 0 900 700" style={{position: 'absolute', left: 30, top: 120}}>
         <Ink f={f}>
-          <Sun cx={450} cy={300} r={110} rot={st2(f) * 0.3} />
-          <Hat x={450} y={560} s={1.2} />
+          <Sun cx={450} cy={210} r={95} rot={st2(f) * 0.3} />
+          <Hat x={450} y={450} s={1.05} />
+          <Sanfona x={450} y={590} s={0.5} f={f} notes />
         </Ink>
       </svg>
       {[['HERÓI?', INK, -6, 140, 860, a + 4], ['VILÃO?', RED, 5, 470, 1010, a + 20]].map(([t, c, rot, x, y, at]) => (
@@ -489,7 +543,7 @@ const Frame = () => {
   const p = prev ? interpolate(f, [stF(cur) - 2, stF(cur) + FLIP], [0, 1], {...clamp, easing: Easing.inOut(Easing.cubic)}) : 1;
   const musicVol = (fr) => {
     const e5 = fr >= stF('e5') && fr < stF('e6');
-    return (e5 ? 0.07 : 0.2) * interpolate(fr, [DUR - 60, DUR], [1, 0], clamp);
+    return (e5 ? 0.09 : 0.2) * interpolate(fr, [0, 12, DUR - 75, DUR], [0, 1, 1, 0], clamp);
   };
   return (
     <AbsoluteFill style={{background: '#3a2a18', perspective: 2600, overflow: 'hidden'}}>
@@ -505,7 +559,7 @@ const Frame = () => {
       {prev && p < 1 && <Folheto k={prev} f={f} flip={p} />}
       <AbsoluteFill style={{backgroundImage: NOISE, opacity: 0.55, mixBlendMode: 'multiply', pointerEvents: 'none'}} />
       <Audio src={staticFile('cordel/voz.wav')} />
-      <Audio src={staticFile('cordel/baiao.wav')} volume={musicVol} />
+      <Audio src={staticFile('cordel/trilha.mp3')} volume={musicVol} />
       {SFX.map(([n, fr, v], i) => <Sequence key={i} from={fr} durationInFrames={90}><Audio src={staticFile(`cordel/${n}.wav`)} volume={v} /></Sequence>)}
     </AbsoluteFill>
   );

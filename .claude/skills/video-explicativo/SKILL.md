@@ -40,7 +40,9 @@ Para temas brasileiros históricos ou de folclore (ex.: "A vida e a morte de Lam
 - desenhos em SVG no estilo xilogravura (papel `#efe0bf`, tinta `#1b1611`, vermelho `#b5291c`, ocre `#d9932b`), sol de raios, mandacaru, chapéu de couro meia-lua com estrela;
 - animação a 15 qps (`st2`) + bordas que "fervem" (filtro de turbulência com semente trocando a cada 3 quadros);
 - narração em sextilhas (versos de 7 sílabas, rima nos versos 2, 4 e 6), cada frase do roteiro = 2 versos; os versos aparecem "impressos" palavra a palavra no folheto (aqui o texto faz parte da estética);
-- fundo de baião sintetizado (`scripts/cordel_audio.py <pasta> <segundos>`: zabumba, triângulo, sanfona) a ~20% de volume, mais baixo em cenas tensas; sons de página, carimbo, vento e tiros abafados;
+- **trilha: use a música que o usuário enviar** (ele achou o baião sintetizado ruim). Copie para `public/cordel/trilha.mp3`, volume ~0.2 (0.09 em cenas tensas) com fade no início e no fim; meça o BPM (autocorrelação da energia) para sincronizar animações. `scripts/cordel_audio.py` fica só para os efeitos (página, carimbo, vento, tiros abafados);
+- **sanfona animada** (`Sanfona`): fole abrindo e fechando no ritmo da trilha (`BEAT` = 60/BPM), notas ♪ subindo; grande na capa e no final, pequenas dos dois lados da faixa de título;
+- **chapéu de couro** (`Hat`, origem no centro do rosto): copa cobrindo a cabeça + aba meia-lua presa na frente com contorno entalhado na borda interna + estrela + tachas + barbicacho. Nunca desenhar a aba solta acima da cabeça (o usuário apontou como erro);
 - fatos históricos: confirme os fatos, mas **não diga anos** nos versos nem nos títulos (pedido do usuário; ex.: "numa noite de julho" em vez de "em julho de trinta e oito"). Violência sem detalhes gráficos.
 - Títulos em Rye, versos em IM Fell English. Não copiar a arte da abertura da novela "Cordel Encantado": só a estética da xilogravura.
 
