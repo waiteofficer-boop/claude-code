@@ -1,6 +1,7 @@
 """Gera narração (Piper, local), timeline com tempo por palavra, trilha e SFX.
 
-Uso: python3 build_audio.py <script_xx.json> <voz.onnx> <pasta_saida> [fator_de_tom=1.0]
+Uso: python3 build_audio.py <script_xx.json> <voz.onnx> <pasta_saida> [fator_de_tom=1.0] [ritmo=1.08] [estilo]
+  ritmo > 1 fala mais devagar; estilo "idoso" = tremor leve, rouquidão e menos brilho.
   fator_de_tom < 1 deixa a voz mais grave sem mudar a duração (ex.: 0.92).
 Saídas: narration.wav, music.wav, timeline.json; e timeline_<lang>.js/.json ao lado deste arquivo.
 SFX:  python3 build_audio.py --sfx sfx_events.json saida.wav duracao
@@ -12,15 +13,26 @@ HERE = pathlib.Path(__file__).parent
 SR = 22050
 
 
-def synth(model, text, out, pitch=1.0):
+def synth(model, text, out, pitch=1.0, length=1.08, style=""):
     subprocess.run([sys.executable, "-m", "piper", "-m", model, "-f", out,
-                    "--length-scale", "1.08", "--sentence-silence", "0.25"],
+                    "--length-scale", str(length), "--sentence-silence", "0.35" if style else "0.25"],
                    input=text.encode(), check=True, capture_output=True)
+    af = []
     if pitch != 1.0:  # abaixa/sobe o tom mantendo a duração
+        af.append(f"asetrate={SR}*{pitch},aresample={SR},atempo={1 / pitch:.5f}")
+    if style == "idoso":  # voz de senhor: tremor (vibrato + tremolo lentos), menos agudo, mais peito
+        af.append("vibrato=f=5.2:d=0.09,tremolo=f=4.6:d=0.12,lowpass=f=5200,bass=g=3:f=120,equalizer=f=1800:t=q:w=1.2:g=-2")
+    if af:
         tmp = out + ".raw.wav"; pathlib.Path(out).rename(tmp)
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", tmp, "-af",
-                        f"asetrate={SR}*{pitch},aresample={SR},atempo={1 / pitch:.5f}", "-ar", str(SR), "-ac", "1", out], check=True)
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", tmp, "-af", ",".join(af), "-ar", str(SR), "-ac", "1", out], check=True)
         pathlib.Path(tmp).unlink()
+    if style == "idoso":  # rouquidão: ruído soprado que segue o envelope da própria voz
+        with wave.open(out) as w:
+            a = np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16).astype(np.float32) / 32768
+        env = np.convolve(np.abs(a), np.ones(400) / 400, "same")
+        rng = np.random.default_rng(len(text))
+        hiss = np.convolve(rng.standard_normal(len(a)), [1, -0.6], "same") * env * 0.35
+        write(out, a + hiss)
     with wave.open(out) as w:
         a = np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16).astype(np.float32) / 32768
         return a, w.getframerate()
@@ -174,12 +186,12 @@ def sfx(total, events):
     return out
 
 
-def main(script, model, outdir, pitch=1.0):
+def main(script, model, outdir, pitch=1.0, length=1.08, style=""):
     outdir = pathlib.Path(outdir); outdir.mkdir(parents=True, exist_ok=True)
     cfg = json.loads(pathlib.Path(script).read_text())
     pieces, segs, t = [np.zeros(int(cfg["lead_in"] * SR))], [], cfg["lead_in"]
     for s in cfg["segments"]:
-        a, sr = synth(model, s["text"], str(outdir / f"{s['id']}.wav"), pitch)
+        a, sr = synth(model, s["text"], str(outdir / f"{s['id']}.wav"), pitch, length, style)
         assert sr == SR, sr
         a = trim(a); d = len(a) / SR
         segs.append({"id": s["id"], "text": s["text"], "s": round(t, 3), "e": round(t + d, 3),
@@ -205,4 +217,5 @@ if __name__ == "__main__":
         ev = json.loads(pathlib.Path(sys.argv[2]).read_text())
         write(sys.argv[3], sfx(float(sys.argv[4]), [(e["k"], e["t"], e.get("d", 0)) for e in ev]))
     else:
-        main(sys.argv[1], sys.argv[2], sys.argv[3], float(sys.argv[4]) if len(sys.argv) > 4 else 1.0)
+        a = sys.argv + [None] * 3
+        main(a[1], a[2], a[3], float(a[4] or 1.0), float(a[5] or 1.08), a[6] or "")
