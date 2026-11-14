@@ -30,7 +30,8 @@ Copie o exemplo mais próximo para `src/<nome>.jsx` e troque cenas, letreiros, c
 12. **Volume:** pops/bolinhas BAIXOS (o usuário reclamou): o `add()` do exemplo YTPBR já multiplica pops e `popk` por 0.35. Som do personagem/animal em toda cena (ex.: `snort`, `grunt`, `oink`, `oink_hi`, `squeal`, `laugh`).
 13. **Efeito lupa (olho de peixe)**: animal "cheirando a câmera". Pré-calcule com `scripts/lupa.py <foto> img/lupa-<nome> <aspecto w/h> <cx> <cy> <raio> <força>` (16 níveis, sem serrilhado) e passe `lupa={{name, at, dur}}` para `<Photo>`, com som de fungada (`snort`). Não use `feDisplacementMap` do navegador: fica em blocos (8 bits).
 14. **Mistura YTPBR** (só se o usuário pedir): gaguejada no áudio (`~palavra` no roteiro → "su-su-su-suando") com zoom de soco a cada repetição; "imagem frita" (contraste/saturação estourados + vinheta vermelha + emoji 🤨😳💀🗿) com `boom`; `<Freeze>` + inversão de cor + `scratch` na virada; meme entra esticando com `boing`; `airhorn` no perigo. Usar 3–5 momentos, não o vídeo inteiro (lista `FX`).
-15. **Memes** quando pedidos (poucos: o usuário pediu para reduzir; 2 por vídeo é um bom limite): foto engraçada de licença livre do bicho do tema com texto clássico de meme (Anton, branco com contorno preto, em cima e embaixo), entra com `hit` por ~1,5–2,5 s num momento de piada e sai antes da próxima informação (`MEMES` no exemplo dos porcos). Nunca usar personagens com direitos autorais (ex.: Peppa) nem templates de meme com pessoas reais.
+15. **Memes em vídeo**: quando pedirem "vídeo de meme" e não houver clipe real, anime o meme a partir da foto (`anim` no exemplo em inglês): `snore` (respira + "Z" subindo + som `snore`), `chew` (mastiga + `chew`), `dramatic` (3 zooms secos no rosto + vinheta + `dramatic` dun-dun-duuun); barra de progresso vermelha embaixo para parecer clipe. Sons longos precisam de `durationInFrames` ≥ 75 na `<Sequence>`.
+16. **Memes** quando pedidos (poucos: o usuário pediu para reduzir; 2–3 por vídeo é o limite): foto engraçada de licença livre do bicho do tema com texto clássico de meme (Anton, branco com contorno preto, em cima e embaixo), entra com `hit` por ~1,5–2,5 s num momento de piada e sai antes da próxima informação (`MEMES` no exemplo dos porcos). Nunca usar personagens com direitos autorais (ex.: Peppa) nem templates de meme com pessoas reais.
 
 ## Voz
 
@@ -45,7 +46,7 @@ P=<scratchpad>/studio && mkdir -p $P/src $P/public/sfx && cp -r .claude/skills/v
 cd $P && npm i --silent
 pip install -q faster-whisper yt-dlp piper-tts edge-tts
 mkdir -p $P/voice && cd $P/voice && for f in pt_BR-faber-medium.onnx pt_BR-faber-medium.onnx.json; do curl -sSL -o $f "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/faber/medium/$f"; done
-for s in sfx_base sfx_extra sfx_animais sfx_ytpbr; do python3 -I $P/scripts/$s.py $P/public/sfx; done
+for s in sfx_base sfx_extra sfx_animais sfx_ytpbr sfx_meme; do python3 -I $P/scripts/$s.py $P/public/sfx; done
 ```
 
 - Navegador para renderizar: `--browser-executable=/opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell` (veja `ls /opt/pw-browsers`).
@@ -69,7 +70,7 @@ for s in sfx_base sfx_extra sfx_animais sfx_ytpbr; do python3 -I $P/scripts/$s.p
 
 ## Mídia externa (vídeo e som reais)
 
-- Deste servidor, Freesound responde 403, Wikimedia (API e upload) costuma dar 429 por IP compartilhado e o Internet Archive raramente tem licença clara. Não forçar Referer nem contornar bloqueios. Peça ao usuário para baixar no celular (pixabay.com/videos, pexels.com/videos, pixabay.com/sound-effects) e enviar os arquivos; encaixe em `public/video/` (via `<OffthreadVideo>`) e `public/sfx/`.
+- Wikimedia Commons tem vídeos livres de animais (busca: `list=search&srsearch=<termo> filetype:video&srnamespace=6`; licença/URL: `prop=imageinfo&iiprop=url|size|extmetadata`), mas o download em `upload.wikimedia.org` costuma dar 429 para este IP. Deste servidor, Freesound responde 403, Wikimedia (API e upload) costuma dar 429 por IP compartilhado e o Internet Archive raramente tem licença clara. Não forçar Referer nem contornar bloqueios. Peça ao usuário para baixar no celular (pixabay.com/videos, pexels.com/videos, pixabay.com/sound-effects) e enviar os arquivos; encaixe em `public/video/` (via `<OffthreadVideo>`) e `public/sfx/`.
 
 ## Referências do YouTube
 

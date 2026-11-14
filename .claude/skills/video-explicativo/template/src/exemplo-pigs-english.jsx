@@ -510,8 +510,9 @@ const Letreiro = ({k}) => {
 
 // ---------- memes de porquinho ----------
 const MEMES = () => ({
-  mud: [{src: 'img/meme-dormindo.jpg', top: 'ME IN SUMMER', bottom: 'AT 2 PM', at: sAt(7) + 18, out: stF('temp') - 12, x: 170, y: 760, w: 740, h: 500, rot: -3}],
-  feed: [{src: 'img/meme-capim.jpg', top: 'JUST A SALAD', bottom: 'IT’S TOO HOT', at: sAt(11) + 30, out: sAt(12) + 8, x: 170, y: 760, w: 740, h: 500, rot: 3}],
+  mud: [{src: 'img/meme-dormindo.jpg', top: 'ME IN SUMMER', bottom: 'AT 2 PM', anim: 'snore', at: sAt(7) + 18, out: stF('temp') - 12, x: 170, y: 760, w: 740, h: 500, rot: -3}],
+  temp: [{src: 'img/focinho.jpg', top: 'WHEN IT HITS', bottom: '81 °F', anim: 'dramatic', focus: '56% 48%', at: sAt(9) + 34, out: stF('feed') - 10, x: 170, y: 1000, w: 740, h: 520, rot: -2}],
+  feed: [{src: 'img/meme-capim.jpg', top: 'JUST A SALAD', bottom: 'IT’S TOO HOT', anim: 'chew', at: sAt(11) + 30, out: sAt(12) + 8, x: 170, y: 760, w: 740, h: 500, rot: 3}],
 });
 const MEME = MEMES();
 const MemeText = ({children, size}) => (
@@ -524,11 +525,31 @@ const Meme = ({m}) => {
   const pin = spring({frame: f - m.at, fps, config: {damping: 16, stiffness: 200}});
   const pout = interpolate(f, [m.out, m.out + 8], [1, 0], {...clamp, easing: Easing.in(Easing.cubic)});
   const kb = interpolate(f, [m.at, m.out], [1.05, 1.15], clamp);
+  const t = f - m.at;
+  // animação de "meme em vídeo"
+  let tf = `scale(${kb})`, origin = '50% 50%', filt;
+  if (m.anim === 'snore') tf = `scale(${kb}) scaleY(${1 + 0.02 * Math.sin(t / 8)}) translateY(${Math.sin(t / 8) * 4}px)`;
+  if (m.anim === 'chew') { tf = `scale(${kb}) scaleY(${1 - 0.04 * Math.abs(Math.sin(t * 0.5))}) rotate(${Math.sin(t * 0.5) * 0.8}deg)`; origin = '50% 100%'; }
+  if (m.anim === 'dramatic') {
+    const z = t < 9 ? 1.02 : t < 18 ? 1.5 : 2.2;
+    tf = `scale(${z})`; origin = m.focus || '50% 50%';
+    filt = t >= 18 ? 'contrast(1.25) saturate(.55)' : undefined;
+  }
+  const dur = Math.max(1, m.out - m.at);
   return (
     <div style={{position: 'absolute', left: m.x, top: m.y, transform: `rotate(${m.rot}deg) scale(${(0.6 + 0.4 * pin) * pout})`, opacity: Math.min(1, pin * 2) * pout}}>
       <div style={{background: '#fff', padding: 12, borderRadius: 8, boxShadow: '0 30px 60px rgba(0,0,0,.35)'}}>
         <div style={{position: 'relative', width: m.w, height: m.h, overflow: 'hidden', background: '#000'}}>
-          <Img src={staticFile(m.src)} style={{width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${kb})`}} />
+          <Img src={staticFile(m.src)} style={{width: '100%', height: '100%', objectFit: 'cover', transform: tf, transformOrigin: origin, filter: filt}} />
+          {m.anim === 'dramatic' && t >= 18 && <div style={{position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,.7) 100%)'}} />}
+          {m.anim === 'snore' && [0, 1, 2].map((i) => {
+            const z = ((t + i * 14) % 42) / 42;
+            return <div key={i} style={{position: 'absolute', left: m.w * 0.55 + z * 90 + i * 20, top: m.h * 0.55 - z * 200, fontFamily: 'Anton, Impact, sans-serif', fontSize: 44 + i * 16, color: '#fff', WebkitTextStroke: '2px #000', opacity: Math.sin(z * Math.PI)}}>Z</div>;
+          })}
+          {/* aparência de clipe: ▶ + barra de progresso */}
+          <div style={{position: 'absolute', left: 16, bottom: 6, right: 16, height: 6, background: 'rgba(255,255,255,.35)', borderRadius: 3}}>
+            <div style={{width: `${Math.min(100, (t / dur) * 100)}%`, height: '100%', background: '#ff3b30', borderRadius: 3}} />
+          </div>
           <div style={{position: 'absolute', top: 14, left: 16, right: 16}}><MemeText size={m.w * 0.105}>{m.top}</MemeText></div>
           <div style={{position: 'absolute', bottom: 14, left: 16, right: 16}}><MemeText size={m.w * 0.105}>{m.bottom}</MemeText></div>
         </div>
@@ -576,12 +597,16 @@ const buildSfx = () => {
   add('tape', stF('end'), 0.45); add('stamp', sAt(15) + 6, 0.7); add('oink', sAt(15) + 20, 0.55); add('sparkle', sAt(15) + 10, 0.3);
   // cta
   add('oink', stF('cta') + 2, 0.55); add('pop', sAt(16) + 8, 0.45); add('pop', sAt(16) + 40, 0.45); add('ding', sAt(16) + 50, 0.35);
-  Object.values(MEME).forEach((L) => L.forEach((m) => { add('hit', m.at, 0.55); add('pop_c', m.at, 0.4); add('whoosh', m.out - 2, 0.15); }));
+  Object.values(MEME).forEach((L) => L.forEach((m) => {
+    if (m.anim === 'dramatic') add('dramatic', m.at, 0.7);
+    else { add('hit', m.at, 0.5); add(m.anim === 'snore' ? 'snore' : 'chew', m.at + 3, 0.8); }
+    add('whoosh', m.out - 2, 0.15);
+  }));
   order.slice(1).forEach((k, i) => add(['snort', 'grunt', 'oink', 'snort', 'grunt', 'oink', 'grunt'][i % 7], stF(k) + 14, 0.6));
   return E;
 };
 const SFX = buildSfx();
-const Sfx = () => <>{SFX.map((e, i) => <Sequence key={i} from={e.frame} durationInFrames={45}><Audio src={staticFile(`sfx/${e.name}.wav`)} volume={e.vol} /></Sequence>)}</>;
+const Sfx = () => <>{SFX.map((e, i) => <Sequence key={i} from={e.frame} durationInFrames={75}><Audio src={staticFile(`sfx/${e.name}.wav`)} volume={e.vol} /></Sequence>)}</>;
 
 const SCENES = {hook: SceneHook, glands: SceneGlands, mud: SceneMud, temp: SceneTemp, feed: SceneFeed, help: SceneHelp, end: SceneEnd, cta: SceneCta};
 
