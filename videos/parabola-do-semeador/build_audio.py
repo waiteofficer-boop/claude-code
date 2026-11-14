@@ -75,11 +75,55 @@ def music(total):
     return out * swell * fade * 0.5
 
 
+def _noise(rng, n, smooth):
+    return np.convolve(rng.standard_normal(n), np.ones(smooth) / smooth, "same")
+
+
+def _bed(kind, d, rng):
+    """Ambiências longas (com fade de entrada/saída)."""
+    n = int(d * SR); tt = np.arange(n) / SR
+    if kind == "crickets":
+        s = np.zeros(n)
+        for f0, rate, ph in ((4300, 2.6, 0), (4700, 3.1, 1.3), (3900, 2.2, 2.1)):
+            gate = (np.sin(2 * np.pi * rate * tt + ph) > .55) * (0.5 + 0.5 * np.sin(2 * np.pi * 30 * tt) > .2)
+            s += np.sin(2 * np.pi * f0 * tt) * gate * .018
+    elif kind == "flame":
+        s = _noise(rng, n, 6) * (0.4 + 0.6 * np.abs(_noise(rng, n, 4000)) * 8) * .05
+    elif kind == "waves":
+        swell = 0.5 + 0.5 * np.sin(2 * np.pi * tt / 3.4) ** 2
+        s = _noise(rng, n, 40) * swell * .45 + _noise(rng, n, 8) * swell ** 3 * .12
+    elif kind == "crowd":
+        s = sum(_noise(rng, n, 30) * np.sin(2 * np.pi * f * tt) for f in (180, 240, 310)) * .25 + _noise(rng, n, 60) * .3
+        s *= 0.6 + 0.4 * np.sin(2 * np.pi * tt / 2.3)
+    elif kind == "wind":
+        gust = 0.35 + 0.65 * (0.5 + 0.5 * np.sin(2 * np.pi * tt / 6.3) * np.sin(2 * np.pi * tt / 2.9))
+        s = _noise(rng, n, 120) * gust * 1.1
+    elif kind == "sizzle":
+        s = _noise(rng, n, 2) * np.linspace(0, 1, n) ** 2 * .05
+    elif kind == "creak":
+        f = 90 + 60 * np.sin(2 * np.pi * 1.7 * tt)
+        s = np.sign(np.sin(2 * np.pi * np.cumsum(f) / SR)) * _noise(rng, n, 200) * 2 * .08
+    elif kind == "rustle":
+        s = _noise(rng, n, 5) * (0.5 + 0.5 * np.sin(2 * np.pi * tt / 1.9)) * .07
+    elif kind == "drone":
+        s = sum(np.sin(2 * np.pi * f * tt) for f in (55, 82.4, 110.2)) * .05 * (0.8 + 0.2 * np.sin(2 * np.pi * tt / 5))
+    else:
+        return None
+    fade = np.clip(tt / .6, 0, 1) * np.clip((d - tt) / .6, 0, 1)
+    return s * fade
+
+
 def sfx(total, events):
     out = np.zeros(int(total * SR))
     rng = np.random.default_rng(7)
-    for kind, at in events:
+    for ev in events:
+        kind, at, d = ev if len(ev) == 3 else (*ev, 0)
         i = int(at * SR)
+        if d:
+            s = _bed(kind, d, rng)
+            if s is not None:
+                j = min(i + len(s), len(out)); out[i:j] += s[: j - i]
+                continue
         if kind == "pop":
             n = int(0.09 * SR); tt = np.arange(n) / SR
             s = np.sin(2 * np.pi * (900 - 4000 * tt) * tt) * np.exp(-tt * 45) * 0.25
@@ -96,6 +140,34 @@ def sfx(total, events):
             for k in range(5):
                 o = int(k * 0.22 * SR); m = int(0.08 * SR); u = np.arange(m) / SR
                 s[o:o + m] += np.sin(2 * np.pi * (2600 + 1800 * np.sin(2 * np.pi * 25 * u)) * u) * np.exp(-u * 30) * 0.12
+        elif kind == "step":
+            n = int(.12 * SR); tt = np.arange(n) / SR
+            s = _noise(rng, n, 12) * np.exp(-tt * 40) * .35
+        elif kind == "toss":
+            n = int(.35 * SR); tt = np.arange(n) / SR
+            s = _noise(rng, n, 10) * np.sin(np.pi * tt / tt[-1]) * .3
+        elif kind == "patter":
+            n = int(.05 * SR); tt = np.arange(n) / SR
+            s = _noise(rng, n, 3) * np.exp(-tt * 90) * .25
+        elif kind == "flutter":
+            n = int(1.6 * SR); tt = np.arange(n) / SR
+            s = _noise(rng, n, 25) * (np.sin(2 * np.pi * 14 * tt) > 0) * np.sin(np.pi * tt / tt[-1]) * .35
+        elif kind == "grow":
+            n = int(.6 * SR); tt = np.arange(n) / SR
+            s = np.sin(2 * np.pi * (300 + 900 * tt) * tt) * np.sin(np.pi * tt / tt[-1]) * .08
+        elif kind == "low":
+            n = int(1.5 * SR); tt = np.arange(n) / SR
+            s = np.sin(2 * np.pi * (70 - 25 * tt) * tt) * np.exp(-tt * 2.2) * .5
+        elif kind == "tick":
+            n = int(.08 * SR); tt = np.arange(n) / SR
+            s = np.sin(2 * np.pi * 1800 * tt) * np.exp(-tt * 60) * .2
+        elif kind == "drop":
+            n = int(.5 * SR); tt = np.arange(n) / SR
+            s = np.sin(2 * np.pi * (900 * np.exp(-tt * 9) + 120) * tt) * np.exp(-tt * 8) * .3
+        elif kind == "heartbeat":
+            n = int(.5 * SR); tt = np.arange(n) / SR
+            thump = lambda o: np.sin(2 * np.pi * 52 * (tt - o)) * np.exp(-np.clip(tt - o, 0, None) * 18) * (tt >= o)
+            s = (thump(0) + .7 * thump(.22)) * .55
         else:
             continue
         j = min(i + len(s), len(out)); out[i:j] += s[: j - i]
@@ -131,6 +203,6 @@ def main(script, model, outdir, pitch=1.0):
 if __name__ == "__main__":
     if sys.argv[1] == "--sfx":  # build_audio.py --sfx sfx_events.json saida.wav duracao
         ev = json.loads(pathlib.Path(sys.argv[2]).read_text())
-        write(sys.argv[3], sfx(float(sys.argv[4]), [(e["k"], e["t"]) for e in ev]))
+        write(sys.argv[3], sfx(float(sys.argv[4]), [(e["k"], e["t"], e.get("d", 0)) for e in ev]))
     else:
         main(sys.argv[1], sys.argv[2], sys.argv[3], float(sys.argv[4]) if len(sys.argv) > 4 else 1.0)

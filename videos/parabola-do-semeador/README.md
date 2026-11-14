@@ -4,6 +4,7 @@
 |---|---|---|---|
 | Português | `parabola-do-semeador.mp4` (57,7 s) | Piper `pt_BR-faber-medium` (~171 Hz) | voz + trilha + SFX |
 | Inglês | `parable-of-the-sower.mp4` (63,0 s) | Piper `en_US-norman-medium`, tom −8 % (~93 Hz, mais grave) | voz + SFX, **sem trilha** |
+| Inglês, só efeitos | `parable-of-the-sower_sfx-only.mp4` (63,0 s) | **sem voz** (a história vem pela legenda) | só SFX + ambiências: grilos e lamparina, ondas e multidão, vento e passos, aves, sol, espinhos, trigo, drone, batidas de coração |
 
 Os roteiros ficam em `script_pt.json` e `script_en.json`. Cada um tem o texto da locução, os textos da tela (`strings`) e as palavras que disparam cada animação (`cues`).
 
@@ -67,7 +68,7 @@ ffmpeg -framerate 25 -i frames/f_%05d.jpg -i build/mix.m4a -c:v libx264 -crf 19 
 
 Para mudar o texto, edite `script_<idioma>.json` e rode tudo de novo: as cenas se ajustam ao tempo das palavras.
 Para ver a animação ao vivo, abra `index.html?lang=pt` ou `index.html?lang=en` no navegador e clique para tocar o áudio.
-Para a versão sem trilha, mixe só `narration.wav` e `sfx.wav`.
+Para a versão sem trilha, mixe só `narration.wav` e `sfx.wav`. Para a versão só com efeitos, use apenas `sfx.wav` (normalizado em −16 LUFS).
 
 ## Limitações
 

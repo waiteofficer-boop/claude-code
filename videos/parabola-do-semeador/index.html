@@ -64,7 +64,7 @@ const T = k => { if (!(k in TL.strings)) throw new Error('texto ' + k); return T
 const C = (k, n = 0) => { const c = TL.cues[k]; if (!c) throw new Error('cue ' + k); return wt(c[0], c[1], n); };
 const KEY = new Set(TL.keywords.map(norm));
 const SFX = []; // eventos de som coletados para a mixagem
-const sfx = (k, t) => SFX.push({ k, t: +t.toFixed(3) });
+const sfx = (k, t, d = 0) => SFX.push({ k, t: +t.toFixed(3), d: +d.toFixed(3) });
 
 // ───────────────────────── defs globais ─────────────────────────
 function grainURL(seed) {
@@ -591,6 +591,18 @@ function collectSFX() {
   ['same', 'jesus', 'crowd', 'path', 'rocky', 'thorns', 'good', 'c100', 'c60', 'c30', 'gGood'].forEach(k => sfx('pop', C(k)));
   [S('s1') + .3, S('s4') + .1, S('s6') + .25, S('s11') + .2, S('s12') + .2].forEach(x => sfx('pop', x));
   sfx('birds', C('birds')); sfx('shimmer', C('fruit')); sfx('shimmer', C('word')); sfx('shimmer', C('heart')); sfx('shimmer', S('s6') - .1);
+  // ambiências por cena (com duração) + efeitos de ação
+  const [A, B, D, Es, F, G1, G2] = SCENES;
+  sfx('crickets', 0, B.to); sfx('flame', 0, B.to); sfx('waves', B.from, B.to - B.from); sfx('crowd', C('crowd'), B.to - C('crowd'));
+  sfx('wind', D.from, D.to - D.from);
+  for (let k = 0; k * .48 < D.to - D.from; k++) sfx('step', D.from + k * .48);
+  ['s7', 's8', 's9', 's10'].forEach(id => { sfx('toss', S(id)); for (let i = 0; i < 6; i++) sfx('patter', S(id) + .55 + i * .1); });
+  sfx('flutter', C('birds') - .1); sfx('grow', C('sprang')); sfx('sizzle', C('sun'), 2.2); sfx('creak', C('grew'), 1.2); sfx('low', C('choked'));
+  sfx('grow', C('fruit') - .1); sfx('rustle', C('fruit'), D.to - C('fruit'));
+  sfx('low', C('word')); sfx('drone', Es.from, Es.to - Es.from); sfx('drone', F.from, F.to - F.from);
+  ['fPath', 'fRock', 'fThorns'].forEach(k => sfx('tick', C(k))); sfx('tick', S('s13'));
+  sfx('rustle', G1.from, G1.to - G1.from); sfx('drop', C('gSeed') + .5); sfx('drop', S('s15') + .8);
+  for (let k = 0; C('heart') + k * 1.21 < TL.duration - .6; k++) sfx('heartbeat', C('heart') + k * 1.21);
   return SFX;
 }
 
