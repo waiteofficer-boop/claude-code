@@ -46,6 +46,16 @@ Para temas brasileiros históricos ou de folclore (ex.: "A vida e a morte de Lam
 - fatos históricos: confirme os fatos, mas **não diga anos** nos versos nem nos títulos (pedido do usuário; ex.: "numa noite de julho" em vez de "em julho de trinta e oito"). Violência sem detalhes gráficos.
 - Títulos em Rye, versos em IM Fell English. Não copiar a arte da abertura da novela "Cordel Encantado": só a estética da xilogravura.
 
+## Estilo alternativo: motion graphics de formas ("dar vida")
+
+`template/src/exemplo-motion-lampiao.jsx` ("A vida e a morte de Lampião" em prosa, sem rimas e sem anos):
+- fundo areia constante com formas geométricas flutuando o tempo todo (círculos, triângulos, pílulas, ondas) e zoom lento por cena;
+- personagens feitos de formas chapadas (Lampião com chapéu de couro, óculos redondos, cartucheiras; Maria Bonita), piscando e balançando;
+- MUITA informação animada: ficha com texto sendo digitado, mapa com pino quicando, contadores (≈20 anos, 7 estados, 11 mortos), rota pontilhada desenhando, ícones (casas, vaqueiro, bota de couro, rifle, lampião, barraca, volante em círculo fechando), balança herói × bandido;
+- tudo sincronizado pela palavra exata da narração (`wAt(i, 'palavra')`);
+- transição: dois círculos de cor (terracota/mostarda/petróleo) crescendo do canto e recolhendo;
+- paleta: areia `#f4e3c1`, terracota `#c8553d`, mostarda `#f0a202`, petróleo `#1f6e6e`, marrom `#2b1d14`. Em painel escuro, desenhe objetos em creme (não marrom).
+
 ## Voz
 
 - **Padrão: voz neural** `pt-BR-AntonioNeural` (edge-tts, `+12%`), bem menos robótica que a Piper. `scripts/tts.py` já aponta o edge-tts para o CA do proxy (`/root/.ccr/ca-bundle.crt`), sem desligar a verificação. `scripts/narracao_neural.py <tts.py> pt-BR-AntonioNeural +12% roteiro.json public/<nome>/voz.wav src/timeline-<nome>.json` gera voz, tempo real de cada palavra (`wAt(i,'palavra')`), gaguejadas (`stutters`) e corta o silêncio do fim de cada frase.
