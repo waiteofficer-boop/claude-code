@@ -56,6 +56,19 @@ Para temas brasileiros históricos ou de folclore (ex.: "A vida e a morte de Lam
 - transição: dois círculos de cor (terracota/mostarda/petróleo) crescendo do canto e recolhendo;
 - paleta: areia `#f4e3c1`, terracota `#c8553d`, mostarda `#f0a202`, petróleo `#1f6e6e`, marrom `#2b1d14`. Em painel escuro, desenhe objetos em creme (não marrom).
 
+## Estilo alternativo: cordel 2.5D com letras 3D (referência: técnica da abertura de "Cordel Encantado")
+
+`template/src/exemplo-cordel-2-5d-letras-3d.jsx`:
+- sépia monocromático (papel `#e9dfc4`, tinta `#1c1814`), grão de filme animado, leve tremulação de brilho e vinheta;
+- texturas de xilogravura: pontinhos brancos nas roupas (`dotsW`), morros pontilhados (`dotsI`), céu hachurado, sol em espiral rabiscada, nuvens recortadas, palma e mandacaru, árvore seca, igrejinha, casa de taipa, vacas;
+- personagens de corpo inteiro (cangaceiro, Maria Bonita, soldado da volante) com piscar, andar a 15 qps e recuo do rifle;
+- **2.5D com CSS 3D**: cada cena é um conjunto de camadas em profundidade (`ZL`: céu -1500, morros -900, meio -450, personagens -150, letras -110, primeiro plano +280), pré-escaladas por `(PERSP - z)/PERSP`; as cenas ficam enfileiradas no eixo Z (`SPACING` 3000) e a câmera faz dolly suave (`DOLLY` 300) + deriva lateral/rotação e **voa através do primeiro plano** até a próxima cena;
+- desenhe a próxima cena só quando o voo começar (senão ela aparece pequena no fundo); fundos/chão muito largos para não aparecer borda;
+- **letras 3D extrudadas** (`Title3D`): 14 cópias da letra em `translateZ` (frente tinta com contorno papel, laterais sépia), entrando letra a letra com rotação 3D; fonte rústica Rubik Dirt; ficam no céu (y ~300), nunca atrás do primeiro plano;
+- carimbos de informação em caixas de xilogravura (`Stamp`), longe do rosto dos personagens;
+- desenhos originais: não copiar a arte da Globo, só a técnica.
+- render é mais pesado (CSS 3D): ~10–15 min para 60 s.
+
 ## Voz
 
 - **Padrão: voz neural** `pt-BR-AntonioNeural` (edge-tts, `+12%`), bem menos robótica que a Piper. `scripts/tts.py` já aponta o edge-tts para o CA do proxy (`/root/.ccr/ca-bundle.crt`), sem desligar a verificação. `scripts/narracao_neural.py <tts.py> pt-BR-AntonioNeural +12% roteiro.json public/<nome>/voz.wav src/timeline-<nome>.json` gera voz, tempo real de cada palavra (`wAt(i,'palavra')`), gaguejadas (`stutters`) e corta o silêncio do fim de cada frase.
