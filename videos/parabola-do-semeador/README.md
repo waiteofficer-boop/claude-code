@@ -1,5 +1,12 @@
 # A Parábola do Semeador — vídeo vertical (9:16)
 
+| Versão | Arquivo | Voz | Áudio |
+|---|---|---|---|
+| Português | `parabola-do-semeador.mp4` (57,7 s) | Piper `pt_BR-faber-medium` (~171 Hz) | voz + trilha + SFX |
+| Inglês | `parable-of-the-sower.mp4` (63,0 s) | Piper `en_US-norman-medium`, tom −8 % (~93 Hz, mais grave) | voz + SFX, **sem trilha** |
+
+Os roteiros ficam em `script_pt.json` e `script_en.json`. Cada um tem o texto da locução, os textos da tela (`strings`) e as palavras que disparam cada animação (`cues`).
+
 Feito com a skill `explainer-cutout-animation`.
 `parabola-do-semeador.mp4`: 1080×1920, 25 fps, 57,7 s, H.264 + AAC, loudness −14 LUFS.
 
@@ -48,8 +55,9 @@ Feito com a skill `explainer-cutout-animation`.
 ```bash
 pip install piper-tts numpy
 # voz: pt_BR-faber-medium (.onnx + .onnx.json) de huggingface.co/rhasspy/piper-voices
-python3 build_audio.py pt_BR-faber-medium.onnx build          # narração, trilha, timeline.js
-node render.js frames 25 4                                     # 1442 quadros (~3 min)
+python3 build_audio.py script_pt.json pt_BR-faber-medium.onnx build          # narração, trilha, timeline_pt.js
+# inglês, voz mais grave: python3 build_audio.py script_en.json en_US-norman-medium.onnx build_en 0.92
+node render.js frames 25 4                                     # VLANG=en para a versão em inglês (~3 min)
 python3 build_audio.py --sfx frames/sfx_events.json build/sfx.wav 57.641
 ffmpeg -i build/narration.wav -i build/music.wav -i build/sfx.wav -filter_complex \
   "[0:a]highpass=f=70,asplit=2[vo][key];[1:a]volume=0.55[m];[2:a]volume=0.8[fx];[m][key]sidechaincompress=threshold=0.05:ratio=4:attack=20:release=400[md];[md][vo][fx]amix=inputs=3:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11[a]" \
@@ -57,8 +65,9 @@ ffmpeg -i build/narration.wav -i build/music.wav -i build/sfx.wav -filter_comple
 ffmpeg -framerate 25 -i frames/f_%05d.jpg -i build/mix.m4a -c:v libx264 -crf 19 -pix_fmt yuv420p -shortest parabola-do-semeador.mp4
 ```
 
-Para mudar o texto, edite `script.json` e rode tudo de novo: as cenas se ajustam ao tempo das palavras.
-Para ver a animação ao vivo, abra o `index.html` no navegador e clique para tocar o áudio.
+Para mudar o texto, edite `script_<idioma>.json` e rode tudo de novo: as cenas se ajustam ao tempo das palavras.
+Para ver a animação ao vivo, abra `index.html?lang=pt` ou `index.html?lang=en` no navegador e clique para tocar o áudio.
+Para a versão sem trilha, mixe só `narration.wav` e `sfx.wav`.
 
 ## Limitações
 

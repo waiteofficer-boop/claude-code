@@ -11,7 +11,7 @@ html,body{margin:0;background:#000;overflow:hidden}
 svg{display:block;width:1080px;height:1920px}
 .preview svg{width:auto;height:100vh;margin:0 auto}
 </style>
-<script src="timeline.js"></script>
+<script>document.write('<script src="timeline_' + (new URLSearchParams(location.search).get('lang') || 'pt') + '.js"><\/script>')</script>
 </head>
 <body>
 <svg id="v" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -60,6 +60,8 @@ function wt(id, needle, n = 0) {
   return hits[Math.min(n, hits.length - 1)].s;
 }
 const S = id => SEG[id].s, Ee = id => SEG[id].e;
+const T = k => { if (!(k in TL.strings)) throw new Error('texto ' + k); return TL.strings[k]; };
+const C = (k, n = 0) => { const c = TL.cues[k]; if (!c) throw new Error('cue ' + k); return wt(c[0], c[1], n); };
 const KEY = new Set(TL.keywords.map(norm));
 const SFX = []; // eventos de som coletados para a mixagem
 const sfx = (k, t) => SFX.push({ k, t: +t.toFixed(3) });
@@ -302,7 +304,7 @@ function vignette(i, x, y, t, hi) {
   return `<g><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${bg}"/>${art}<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${INK}" stroke-width="4"/>${seed(cx, gy - 6, 1.6, hi, 15)}</g>`;
 }
 function sceneA(t) {
-  const s1 = S('s1'), tm = wt('s1', 'mesma');
+  const s1 = S('s1'), tm = C('same');
   const c = cam3(t, [[0, [335, 1040, 1.85]], [s1 + 2.6, [420, 1020, 1.5], 'sine'], [S('s2') + .1, [440, 1000, 1.42]], [Ee('s2') + .25, [540, 880, 1.0], 'io'], [S('s3') + .2, [548, 870, 1.02], 'lin'], [Ee('s3') + .55, [585, 430, 3.4], 'in']]);
   const d = drift(t); c.x += d.dx; c.y += d.dy;
   const moonGlow = .55 + .1 * Math.sin(t * 2);
@@ -334,16 +336,16 @@ function sceneA(t) {
   const world = `<rect x="-800" y="-600" width="2700" height="3200" fill="url(#wall)"/>` + win +
     `<rect x="-800" y="1330" width="2700" height="1400" fill="#5b3c27"/><rect x="-800" y="1322" width="2700" height="22" fill="#7a5235" stroke="${INK}" stroke-width="5"/>` +
     lamp + quill + book + vg + lines + row + lensG +
-    label('A MESMA SEMENTE', 757, 1010, t, tm - .05, -3, 34) +
-    label('4 LUGARES', 335, 790, t, s1 + 2.2, 3, 30);
-  const screen = italic('— quase ninguém repara —', 540, 300, t, S('s2') + .1, 46, Ee('s2') + .4) +
-    tag('MATEUS 13', t, s1 + .3);
+    label(T('sameSeed'), 757, 1010, t, tm - .05, -3, 34) +
+    label(T('places'), 335, 790, t, s1 + 2.2, 3, 30);
+  const screen = italic(T('nobody'), 540, 300, t, S('s2') + .1, 46, Ee('s2') + .4) +
+    tag(T('book'), t, s1 + .3);
   return { cam: c, world, screen };
 }
 
 // ───────────────────────── CENA B — Jesus no barco, multidão na praia ─────────────────────────
 function sceneB(t) {
-  const t0 = S('s4'), tj = wt('s4', 'Jesus'), tg = wt('s4', 'Galileia'), tm = wt('s4', 'multidao');
+  const t0 = S('s4'), tj = C('jesus'), tg = C('galilee'), tm = C('crowd');
   const c = cam3(t, [[Ee('s3') - .2, [560, 640, 2.2]], [t0 + 1.1, [545, 860, 1.12], 'out'], [Ee('s4'), [540, 900, 1.04], 'sine'], [S('s5') + .1, [540, 900, 1.04]], [Ee('s5') + .1, [545, 700, 1.75], 'io'], [Ee('s5') + .7, [548, 650, 2.6], 'in']]);
   const d = drift(t); c.x += d.dx; c.y += d.dy;
   const bobY = 6 * Math.sin(t * 1.6), bobR = 1.8 * Math.sin(t * 1.3);
@@ -363,8 +365,8 @@ function sceneB(t) {
   const beach = `<path d="M-600 1150 Q100 1100 540 1130 T1700 1130 L1700 2600 L-600 2600Z" fill="#d6b487" stroke="${INK}" stroke-width="6"/><path d="M-600 1150 Q100 1100 540 1130 T1700 1130" stroke="#f3e6c8" stroke-width="8" fill="none" opacity=".6" transform="translate(0,-14)"/>`;
   const fg = `<g filter="url(#blur)">${tuft(40, 1880, 2.2, '#5f6b38')}${tuft(1020, 1900, 2.4, '#5a6634')}${tuft(860, 1930, 1.8, '#66733d')}</g>`;
   const world = par(c, .05, sky) + par(c, .15, clouds) + par(c, .35, hills) + par(c, .7, sea) + boat + beach + crowd + par(c, 1.35, fg) +
-    label('JESUS', 545, 520, t, tj, -3) + italic('mar da Galileia', 300, 880, t, tg, 40);
-  const screen = tag('MATEUS 13:1-2', t, tm + .1);
+    label(T('jesusL'), 545, 520, t, tj, -3) + italic(T('sea'), 300, 880, t, tg, 40);
+  const screen = tag(T('ref12'), t, tm + .1);
   return { cam: c, world, screen };
 }
 
@@ -384,10 +386,10 @@ function seedsFall(t, t0, zx, n, hideAt = []) {
 }
 function sceneD(t) {
   const s6 = S('s6'), s7 = S('s7'), s8 = S('s8'), s9 = S('s9'), s10 = S('s10');
-  const ta = wt('s7', 'aves'), tc = wt('s7', 'caminho');
-  const tb = wt('s8', 'brotou'), tsol = wt('s8', 'sol'), tsec = wt('s8', 'secou'), traiz = wt('s8', 'raiz'), tp = wt('s8', 'pedregais');
-  const te = wt('s9', 'espinhos'), tcr = wt('s9', 'cresceram'), tsu = wt('s9', 'sufocaram');
-  const tbo = wt('s10', 'boa'), tf = wt('s10', 'fruto'), t100 = wt('s10', 'cem'), t60 = wt('s10', 'sessenta'), t30 = wt('s10', 'trinta');
+  const ta = C('birds'), tc = C('path');
+  const tb = C('sprang'), tsol = C('sun'), tsec = C('withered'), traiz = C('root'), tp = C('rocky');
+  const te = C('thorns'), tcr = C('grew'), tsu = C('choked');
+  const tbo = C('good'), tf = C('fruit'), t100 = C('c100'), t60 = C('c60'), t30 = C('c30');
   const Y = 1040, Z = 1.04;
   const c = cam3(t, [[S('s6') - .55, [470, 820, 1.9]], [s6 + .9, [470, 1000, 1.06], 'out'], [Ee('s6') + .1, [520, 1000, 1.0], 'sine'],
     [s7 - .15, [560, Y, Z]], [s7 + .65, [ZX[0] + 60, Y, Z]], [Ee('s7'), [ZX[0] + 70, Y, 1.12], 'sine'],
@@ -452,15 +454,15 @@ function sceneD(t) {
   const sower = person({ t, x: sx, y: 1080, s: 1.12, robe: '#a88a63', sleeve: '#9a7d58', skin: '#e1b48a', cloth: '#d9c7a0', clothBand: '#8a4a3a', beard: '#5a3a24', bag: true, walk: walkPh, armR: throwA, seed: .4 });
   const fg = `<g filter="url(#blur)">${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(i => tuft(-600 + i * 520 + rnd(i) * 90, 1820, 2.3, '#6d6a3a')).join('')}</g>`;
   const world = par(c, .03, sky) + par(c, .12, clouds) + par(c, .3, hills) + par(c, .6, fields) + ground + z1 + z2 + z3 + z4 + sower + par(c, 1.4, fg) +
-    label('BEIRA DO CAMINHO', ZX[0] + 60, BAND - 330, t, tc, -3) + label('PEDREGAIS', ZX[1] + 60, BAND - 330, t, tp, 3) + italic('sem raiz', ZX[1] + 80, BAND + 250, t, traiz, 46) +
-    label('ESPINHOS', ZX[2] + 60, BAND - 380, t, te, -3) + label('BOA TERRA', ZX[3] + 60, BAND - 560, t, tbo, -3);
-  const screen = title(['O SEMEADOR', 'SAIU A SEMEAR'], 540, 430, t, s6 - .1, Ee('s6') + .2, 100) + (t < s7 ? tag('MATEUS 13:3', t, s6 + .25) : '') + (t > s10 ? tag('MATEUS 13:8', t, tbo) : '') + (t > s8 && t < s10 ? tag('MATEUS 13:5-7', t, s8 + .3) : '') + (t > s7 && t < s8 ? tag('MATEUS 13:4', t, s7 + .3) : '');
+    label(T('pathL'), ZX[0] + 60, BAND - 330, t, tc, -3) + label(T('rockyL'), ZX[1] + 60, BAND - 330, t, tp, 3) + italic(T('noRoot'), ZX[1] + 80, BAND + 250, t, traiz, 46) +
+    label(T('thornsL'), ZX[2] + 60, BAND - 380, t, te, -3) + label(T('goodL'), ZX[3] + 60, BAND - 560, t, tbo, -3);
+  const screen = title([T('title1'), T('title2')], 540, 430, t, s6 - .1, Ee('s6') + .2, 100) + (t < s7 ? tag(T('ref3'), t, s6 + .25) : '') + (t > s10 ? tag(T('ref8'), t, tbo) : '') + (t > s8 && t < s10 ? tag(T('ref57'), t, s8 + .3) : '') + (t > s7 && t < s8 ? tag(T('ref4'), t, s7 + .3) : '');
   return { cam: c, world, screen };
 }
 
 // ───────────────────────── CENA E — a semente é a Palavra ─────────────────────────
 function sceneE(t) {
-  const t0 = S('s11'), tse = wt('s11', 'semente'), tpa = wt('s11', 'palavra'), tex = wt('s11', 'explica');
+  const t0 = S('s11'), tse = C('seedE'), tpa = C('word'), tex = C('explains');
   const c = cam3(t, [[t0 - .5, [540, 900, 1.3]], [tpa - .1, [540, 880, 1.08], 'out'], [tpa + .5, [540, 860, 1.24], 'out'], [Ee('s11') + .6, [540, 860, 1.3], 'sine']]);
   const d = drift(t); c.x += d.dx; c.y += d.dy;
   const burst = prog(t, tpa - .05, .5), ring = E.io(prog(t, tpa + .1, .6));
@@ -475,12 +477,12 @@ function sceneE(t) {
     (burst > 0 ? `<g filter="url(#glow)">${book}</g>` : '') +
     `<circle cx="540" cy="${f1(880 + 30)}" r="${rr}" fill="none" stroke="#e8c05c" stroke-width="8" stroke-dasharray="${f1(circ)}" stroke-dashoffset="${f1(circ * (1 - ring))}" transform="rotate(-90 540 910)" filter="url(#glow)"/>` +
     `<path d="M-400 1480 Q0 1420 1500 1490 L1500 2400 L-400 2400Z" fill="#3a2c4c" opacity=".9"/>` + cloud(-60, 1500, 1.3, '#6c5a86', '#9d8bb5', t * 8) + cloud(640, 1530, 1.4, '#6c5a86', '#9d8bb5', -t * 7);
-  const screen = tag('MATEUS 13:19', t, t0 + .2) + card('A SEMENTE:', 'A PALAVRA', t, tse - .05, tpa, 540, 470) + italic('Jesus explica', 540, 1290, t, tex, 46, Ee('s11'));
+  const screen = tag(T('ref19'), t, t0 + .2) + card(T('seedCard'), T('wordCard'), t, tse - .05, tpa, 540, 470) + italic(T('explains'), 540, 1290, t, tex, 46, Ee('s11'));
   return { cam: c, world, screen };
 }
 
 // ───────────────────────── CENA F — os 4 corações ─────────────────────────
-const STRIP_LABEL = ['NÃO ENTENDE', 'SEM RAIZ', 'PREOCUPAÇÕES', 'DÁ FRUTO'];
+const STRIP_LABEL = () => [T('st0'), T('st1'), T('st2'), T('st3')];
 function stripArt(i, t, y0, active) {
   const yb = y0 + 200, x0 = 60;
   const bgc = ['#e9cfa0', '#c9c0bb', '#c7a98a', '#f1d08a'][i];
@@ -495,7 +497,7 @@ function stripArt(i, t, y0, active) {
   return s;
 }
 function sceneF(t) {
-  const t0 = S('s12'), act = [wt('s12', 'caminho'), wt('s12', 'pedra'), wt('s12', 'espinhos'), S('s13')];
+  const t0 = S('s12'), act = [C('fPath'), C('fRock'), C('fThorns'), S('s13')];
   let ai = -1; act.forEach((a, i) => { if (t >= a - .15) ai = i; });
   const sy = i => 250 + i * 290 + 130;
   const keys = [[t0 - .5, [540, 960, 1.15]], [act[0] - .1, [540, 960, 1.0], 'out']];
@@ -508,19 +510,19 @@ function sceneF(t) {
     if (inS <= 0) continue;
     const on = i === ai ? 1 : 0, a = prog(t, act[i] - .15, .3);
     const op = ai < 0 ? .85 : (i === ai ? 1 : ai === 3 ? .12 : .32 + (i < ai ? .1 : 0));
-    const lab = `<g transform="translate(830,${y0 + 70}) rotate(${i % 2 ? 3 : -3})"><rect x="-170" y="-34" width="340" height="62" fill="#fbf7ee" stroke="${INK}" stroke-width="4" filter="url(#shadow)"/><text x="0" y="12" text-anchor="middle" font-family="CSC" font-size="38" fill="${INK}">${STRIP_LABEL[i]}</text></g>`;
+    const lab = `<g transform="translate(${f1(Math.min(830, 1000 - STRIP_LABEL()[i].length * 11 - 24))},${y0 + 70}) rotate(${i % 2 ? 3 : -3})"><rect x="${-(STRIP_LABEL()[i].length * 11 + 24)}" y="-34" width="${STRIP_LABEL()[i].length * 22 + 48}" height="62" fill="#fbf7ee" stroke="${INK}" stroke-width="4" filter="url(#shadow)"/><text x="0" y="12" text-anchor="middle" font-family="CSC" font-size="38" fill="${INK}">${esc(STRIP_LABEL()[i])}</text></g>`;
     strips += g(`translate(540,${y0 + 130}) scale(${f1((inS * (1 + .035 * on * a)) * 1000) / 1000}) translate(-540,${-(y0 + 130)})`,
       `<g clip-path="url(#strip${i})">${stripArt(i, t, y0, on)}</g><rect x="60" y="${y0}" width="960" height="260" rx="22" fill="none" stroke="${on ? '#f2c75c' : INK}" stroke-width="${on ? 9 : 6}" ${on ? 'filter="url(#glow)"' : ''}/>` + (i <= ai || i === 3 && ai === 3 ? lab : ''),
       `opacity="${op.toFixed(3)}"`);
   }
   const world = `<rect x="-600" y="-600" width="2300" height="3200" fill="url(#darkB)"/>` + strips;
-  const screen = tag('MATEUS 13:18-23', t, t0 + .2) + (t > act[3] ? title(['QUEM OUVE,', 'ENTENDE E DÁ FRUTO'], 540, 380, t, wt('s13', 'entende') - .1, 99, 70, [0, 1]) : '');
+  const screen = tag(T('ref1823'), t, t0 + .2) + (t > act[3] ? title([T('hears1'), T('hears2')], 540, 380, t, C('understands') - .1, 99, 70, [0, 1]) : '');
   return { cam: c, world, screen };
 }
 
 // ───────────────────────── CENA G1 — tela dividida ─────────────────────────
 function sceneG1(t) {
-  const t0 = S('s14'), tse = wt('s14', 'semente'), tbo = wt('s14', 'boa');
+  const t0 = S('s14'), tse = C('gSeed'), tbo = C('gGood');
   const c = { x: 540 + 6 * Math.sin(t * .5), y: 960, z: 1.02 + .03 * prog(t, t0, 2.5) };
   let top = `<rect x="0" y="0" width="1080" height="960" fill="#f1d08a"/>` + glowDot(540, 380, 600, .7) + rays(540, 300, t * 5, 18, 900, .3) + `<path d="M0 760 Q540 730 1080 760 L1080 960 L0 960Z" fill="#6b4329" stroke="${INK}" stroke-width="5"/>`;
   for (let i = 0; i < 11; i++) top += wheat(80 + i * 92, 790 + rnd(i) * 20, .9 + rnd(i + 1) * .2, i, t, 1);
@@ -531,13 +533,13 @@ function sceneG1(t) {
   const sp = E.out(prog(t, tse - .2, .9));
   const world = `<g clip-path="url(#topHalf)">${top}</g><g clip-path="url(#botHalf)">${bot}<rect x="0" y="960" width="1080" height="960" fill="#0d0710" opacity=".35"/></g>` +
     `<rect x="0" y="952" width="1080" height="16" fill="#f2c75c" filter="url(#glow)"/>` +
-    (sp > 0 ? seed(540, lerp(560, 960, sp), 4, .95, 15 + Math.sin(t * 3) * 6) : '') + label('A SEMENTE É BOA', 540, 1130, t, tbo, -3, 44);
+    (sp > 0 ? seed(540, lerp(560, 960, sp), 4, .95, 15 + Math.sin(t * 3) * 6) : '') + label(T('seedGood'), 540, 1130, t, tbo, -3, 44);
   return { cam: c, world, screen: '' };
 }
 
 // ───────────────────────── CENA G2 — que chão é o seu coração? ─────────────────────────
 function sceneG2(t) {
-  const t0 = S('s15'), tch = wt('s15', 'chao'), tco = wt('s15', 'coracao');
+  const t0 = S('s15'), tch = C('ground'), tco = C('heart');
   const c = cam3(t, [[t0 - .5, [540, 900, 1.25]], [t0 + 1.2, [540, 880, 1.02], 'out'], [TL.duration, [540, 860, 1.18], 'sine']]);
   const beat = 1 + .035 * Math.max(0, Math.sin(t * 5.2)) * prog(t, tco, .3);
   const q = popS(t, tco + .05, .4), glow = prog(t, tco, .6);
@@ -551,7 +553,7 @@ function sceneG2(t) {
   const world = `<rect x="-600" y="-600" width="2300" height="3200" fill="url(#darkP)"/>` + rays(540, 820, t * 4, 20, 1300, .18 + .15 * glow) + heart +
     (sp < 1 ? seed(540, lerp(240, 680, E.in(sp)), 2.2, .9, 15) : '') +
     (q > 0 ? g(`translate(540,640) scale(${f1(q * 100) / 100})`, `<text x="0" y="0" text-anchor="middle" font-family="CSC" font-size="240" fill="#fffaf0" filter="url(#glow)">?</text>`, `opacity="${(.85 + .15 * Math.sin(t * 4)).toFixed(2)}"`) : '');
-  const screen = card('QUE CHÃO É', 'O SEU CORAÇÃO?', t, tch - .1, tco, 540, 330);
+  const screen = card(T('q1'), T('q2'), t, tch - .1, tco, 540, 330);
   return { cam: c, world, screen };
 }
 
@@ -586,9 +588,9 @@ function frame(t) {
 // eventos de som (pop em cada rótulo/etiqueta, whoosh nas transições)
 function collectSFX() {
   SCENES.slice(1).forEach(s => sfx('whoosh', s.from - .2));
-  [['s1', 'mesma'], ['s4', 'Jesus'], ['s4', 'multidao'], ['s7', 'caminho'], ['s8', 'pedregais'], ['s9', 'espinhos'], ['s10', 'boa'], ['s10', 'cem'], ['s10', 'sessenta'], ['s10', 'trinta'], ['s14', 'boa']].forEach(([id, w]) => sfx('pop', wt(id, w)));
+  ['same', 'jesus', 'crowd', 'path', 'rocky', 'thorns', 'good', 'c100', 'c60', 'c30', 'gGood'].forEach(k => sfx('pop', C(k)));
   [S('s1') + .3, S('s4') + .1, S('s6') + .25, S('s11') + .2, S('s12') + .2].forEach(x => sfx('pop', x));
-  sfx('birds', wt('s7', 'aves')); sfx('shimmer', wt('s10', 'fruto')); sfx('shimmer', wt('s11', 'palavra')); sfx('shimmer', wt('s15', 'coracao')); sfx('shimmer', S('s6') - .1);
+  sfx('birds', C('birds')); sfx('shimmer', C('fruit')); sfx('shimmer', C('word')); sfx('shimmer', C('heart')); sfx('shimmer', S('s6') - .1);
   return SFX;
 }
 
@@ -598,7 +600,7 @@ window.getSFX = collectSFX;
 window.DURATION = TL.duration;
 if (!/render/.test(location.search)) {
   document.body.classList.add('preview');
-  const a = new Audio('build/mix.m4a'); let t0 = null;
+  const a = new Audio('build/mix_' + TL.lang + '.m4a'); let t0 = null;
   document.body.onclick = () => { a.currentTime = 0; a.play().catch(() => {}); t0 = performance.now(); };
   const loop = now => { if (t0 == null) t0 = now; const t = ((now - t0) / 1000) % TL.duration; renderAt(t); requestAnimationFrame(loop); };
   requestAnimationFrame(loop);

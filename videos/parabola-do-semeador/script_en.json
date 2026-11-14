@@ -1,0 +1,26 @@
+{
+ "lang": "en",
+ "gap": 0.35,
+ "lead_in": 0.6,
+ "tail": 1.6,
+ "keywords": ["same", "sower", "sow", "path", "birds", "rocky", "root", "thorns", "choked", "good", "soil", "fruit", "Word", "heart", "Jesus"],
+ "segments": [
+  {"id": "s1",  "text": "In this parable, the seed is the same in all four places."},
+  {"id": "s2",  "text": "And almost nobody notices it."},
+  {"id": "s3",  "text": "But first, come see the scene with me."},
+  {"id": "s4",  "text": "Jesus is in a boat, by the Sea of Galilee, and the whole crowd is standing on the shore."},
+  {"id": "s5",  "text": "And he begins like this:"},
+  {"id": "s6",  "text": "A sower went out to sow."},
+  {"id": "s7",  "text": "Some seed fell along the path, and the birds came and ate it."},
+  {"id": "s8",  "text": "Some fell on rocky ground. It sprang up quickly, but when the sun rose, it withered, because it had no root."},
+  {"id": "s9",  "text": "Other seed fell among thorns, and the thorns grew up and choked it."},
+  {"id": "s10", "text": "And other seed fell on good soil, and it bore fruit: a hundred, sixty, and thirty times."},
+  {"id": "s11", "text": "Later, Jesus himself explains: the seed is the Word."},
+  {"id": "s12", "text": "The path is the one who hears, but doesn't understand. The rocky ground receives it with joy, but has no root. The thorns are the worries of life, and the deceitfulness of wealth."},
+  {"id": "s13", "text": "But the good soil is the one who hears, understands, and bears fruit."},
+  {"id": "s14", "text": "So the question isn't whether the seed is good."},
+  {"id": "s15", "text": "It's this: what kind of ground is your heart today?"}
+ ],
+ "strings": {"sameSeed": "THE SAME SEED", "places": "4 PLACES", "nobody": "— almost nobody notices —", "book": "MATTHEW 13", "jesusL": "JESUS", "sea": "Sea of Galilee", "ref12": "MATTHEW 13:1-2", "title1": "A SOWER", "title2": "WENT OUT TO SOW", "ref3": "MATTHEW 13:3", "ref4": "MATTHEW 13:4", "ref57": "MATTHEW 13:5-7", "ref8": "MATTHEW 13:8", "pathL": "ALONG THE PATH", "rockyL": "ROCKY GROUND", "noRoot": "no root", "thornsL": "THORNS", "goodL": "GOOD SOIL", "ref19": "MATTHEW 13:19", "seedCard": "THE SEED:", "wordCard": "THE WORD", "explains": "Jesus explains", "ref1823": "MATTHEW 13:18-23", "st0": "NO UNDERSTANDING", "st1": "NO ROOT", "st2": "WORRIES", "st3": "BEARS FRUIT", "hears1": "HEARS, UNDERSTANDS,", "hears2": "BEARS FRUIT", "seedGood": "THE SEED IS GOOD", "q1": "WHAT GROUND", "q2": "IS YOUR HEART?"},
+ "cues": {"same": ["s1", "same"], "jesus": ["s4", "Jesus"], "galilee": ["s4", "Galilee"], "crowd": ["s4", "crowd"], "birds": ["s7", "birds"], "path": ["s7", "path"], "sprang": ["s8", "sprang"], "sun": ["s8", "sun"], "withered": ["s8", "withered"], "root": ["s8", "root"], "rocky": ["s8", "rocky"], "thorns": ["s9", "thorns"], "grew": ["s9", "grew"], "choked": ["s9", "choked"], "good": ["s10", "good"], "fruit": ["s10", "fruit"], "c100": ["s10", "hundred"], "c60": ["s10", "sixty"], "c30": ["s10", "thirty"], "seedE": ["s11", "seed"], "word": ["s11", "Word"], "explains": ["s11", "explains"], "fPath": ["s12", "path"], "fRock": ["s12", "rocky"], "fThorns": ["s12", "thorns"], "understands": ["s13", "understands"], "gSeed": ["s14", "seed"], "gGood": ["s14", "good"], "ground": ["s15", "ground"], "heart": ["s15", "heart"]}
+}

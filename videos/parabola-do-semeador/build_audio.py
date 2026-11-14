@@ -1,7 +1,9 @@
 """Gera narração (Piper, local), timeline com tempo por palavra, trilha e SFX.
 
-Uso: python3 build_audio.py <voz.onnx> <pasta_saida>
-Saídas: narration.wav, music.wav, sfx.wav, timeline.json (também copiado ao lado deste arquivo).
+Uso: python3 build_audio.py <script_xx.json> <voz.onnx> <pasta_saida> [fator_de_tom=1.0]
+  fator_de_tom < 1 deixa a voz mais grave sem mudar a duração (ex.: 0.92).
+Saídas: narration.wav, music.wav, timeline.json; e timeline_<lang>.js/.json ao lado deste arquivo.
+SFX:  python3 build_audio.py --sfx sfx_events.json saida.wav duracao
 """
 import json, subprocess, sys, wave, re, pathlib
 import numpy as np
@@ -10,10 +12,15 @@ HERE = pathlib.Path(__file__).parent
 SR = 22050
 
 
-def synth(model, text, out):
+def synth(model, text, out, pitch=1.0):
     subprocess.run([sys.executable, "-m", "piper", "-m", model, "-f", out,
                     "--length-scale", "1.08", "--sentence-silence", "0.25"],
                    input=text.encode(), check=True, capture_output=True)
+    if pitch != 1.0:  # abaixa/sobe o tom mantendo a duração
+        tmp = out + ".raw.wav"; pathlib.Path(out).rename(tmp)
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", tmp, "-af",
+                        f"asetrate={SR}*{pitch},aresample={SR},atempo={1 / pitch:.5f}", "-ar", str(SR), "-ac", "1", out], check=True)
+        pathlib.Path(tmp).unlink()
     with wave.open(out) as w:
         a = np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16).astype(np.float32) / 32768
         return a, w.getframerate()
@@ -95,12 +102,12 @@ def sfx(total, events):
     return out
 
 
-def main(model, outdir):
+def main(script, model, outdir, pitch=1.0):
     outdir = pathlib.Path(outdir); outdir.mkdir(parents=True, exist_ok=True)
-    cfg = json.loads((HERE / "script.json").read_text())
+    cfg = json.loads(pathlib.Path(script).read_text())
     pieces, segs, t = [np.zeros(int(cfg["lead_in"] * SR))], [], cfg["lead_in"]
     for s in cfg["segments"]:
-        a, sr = synth(model, s["text"], str(outdir / f"{s['id']}.wav"))
+        a, sr = synth(model, s["text"], str(outdir / f"{s['id']}.wav"), pitch)
         assert sr == SR, sr
         a = trim(a); d = len(a) / SR
         segs.append({"id": s["id"], "text": s["text"], "s": round(t, 3), "e": round(t + d, 3),
@@ -110,10 +117,12 @@ def main(model, outdir):
     nar = np.concatenate(pieces); total = len(nar) / SR
     write(outdir / "narration.wav", nar * 0.95)
     write(outdir / "music.wav", music(total))
-    timeline = {"duration": round(total, 3), "keywords": cfg["keywords"], "segments": segs}
+    lang = cfg["lang"]
+    timeline = {"duration": round(total, 3), "lang": lang, "keywords": cfg["keywords"], "segments": segs,
+                "strings": cfg["strings"], "cues": cfg["cues"]}
     (outdir / "timeline.json").write_text(json.dumps(timeline, ensure_ascii=False, indent=1))
-    (HERE / "timeline.json").write_text(json.dumps(timeline, ensure_ascii=False, indent=1))
-    (HERE / "timeline.js").write_text("window.TL = " + json.dumps(timeline, ensure_ascii=False) + ";\n")
+    (HERE / f"timeline_{lang}.json").write_text(json.dumps(timeline, ensure_ascii=False, indent=1))
+    (HERE / f"timeline_{lang}.js").write_text("window.TL = " + json.dumps(timeline, ensure_ascii=False) + ";\n")
     print(f"duração {total:.2f}s")
     for s in segs:
         print(f"{s['id']:>4} {s['s']:6.2f}–{s['e']:6.2f}  {s['text'][:60]}")
@@ -124,4 +133,4 @@ if __name__ == "__main__":
         ev = json.loads(pathlib.Path(sys.argv[2]).read_text())
         write(sys.argv[3], sfx(float(sys.argv[4]), [(e["k"], e["t"]) for e in ev]))
     else:
-        main(sys.argv[1], sys.argv[2])
+        main(sys.argv[1], sys.argv[2], sys.argv[3], float(sys.argv[4]) if len(sys.argv) > 4 else 1.0)

@@ -1,11 +1,12 @@
 // Renderiza index.html quadro a quadro com Playwright.
+// Idioma: VLANG=en (padrão pt).
 // Uso: node render.js <pasta_frames> [fps=25] [workers=4] [só_estes_tempos_em_s,separados,por,vírgula]
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs');
 (async () => {
   const [out, fps = '25', workers = '4', only] = process.argv.slice(2);
   fs.mkdirSync(out, { recursive: true });
-  const url = 'file://' + path.resolve(__dirname, 'index.html') + '?render=1';
+  const url = 'file://' + path.resolve(__dirname, 'index.html') + '?render=1&lang=' + (process.env.VLANG || 'pt');
   const browser = await chromium.launch();
   const open = async () => {
     const page = await browser.newPage({ viewport: { width: 1080, height: 1920 } });

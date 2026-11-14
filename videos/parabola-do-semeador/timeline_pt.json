@@ -1003,5 +1003,162 @@
     }
    ]
   }
- ]
+ ],
+ "strings": {
+  "sameSeed": "A MESMA SEMENTE",
+  "places": "4 LUGARES",
+  "nobody": "— quase ninguém repara —",
+  "book": "MATEUS 13",
+  "jesusL": "JESUS",
+  "sea": "mar da Galileia",
+  "ref12": "MATEUS 13:1-2",
+  "title1": "O SEMEADOR",
+  "title2": "SAIU A SEMEAR",
+  "ref3": "MATEUS 13:3",
+  "ref4": "MATEUS 13:4",
+  "ref57": "MATEUS 13:5-7",
+  "ref8": "MATEUS 13:8",
+  "pathL": "BEIRA DO CAMINHO",
+  "rockyL": "PEDREGAIS",
+  "noRoot": "sem raiz",
+  "thornsL": "ESPINHOS",
+  "goodL": "BOA TERRA",
+  "ref19": "MATEUS 13:19",
+  "seedCard": "A SEMENTE:",
+  "wordCard": "A PALAVRA",
+  "explains": "Jesus explica",
+  "ref1823": "MATEUS 13:18-23",
+  "st0": "NÃO ENTENDE",
+  "st1": "SEM RAIZ",
+  "st2": "PREOCUPAÇÕES",
+  "st3": "DÁ FRUTO",
+  "hears1": "QUEM OUVE,",
+  "hears2": "ENTENDE E DÁ FRUTO",
+  "seedGood": "A SEMENTE É BOA",
+  "q1": "QUE CHÃO É",
+  "q2": "O SEU CORAÇÃO?"
+ },
+ "cues": {
+  "same": [
+   "s1",
+   "mesma"
+  ],
+  "jesus": [
+   "s4",
+   "Jesus"
+  ],
+  "galilee": [
+   "s4",
+   "Galileia"
+  ],
+  "crowd": [
+   "s4",
+   "multidao"
+  ],
+  "birds": [
+   "s7",
+   "aves"
+  ],
+  "path": [
+   "s7",
+   "caminho"
+  ],
+  "sprang": [
+   "s8",
+   "brotou"
+  ],
+  "sun": [
+   "s8",
+   "sol"
+  ],
+  "withered": [
+   "s8",
+   "secou"
+  ],
+  "root": [
+   "s8",
+   "raiz"
+  ],
+  "rocky": [
+   "s8",
+   "pedregais"
+  ],
+  "thorns": [
+   "s9",
+   "espinhos"
+  ],
+  "grew": [
+   "s9",
+   "cresceram"
+  ],
+  "choked": [
+   "s9",
+   "sufocaram"
+  ],
+  "good": [
+   "s10",
+   "boa"
+  ],
+  "fruit": [
+   "s10",
+   "fruto"
+  ],
+  "c100": [
+   "s10",
+   "cem"
+  ],
+  "c60": [
+   "s10",
+   "sessenta"
+  ],
+  "c30": [
+   "s10",
+   "trinta"
+  ],
+  "seedE": [
+   "s11",
+   "semente"
+  ],
+  "word": [
+   "s11",
+   "palavra"
+  ],
+  "explains": [
+   "s11",
+   "explica"
+  ],
+  "fPath": [
+   "s12",
+   "caminho"
+  ],
+  "fRock": [
+   "s12",
+   "pedra"
+  ],
+  "fThorns": [
+   "s12",
+   "espinhos"
+  ],
+  "understands": [
+   "s13",
+   "entende"
+  ],
+  "gSeed": [
+   "s14",
+   "semente"
+  ],
+  "gGood": [
+   "s14",
+   "boa"
+  ],
+  "ground": [
+   "s15",
+   "chao"
+  ],
+  "heart": [
+   "s15",
+   "coracao"
+  ]
+ },
+ "lang": "pt"
 }
