@@ -1,7 +1,7 @@
 """Gera narração (Piper, local), timeline com tempo por palavra, trilha e SFX.
 
 Uso: python3 build_audio.py <script_xx.json> <voz.onnx> <pasta_saida> [fator_de_tom=1.0] [ritmo=1.08] [estilo]
-  ritmo > 1 fala mais devagar; estilo "idoso" = tremor leve, rouquidão e menos brilho.
+  ritmo > 1 fala mais devagar; estilo "idoso" = tremor, rouquidão e menos brilho; "sabio" = calmo, caloroso, tremor discreto.
   fator_de_tom < 1 deixa a voz mais grave sem mudar a duração (ex.: 0.92).
 Saídas: narration.wav, music.wav, timeline.json; e timeline_<lang>.js/.json ao lado deste arquivo.
 SFX:  python3 build_audio.py --sfx sfx_events.json saida.wav duracao
@@ -22,16 +22,18 @@ def synth(model, text, out, pitch=1.0, length=1.08, style=""):
         af.append(f"asetrate={SR}*{pitch},aresample={SR},atempo={1 / pitch:.5f}")
     if style == "idoso":  # voz de senhor: tremor (vibrato + tremolo lentos), menos agudo, mais peito
         af.append("vibrato=f=5.2:d=0.09,tremolo=f=4.6:d=0.12,lowpass=f=5200,bass=g=3:f=120,equalizer=f=1800:t=q:w=1.2:g=-2")
+    if style == "sabio":  # idoso sábio: calmo e caloroso, tremor discreto, voz clara, leve sala
+        af.append("vibrato=f=4.8:d=0.045,tremolo=f=4.2:d=0.06,lowpass=f=7500,bass=g=2:f=160,equalizer=f=2500:t=q:w=1:g=1.5,aecho=0.85:0.6:35|60:0.12|0.07")
     if af:
         tmp = out + ".raw.wav"; pathlib.Path(out).rename(tmp)
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", tmp, "-af", ",".join(af), "-ar", str(SR), "-ac", "1", out], check=True)
         pathlib.Path(tmp).unlink()
-    if style == "idoso":  # rouquidão: ruído soprado que segue o envelope da própria voz
+    if style in ("idoso", "sabio"):  # rouquidão/sopro: ruído que segue o envelope da própria voz
         with wave.open(out) as w:
             a = np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16).astype(np.float32) / 32768
         env = np.convolve(np.abs(a), np.ones(400) / 400, "same")
         rng = np.random.default_rng(len(text))
-        hiss = np.convolve(rng.standard_normal(len(a)), [1, -0.6], "same") * env * 0.35
+        hiss = np.convolve(rng.standard_normal(len(a)), [1, -0.6], "same") * env * (0.35 if style == "idoso" else 0.18)
         write(out, a + hiss)
     with wave.open(out) as w:
         a = np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16).astype(np.float32) / 32768
