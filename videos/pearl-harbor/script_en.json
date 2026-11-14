@@ -1,0 +1,27 @@
+{
+ "lang": "en",
+ "gap": 0.45,
+ "lead_in": 1.2,
+ "tail": 3.0,
+ "keywords": ["quiet", "periscope", "six", "carriers", "Ward", "first", "radar", "huge", "worry", "battleships", "attack", "Tora", "drill"],
+ "segments": [
+  {"id": "s1",  "text": "December seventh, nineteen forty-one."},
+  {"id": "s2",  "text": "A quiet Sunday morning in Hawaii."},
+  {"id": "s3",  "text": "At three forty-two, a minesweeper spots a periscope near the entrance to Pearl Harbor."},
+  {"id": "s4",  "text": "Far to the north, six Japanese carriers turn into the wind."},
+  {"id": "s5",  "text": "At six o'clock, the first wave takes off. One hundred eighty-three planes."},
+  {"id": "s6",  "text": "At six forty-five, the destroyer Ward fires on a small submarine. The first American shots of the war."},
+  {"id": "s7",  "text": "The report moves slowly."},
+  {"id": "s8",  "text": "At seven oh two, a radar station on the north shore sees something huge."},
+  {"id": "s9",  "text": "More than fifty planes, a hundred and thirty miles out."},
+  {"id": "s10", "text": "The officer on duty thinks they are American bombers, due from California."},
+  {"id": "s11", "text": "Don't worry about it, he says."},
+  {"id": "s12", "text": "At seven forty, the planes reach Oahu."},
+  {"id": "s13", "text": "Below, eight battleships rest side by side. Sailors get ready for morning colors."},
+  {"id": "s14", "text": "At seven forty-nine, the signal: attack."},
+  {"id": "s15", "text": "Tora, Tora, Tora."},
+  {"id": "s16", "text": "At seven fifty-eight, a message goes out: Air raid, Pearl Harbor. This is not drill."}
+ ],
+ "strings": {},
+ "cues": {}
+}
