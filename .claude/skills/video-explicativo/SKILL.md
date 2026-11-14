@@ -41,7 +41,7 @@ Para temas brasileiros históricos ou de folclore (ex.: "A vida e a morte de Lam
 - animação a 15 qps (`st2`) + bordas que "fervem" (filtro de turbulência com semente trocando a cada 3 quadros);
 - narração em sextilhas (versos de 7 sílabas, rima nos versos 2, 4 e 6), cada frase do roteiro = 2 versos; os versos aparecem "impressos" palavra a palavra no folheto (aqui o texto faz parte da estética);
 - fundo de baião sintetizado (`scripts/cordel_audio.py <pasta> <segundos>`: zabumba, triângulo, sanfona) a ~20% de volume, mais baixo em cenas tensas; sons de página, carimbo, vento e tiros abafados;
-- fatos históricos: confirme datas; quando as fontes divergem (ex.: nascimento de Lampião, 1897 ou 1898), não cite o ano. Violência sem detalhes gráficos.
+- fatos históricos: confirme os fatos, mas **não diga anos** nos versos nem nos títulos (pedido do usuário; ex.: "numa noite de julho" em vez de "em julho de trinta e oito"). Violência sem detalhes gráficos.
 - Títulos em Rye, versos em IM Fell English. Não copiar a arte da abertura da novela "Cordel Encantado": só a estética da xilogravura.
 
 ## Voz

@@ -40,7 +40,7 @@ const PAGES = {
   e2: 'A VINGANÇA',
   e3: 'O NOME LAMPIÃO',
   e4: 'O REI E A RAINHA',
-  e5: 'ANGICO, 1938',
+  e5: 'A GROTA DO ANGICO',
   e6: 'A LENDA',
 };
 const VERSOS = {
@@ -56,7 +56,7 @@ const VERSOS = {
   10: ['Rei do Cangaço chamado,', 'quase vinte anos de correria,'],
   11: ['rodou sete estados inteiros,', 'temido de noite e de dia;'],
   12: ['e no sertão da Bahia', 'achou seu amor: Maria.'],
-  13: ['Em julho de trinta e oito,', 'no Angico, de madrugada,'],
+  13: ['Numa noite de julho,', 'no Angico, de madrugada,'],
   14: ['a volante cercou o bando', 'numa emboscada calada;'],
   15: ['caíram Lampião e Maria,', 'e a história foi encerrada.'],
   16: ['Morreu o homem, ficou', 'a lenda pelo sertão:'],

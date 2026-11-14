@@ -1,20 +1,82 @@
-[["Vou contar em verso e rima a vida e a morte de Lampião, o Rei do Cangaço.","capa"],
-["Lá no sertão do Pajeú, terra de sol e de espinho,","e1"],
-["nasceu Virgulino Ferreira, menino de bom caminho,","e1"],
-["vaqueiro e artesão de couro, amansador de redemoinho.","e1"],
-["Mas a briga entre famílias virou guerra no sertão;","e2"],
-["quando mataram seu pai, ferveu o seu coração:","e2"],
-["deixou a vida de vaqueiro e entrou pro cangaço, então.","e2"],
-["Dizem que, no tiroteio, seu rifle não descansava:","e3"],
-["era tanto fogo aceso que a noite se clareava.","e3"],
-["Por isso, de Lampião, o povo o apelidava.","e3"],
-["Rei do Cangaço chamado, quase vinte anos de correria,","e4"],
-["rodou sete estados inteiros, temido de noite e de dia;","e4"],
-["e no sertão da Bahia achou seu amor: Maria.","e4"],
-["Em julho de trinta e oito, no Angico, de madrugada,","e5"],
-["a volante cercou o bando numa emboscada calada;","e5"],
-["caíram Lampião e Maria, e a história foi encerrada.","e5"],
-["Morreu o homem, ficou a lenda pelo sertão:","e6"],
-["pra uns, herói valente; pra outros, puro vilão.","e6"],
-["E até hoje o cordel canta a vida de Lampião.","e6"],
-["E pra você: herói ou vilão? Comenta aí.","cta"]]
+[
+[
+"Vou contar em verso e rima a vida e a morte de Lampião, o Rei do Cangaço.",
+"capa"
+],
+[
+"Lá no sertão do Pajeú, terra de sol e de espinho,",
+"e1"
+],
+[
+"nasceu Virgulino Ferreira, menino de bom caminho,",
+"e1"
+],
+[
+"vaqueiro e artesão de couro, amansador de redemoinho.",
+"e1"
+],
+[
+"Mas a briga entre famílias virou guerra no sertão;",
+"e2"
+],
+[
+"quando mataram seu pai, ferveu o seu coração:",
+"e2"
+],
+[
+"deixou a vida de vaqueiro e entrou pro cangaço, então.",
+"e2"
+],
+[
+"Dizem que, no tiroteio, seu rifle não descansava:",
+"e3"
+],
+[
+"era tanto fogo aceso que a noite se clareava.",
+"e3"
+],
+[
+"Por isso, de Lampião, o povo o apelidava.",
+"e3"
+],
+[
+"Rei do Cangaço chamado, quase vinte anos de correria,",
+"e4"
+],
+[
+"rodou sete estados inteiros, temido de noite e de dia;",
+"e4"
+],
+[
+"e no sertão da Bahia achou seu amor: Maria.",
+"e4"
+],
+[
+"Numa noite de julho, no Angico, de madrugada,",
+"e5"
+],
+[
+"a volante cercou o bando numa emboscada calada;",
+"e5"
+],
+[
+"caíram Lampião e Maria, e a história foi encerrada.",
+"e5"
+],
+[
+"Morreu o homem, ficou a lenda pelo sertão:",
+"e6"
+],
+[
+"pra uns, herói valente; pra outros, puro vilão.",
+"e6"
+],
+[
+"E até hoje o cordel canta a vida de Lampião.",
+"e6"
+],
+[
+"E pra você: herói ou vilão? Comenta aí.",
+"cta"
+]
+]
