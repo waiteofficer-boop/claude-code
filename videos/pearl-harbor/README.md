@@ -146,3 +146,24 @@ VLANG=pt node render.js frames 25 4                                            #
 python3 sound_design.py frames/sfx_events.json build/sfx.wav <duração>
 python3 mix.py build/narration.wav build/sfx.wav build/mix_pt.m4a
 ```
+
+## Áudio (v3): narração do usuário + mais efeitos + efeitos de processamento
+
+- **Narração:** `narration/narracao_pt_elevenlabs.mp3`, gravada fora (ElevenLabs). `align_recording.py` transcreve com o Whisper, alinha com o roteiro (95 % de concordância) e gera a timeline. Todo o vídeo segue o ritmo dessa fala: legenda, animações, relógio e efeitos.
+- **Efeitos novos** em `sound_design.extra`, por plano:
+  - buzina de navio, sino de bordo, gaivotas e bandeira tremulando;
+  - motor dando partida, aviões passando pela câmera (Doppler), servo da antena e chiado da tela do radar;
+  - estática de rádio, cápsulas de bala caindo no convés, baque metálico da bomba e bolhas debaixo d'água;
+  - destroços, fogo crepitando, papel e o risco do "MÍSSEIS?"/"KAMIKAZE?".
+  - São 260 eventos de 43 tipos.
+- **Efeitos de processamento**, eventos `fx_*` aplicados em `mix.py`:
+  - **telefone** no "Não se preocupe com isso" (banda 300–3400 Hz e saturação);
+  - **rádio** no "Tora, Tora, Tora" e na mensagem "Ataque aéreo, Pearl Harbor…" (banda 450–2800 Hz, saturação e estática);
+  - **choque da explosão** no close do marinheiro: os sons do mundo ficam abafados (~350 Hz) e voltam aos poucos, com zumbido de 6,2 kHz no ouvido. A narração continua limpa.
+
+```bash
+python3 align_recording.py script_pt.json narration/narracao_pt_elevenlabs.mp3 build
+VLANG=pt node render.js frames 25 4
+python3 sound_design.py frames/sfx_events.json build/sfx.wav <duração>
+python3 mix.py build/narration.wav build/sfx.wav build/mix_pt.m4a frames/sfx_events.json
+```

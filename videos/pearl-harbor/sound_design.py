@@ -17,7 +17,7 @@ RNG = np.random.default_rng(1941)
 
 
 # ───────────────────────── blocos básicos ─────────────────────────
-def t_(d): return np.arange(int(d * SR)) / SR
+def t_(d): return np.arange(int(round(d * SR))) / SR
 def white(n): return RNG.standard_normal(n)
 def pink(n):  # 1/f por soma de oitavas (Voss-McCartney simplificado)
     out = np.zeros(n)
@@ -225,11 +225,95 @@ def hit(kind):
     return None
 
 
+# ───────────────────────── efeitos extras (v3) ─────────────────────────
+def extra(kind, d=0):
+    if kind == 'horn':  # buzina de navio ao longe
+        m = int(4 * SR); tt = t_(4)[:m]; f = 98
+        tone = sum(np.sin(2 * np.pi * f * h * tt + h) / h ** .9 for h in range(1, 10)) * np.clip(tt / .4, 0, 1) * np.clip((3.2 - tt) / .5, 0, 1)
+        return space(stereo(sat(filt(tone, 'low', 1400) * .3, 1.4), .4, .3), 'water', .7)
+    if kind == 'shipbell':
+        m = int(3 * SR); tt = t_(3)[:m]; out = np.zeros(m)
+        for k in range(2):
+            i = int(k * .45 * SR); q = m - i; u = t_(q / SR)[:q]
+            out[i:] += sum(np.sin(2 * np.pi * f * u) * a for f, a in ((1180, 1), (2420, .5), (3610, .25))) * expdecay(q, .9)
+        return space(stereo(out * .2, -.5), 'water', .5)
+    if kind == 'flyby':  # avião passando pela câmera
+        m = int(3.2 * SR); tt = t_(3.2)[:m]; ph = 2 * np.pi * np.cumsum(np.full(m, 160.)) / SR
+        eng = sat(sum(np.sin(h * ph + h) / h for h in range(1, 12)) * .35, 1.7) + filt(pink(m), 'band', [500, 4000]) * .5
+        y, pos = doppler(eng, 1.6, 95, 9)
+        p = np.clip(pos, -1, 1)
+        return space(np.stack([y * (1 - p) * .5, y * (1 + p) * .5], 1), 'outdoor', .2)
+    if kind == 'enginestart':  # motor pegando: tossidas e subida de rotação
+        m = int(3 * SR); tt = t_(3)[:m]; f = 30 + 130 * np.clip((tt - .6) / 1.6, 0, 1) ** .7
+        ph = 2 * np.pi * np.cumsum(f) / SR; eng = sat(sum(np.sin(h * ph) / h for h in range(1, 12)) * .4, 2)
+        cough = np.zeros(m)
+        for k in range(4):
+            i = int((.05 + k * .14) * SR); q = int(.09 * SR); cough[i:i + q] += filt(white(q), 'low', 900) * expdecay(q, .03)
+        return space(stereo(eng * np.clip(tt / .6, .2, 1) + cough, .2, .3), 'outdoor', .25)
+    if kind == 'servo':  # motor da antena do radar girando
+        n = int(d * SR); tt = t_(d)[:n]
+        return space(stereo((np.sin(2 * np.pi * 220 * tt) * .3 + np.sin(2 * np.pi * 440 * tt) * .1) * (.8 + .2 * np.sin(2 * np.pi * 1.2 * tt)) + filt(pink(n), 'band', [800, 2000]) * .2, .2, .3), 'outdoor', .2)
+    if kind == 'crtwhine':  # chiado do tubo de raios catódicos + zumbido
+        n = int(d * SR); tt = t_(d)[:n]
+        return stereo(np.sin(2 * np.pi * 7800 * tt) * .08 + filt(pink(n), 'band', [2000, 6000]) * .05 + np.sin(2 * np.pi * 120 * tt) * .1, 0, .2)
+    if kind == 'gulls':
+        n = int(d * SR); out = np.zeros((n, 2)); tcur = RNG.random()
+        while tcur < d - 1:
+            q = int(.5 * SR); u = t_(.5)[:q]; f = 1500 + 900 * np.sin(np.pi * u / .5) - 500 * u
+            cry = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.sin(np.pi * u / .5) ** 2 * (1 + .3 * np.sin(2 * np.pi * 30 * u))
+            i = int(tcur * SR); out[i:i + q] += stereo(filt(cry, 'band', [900, 4000]) * .3, RNG.uniform(-.9, .9))[:len(out) - i]
+            tcur += 1.2 + RNG.random() * 2.5
+        return space(out, 'outdoor', .5)
+    if kind == 'flag':  # lona tremulando
+        n = int(d * SR); tt = t_(d)[:n]; flap = np.clip(np.sin(2 * np.pi * 4.5 * tt) + .4 * np.sin(2 * np.pi * 7.1 * tt), 0, None)
+        return stereo(filt(pink(n), 'band', [300, 3000]) * flap * .5, -.2, .4)
+    if kind == 'static':  # estática de rádio
+        n = int(max(d, .8) * SR); tt = t_(n / SR)[:n]
+        crackle = (RNG.random(n) > .997) * RNG.standard_normal(n) * 3
+        return stereo(filt(white(n) * .3 + crackle, 'band', [400, 3500]) * (.6 + .4 * np.sin(2 * np.pi * .7 * tt)), 0, .3)
+    if kind == 'debris':  # destroços caindo depois da explosão
+        m = int(3.5 * SR); out = np.zeros(m)
+        for k in range(60):
+            i = int((.3 + RNG.random() * 2.8) * SR); q = int(.06 * SR)
+            if i + q < m: out[i:i + q] += filt(white(q), 'band', [1500, 7000]) * expdecay(q, .01) * RNG.uniform(.2, 1)
+        return space(stereo(out * .4, .1, .7), 'outdoor', .4)
+    if kind == 'fire':  # fogo crepitando (ambiência)
+        n = int(d * SR); roar = filt(brown(n), 'low', 400) * .6
+        crack = np.zeros(n)
+        for k in range(int(d * 14)):
+            i = RNG.integers(0, n - 800); crack[i:i + 800] += filt(white(800), 'band', [1500, 6000]) * expdecay(800, .004) * RNG.uniform(.2, 1)
+        return space(stereo(roar + crack * .6, -.1, .6), 'outdoor', .4)
+    if kind == 'bubbles':  # bolhas / debaixo d'água
+        n = int(d * SR); out = filt(brown(n), 'low', 250) * .5
+        for k in range(int(d * 9)):
+            i = RNG.integers(0, n - 3000); q = 3000; u = t_(q / SR)[:q]; f = RNG.uniform(400, 1200)
+            out[i:i + q] += np.sin(2 * np.pi * f * (1 + 2 * u) * u) * expdecay(q, .015) * .4
+        return space(stereo(filt(out, 'low', 1600), 0, .5), 'room', .4)
+    if kind == 'clank':  # baque metálico (trava da bomba, peça pesada)
+        m = int(1.5 * SR); tt = t_(1.5)[:m]
+        return space(stereo(sum(np.sin(2 * np.pi * f * tt) * a for f, a in ((180, 1), (530, .6), (1270, .4), (2710, .25))) * expdecay(m, .18) * .4 + filt(white(m), 'band', [1000, 6000]) * expdecay(m, .01), .1), 'room', .3)
+    if kind == 'casings':  # cápsulas caindo no convés
+        m = int(1.6 * SR); out = np.zeros(m)
+        for k in range(10):
+            i = int((.05 + k * .09 + RNG.random() * .05) * SR); q = int(.25 * SR); u = t_(.25)[:q]
+            out[i:i + q] += sum(np.sin(2 * np.pi * f * u) for f in (RNG.uniform(3800, 4600), RNG.uniform(6200, 7400))) * expdecay(q, .03) * .3
+        return space(stereo(out, .3, .5), 'outdoor', .3)
+    if kind == 'paper':  # papel deslizando
+        m = int(.8 * SR); tt = t_(.8)[:m]
+        return stereo(filt(white(m), 'band', [1500, 8000]) * np.sin(np.pi * tt / .8) ** 2 * (.6 + .4 * np.sin(2 * np.pi * 23 * tt)) * .3, 0, .4)
+    if kind == 'scribble':  # risco de caneta / traço vermelho
+        m = int(.45 * SR); tt = t_(.45)[:m]
+        return space(stereo(filt(white(m), 'band', [2500, 9000]) * np.sin(np.pi * tt / .45) * (.6 + .4 * np.sin(2 * np.pi * 45 * tt)) * .4 + np.sin(2 * np.pi * (200 - 150 * tt) * tt) * expdecay(m, .15) * .5, 0, .3), 'room', .2)
+    return None
+
+
 # níveis-alvo da "mesa": ambiências por RMS, golpes por pico (dBFS, antes da masterização)
 BED_RMS = {'waves': -27, 'crickets': -33, 'flame': -40, 'drone': -31, 'wind': -30, 'engines': -27, 'cockpit': -25, 'teletype': -30,
-           'radarhum': -37, 'roomtone': -42, 'crowd': -32, 'siren': -29, 'dive': -23, 'drone_low': -34}
+           'radarhum': -37, 'roomtone': -42, 'crowd': -32, 'siren': -29, 'dive': -23, 'drone_low': -34,
+           'servo': -36, 'crtwhine': -40, 'gulls': -34, 'flag': -33, 'static': -33, 'fire': -28, 'bubbles': -30}
 HIT_PEAK = {'boom': -2, 'impact': -4, 'gunburst': -5, 'splash': -8, 'whistle': -11, 'ping': -19, 'ring': -13, 'click': -15,
-            'bugle': -9, 'morse': -17, 'tock': -32, 'cut': -20, 'whoosh': -18, 'pop': -21, 'low': -8, 'shimmer': -18}
+            'bugle': -9, 'morse': -17, 'tock': -32, 'cut': -20, 'whoosh': -18, 'pop': -21, 'low': -8, 'shimmer': -18,
+            'horn': -8, 'shipbell': -16, 'flyby': -5, 'enginestart': -8, 'debris': -10, 'clank': -9, 'casings': -16, 'paper': -20, 'scribble': -12, 'static': -18}
 def level(s, kind, is_bed):
     if is_bed:
         r = np.sqrt((s ** 2).mean()) + 1e-12; return s * 10 ** (BED_RMS.get(kind, -30) / 20) / r
@@ -240,9 +324,11 @@ def render(events, total):
     out = np.zeros((int(total * SR) + SR, 2))
     for e in events:
         k, t0, d = e['k'], e['t'], e.get('d', 0)
+        if d < 0 or (d and d < .25) or k.startswith('fx_'): continue   # trechos inválidos e efeitos de mixagem
         s = bed(k, d) if d else hit(k)
+        if s is None: s = extra(k, d)
         if s is None: continue
-        s = level(s, k, bool(d))
+        s = level(s, k, bool(d) and k in BED_RMS)
         if d:  # entrada e saída suaves das ambiências
             f = min(.8, d / 3); fade = np.clip(t_(len(s) / SR)[:len(s)] / f, 0, 1) * np.clip((d - t_(len(s) / SR)[:len(s)]) / f, 0, 1); s = s * fade[:, None]
         if 'pan' in e: s = stereo(s.mean(1), e['pan'], .2)

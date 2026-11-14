@@ -20,6 +20,10 @@ Implementação de referência: `videos/pearl-harbor/` → `build_voice.py`, `so
    - `"phonemes"`: IPA direto (`k.create(..., is_phonemes=True)`) quando o espeak erra a vogal. Ex.: "Tora" → `tˈoɾa` (o espeak gera `tˈɔɾæ`, que soa "Torres").
    - Para palavras de outra língua, valide transcrevendo com o Whisper **naquela língua** (ex.: `language='ja'` → とら).
 
+## 1b. Narração gravada pelo usuário (ou feita em outro serviço)
+
+Prefira sempre a voz que o usuário trouxer. `align_recording.py roteiro.json gravacao.mp3 saida` transcreve o arquivo inteiro com Whisper (com o roteiro como `initial_prompt`), alinha as palavras ao roteiro e imprime as divergências (concordância esperada > 0,9). Não reprocesse a voz além de um passa-altas de 60 Hz. Depois, renderize de novo: os tempos mudam.
+
 ## 2. Tempo de cada palavra (legenda karaokê e animações)
 
 - `faster-whisper` modelo `small`, `compute_type='int8'`, `word_timestamps=True`, `language=` do roteiro.
@@ -44,6 +48,13 @@ Cada som é **camadas** (transiente + corpo + cauda), não um bip:
 | Relógio | bloco de madeira 2,1 + 3,4 kHz, τ 12 ms, bem baixo |
 
 **Espaço:** reverb por convolução com IR sintética estéreo (`ir()`: ruído com decaimento exponencial + reflexões discretas). Use `room` (interiores), `outdoor` (ecos de colinas), `water` (ecos curtos sobre o mar), `hall` (golpes de título).
+
+## 3b. Efeitos de processamento por trecho (eventos `fx_*` → `mix.py`)
+
+- `fx_phone`: fala ao telefone (banda 300–3400 Hz e saturação).
+- `fx_radio`: rádio ou mensagem transmitida (banda 450–2800 Hz, saturação e estática).
+- `fx_shock`: depois de uma explosão perto do personagem, os sons do mundo ficam abafados (passa-baixas que volta aos poucos), com zumbido de ~6 kHz. A narração não é afetada.
+- Confira medindo a energia acima de 4 kHz no trecho: deve cair 15 dB ou mais em relação à voz normal.
 
 ## 4. Mesa (níveis-alvo antes do master)
 

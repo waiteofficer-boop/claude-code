@@ -1242,6 +1242,30 @@ function collectSFX() {
   sfx('dive', sh('dive').t0, sh('dive').t1 - sh('dive').t0); sfx('siren', sh('dive').t0 + .8, TL.duration - sh('dive').t0 - .8);
   sfx('teletype', sh('message').t0, 2.5); sfx('impact', C('s16_air'));
   for (let k = 0; S('s3') + k < TL.duration - 2; k++) sfx('tock', S('s3') + k);
+  // ── v3: mais efeitos sonoros por plano ──
+  const S0 = n => sh(n).t0, has = n => SHOTS.some(s => s.name === n);
+  sfx('impact', S('s1') - .1); sfx('shipbell', S0('ocean') + 1.6); sfx('waves', 0, S0('oahu-night') + .5);
+  sfx('click', S0('binoculars') + .15); sfx('wind', ...span('binoculars')); sfx('paper', S0('map') + .05);
+  sfx('horn', S0('fleet') + .5); sfx('enginestart', S0('deck') + .05); sfx('flyby', S0('deck') + .9); sfx('flyby', S0('deck') + 2.0);
+  [1.0, 1.7, 2.4].forEach(d => sfx('flyby', S0('formation') + d));
+  if (has('no-missiles')) sfx('scribble', C('w1_misseis') + .35);
+  if (has('kamikaze')) sfx('scribble', C('w1b_kamikazes') + .35);
+  if (has('zero')) { sfx('flyby', S0('zero') + .2); sfx('casings', C('w2_canhoes') + .45); sfx('casings', C('w2_metralhadoras') + .45); }
+  if (has('val')) sfx('clank', C('w3_bomba') + .9);
+  if (has('kate')) { sfx('flyby', S0('kate') + .1); sfx('bubbles', C('w4_torpedo') + 1.1, Math.max(.8, sh('kate').t1 - C('w4_torpedo') - 1.1 + .3)); }
+  if (has('torpedo')) sfx('bubbles', ...span('torpedo'));
+  if (has('kate-bombers')) sfx('flyby', S0('kate-bombers') + .6);
+  if (has('apbomb')) sfx('clank', C('w5_projeteis') + .95);
+  sfx('drone', ...span('ward')); sfx('casings', S0('gun') + .3); sfx('casings', S0('gun') + 1.05); sfx('bubbles', ...span('splash'));
+  sfx('servo', ...span('radar')); sfx('crtwhine', ...span('scope')); sfx('flyby', S0('clouds') + 1.0);
+  sfx('gulls', S0('harbor'), sh('cockpit').t0 - S0('harbor')); sfx('shipbell', S0('harbor') + 1.2); sfx('flag', ...span('colors'));
+  sfx('static', ...span('cockpit')); [S('s15') + .02, C('s15_tora', 1), C('s15_tora', 2)].forEach(x => sfx('static', x - .05));
+  if (has('blast')) { const tb = C('s15b_bombas') + .45; sfx('debris', tb + .2); sfx('debris', tb + 1.4); sfx('fire', tb, TL.duration - tb); sfx('boom', S0('message') + 1.5); sfx('boom', S0('message') + 4.2); }
+  // efeitos de processamento (aplicados na mixagem)
+  sfx('fx_phone', S('s11') - .05, Ee('s11') - S('s11') + .15);
+  sfx('fx_radio', S('s15') - .05, Ee('s15') - S('s15') + .15);
+  sfx('fx_radio', C('s16_air') - .05, Ee('s16') - C('s16_air') + .15);
+  if (has('reaction')) sfx('fx_shock', S0('reaction') + .12, 2.8);
   if (SEG.w1b) { sfx('impact', C('w1b_kamikazes') + .35); sfx('pop', C('w1b_suicidas')); sfx('pop', C('w1b_tres')); sfx('roomtone', ...span('kamikaze')); }
   if (SEG.s15b) { const tb = C('s15b_bombas') + .45; sfx('whistle', tb - 1.5); sfx('boom', tb); sfx('boom', tb + 1.2); sfx('engines', ...span('blast')); sfx('boom', sh('reaction').t0 + .15); sfx('boom', sh('reaction').t0 + 1.6); sfx('crowd', ...span('reaction')); }
   if (HAS_W) {
