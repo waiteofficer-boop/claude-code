@@ -128,3 +128,21 @@ ffmpeg -framerate 25 -i frames/f_%05d.jpg -i build/mix_en.m4a -c:v libx264 -crf 
 ```
 
 Para ver ao vivo, abra o `index.html` num navegador (depois do `npm i`) e clique para tocar o áudio.
+
+## Áudio (v2): voz neural + design de som + master
+
+Detalhes na skill `.claude/skills/narration-sound-design`.
+
+- **Voz:** Kokoro (`pm_alex` + `pm_santa` misturadas), `speed` 0,86 e tom −18 % por rubberband com formantes preservados (~115 Hz, "senhor sábio" sem soar robótico). Cadeia: EQ de calor e presença, de-esser e compressor (`build_voice.py`).
+  - Pronúncia corrigida por segmento: `say` (Kêit, Pérl Rárbor), frase reescrita ("à ilha de Oahu") e `phonemes` IPA para "Tora" (`tˈoɾa`, conferido com o Whisper em japonês: とら).
+- **Tempo de cada palavra:** vem do Whisper (`faster-whisper small`), não mais de estimativa. Legenda karaokê e animações seguem a fala de verdade.
+- **Efeitos:** em `sound_design.py`, 48 kHz estéreo, em camadas, com reverb por convolução (sala, ar livre, água), Doppler, motores radiais por pulsos de combustão, sirene de manivela, canhão com eco na água e rajadas.
+- **Mesa e master:** em `mix.py`, cada som tem nível-alvo (RMS para ambiências, pico para golpes). Voz a −20 dBFS, ducking de até −9 dB, limitador, −14 LUFS e pico real −1,5 dB. Sem música.
+
+```bash
+pip install kokoro-onnx faster-whisper scipy soundfile
+python3 build_voice.py script_pt.json <pasta_kokoro> build                       # voz + timeline_pt.js
+VLANG=pt node render.js frames 25 4                                            # gera também frames/sfx_events.json
+python3 sound_design.py frames/sfx_events.json build/sfx.wav <duração>
+python3 mix.py build/narration.wav build/sfx.wav build/mix_pt.m4a
+```

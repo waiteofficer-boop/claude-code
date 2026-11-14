@@ -43,7 +43,8 @@
   },
   {
    "id": "s3",
-   "text": "Às três e quarenta e dois da manhã, um caça-minas avista um periscópio perto da entrada de Pearl Harbor."
+   "text": "Às três e quarenta e dois da manhã, um caça-minas avista um periscópio perto da entrada de Pearl Harbor.",
+   "say": "Às três e quarenta e dois da manhã, um caça-minas avista um periscópio perto da entrada de Pérl Rárbor."
   },
   {
    "id": "s4",
@@ -71,11 +72,13 @@
   },
   {
    "id": "w4",
-   "text": "Quarenta torpedeiros Kate. O torpedo ganhou aletas de madeira, para não se enterrar na lama de um porto com só doze metros de fundo."
+   "text": "Quarenta torpedeiros Kate. O torpedo ganhou aletas de madeira, para não se enterrar na lama de um porto com só doze metros de fundo.",
+   "say": "Quarenta torpedeiros Kêit. O torpedo ganhou aletas de madeira, para não se enterrar na lama de um porto com só doze metros de fundo."
   },
   {
    "id": "w5",
-   "text": "E mais quarenta e nove Kates, com bombas perfurantes de oitocentos quilos, feitas a partir de projéteis de canhão de encouraçado."
+   "text": "E mais quarenta e nove Kates, com bombas perfurantes de oitocentos quilos, feitas a partir de projéteis de canhão de encouraçado.",
+   "say": "E mais quarenta e nove Kêits, com bombas perfurantes de oitocentos quilos, feitas a partir de projéteis de canhão de encouraçado."
   },
   {
    "id": "s6",
@@ -103,7 +106,7 @@
   },
   {
    "id": "s12",
-   "text": "Às sete e quarenta, os aviões chegam a Oahu."
+   "text": "Às sete e quarenta, os aviões chegam à ilha de Oahu."
   },
   {
    "id": "s13",
@@ -115,7 +118,8 @@
   },
   {
    "id": "s15",
-   "text": "Tora, Tora, Tora."
+   "text": "Tora, Tora, Tora.",
+   "phonemes": "tˈoɾa! tˈoɾa! tˈoɾa!"
   },
   {
    "id": "s15b",
@@ -123,7 +127,8 @@
   },
   {
    "id": "s16",
-   "text": "Às sete e cinquenta e oito, sai a mensagem: Ataque aéreo, Pearl Harbor. Isto não é um exercício."
+   "text": "Às sete e cinquenta e oito, sai a mensagem: Ataque aéreo, Pearl Harbor. Isto não é um exercício.",
+   "say": "Às sete e cinquenta e oito, sai a mensagem: Ataque aéreo, Pérl Rárbor. Isto não é um exercício."
   }
  ],
  "strings": {
