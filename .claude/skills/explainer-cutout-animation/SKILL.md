@@ -120,6 +120,21 @@ Qualquer ferramenta de cut-out serve. Recomendações:
   deslocamento (fundo 0,2 · meio 0,6 · frente 1,0 · primeiro plano desfocado 1,4).
 - Legenda karaokê: gere timestamps por palavra com Whisper (`word_timestamps=True`)
   e anime opacidade/cor por palavra.
+- **Exemplo pronto por código** (sem software de animação): `videos/parabola-do-semeador/`
+  — `script.json` (roteiro) → `build_audio.py` (voz Piper local + trilha + SFX +
+  `timeline.js` com tempo por palavra) → `index.html` (cenas SVG em função de `t`,
+  câmera/parallax/primitivas de personagem reutilizáveis) → `render.js` (Playwright,
+  quadro a quadro) → ffmpeg. Copie a pasta e troque roteiro e cenas.
+
+## Formato vertical (9:16, 1080×1920)
+
+- Empilhe a composição: céu/título no terço de cima, ação no meio (y 600–1300),
+  legenda em y≈1440. Abaixo de ~1550 e na faixa direita (x>950) fica a UI do
+  TikTok/Reels — só cenário ali.
+- Etiqueta de referência no topo (y≈235), barras de progresso em y≈120.
+- Pans laterais viram "passeio" por um mundo largo (ex.: os 4 solos lado a lado);
+  listas/comparações viram **painéis empilhados** que acendem um por vez.
+- Split-screen final é **em cima × embaixo**, não esquerda × direita.
 
 Ao entregar, inclua sempre: roteiro, decupagem em tabela, lista de assets
 por camada, e o arquivo/projeto da animação (ou código) — e diga o que ficou
