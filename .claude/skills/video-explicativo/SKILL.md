@@ -33,6 +33,17 @@ Copie o exemplo mais próximo para `src/<nome>.jsx` e troque cenas, letreiros, c
 15. **Memes em vídeo**: quando pedirem "vídeo de meme" e não houver clipe real, anime o meme a partir da foto (`anim` no exemplo em inglês): `snore` (respira + "Z" subindo + som `snore`), `chew` (mastiga + `chew`), `dramatic` (3 zooms secos no rosto + vinheta + `dramatic` dun-dun-duuun); barra de progresso vermelha embaixo para parecer clipe. Sons longos precisam de `durationInFrames` ≥ 75 na `<Sequence>`.
 16. **Memes** quando pedidos (poucos: o usuário pediu para reduzir; 2–3 por vídeo é o limite): foto engraçada de licença livre do bicho do tema com texto clássico de meme (Anton, branco com contorno preto, em cima e embaixo), entra com `hit` por ~1,5–2,5 s num momento de piada e sai antes da próxima informação (`MEMES` no exemplo dos porcos). Nunca usar personagens com direitos autorais (ex.: Peppa) nem templates de meme com pessoas reais.
 
+## Estilo alternativo: cordel / xilogravura
+
+Para temas brasileiros históricos ou de folclore (ex.: "A vida e a morte de Lampião"), use `template/src/exemplo-cordel-lampiao.jsx`:
+- folhetos de cordel pendurados num barbante com prendedores, virando a página a cada estrofe (rotateY 3D);
+- desenhos em SVG no estilo xilogravura (papel `#efe0bf`, tinta `#1b1611`, vermelho `#b5291c`, ocre `#d9932b`), sol de raios, mandacaru, chapéu de couro meia-lua com estrela;
+- animação a 15 qps (`st2`) + bordas que "fervem" (filtro de turbulência com semente trocando a cada 3 quadros);
+- narração em sextilhas (versos de 7 sílabas, rima nos versos 2, 4 e 6), cada frase do roteiro = 2 versos; os versos aparecem "impressos" palavra a palavra no folheto (aqui o texto faz parte da estética);
+- fundo de baião sintetizado (`scripts/cordel_audio.py <pasta> <segundos>`: zabumba, triângulo, sanfona) a ~20% de volume, mais baixo em cenas tensas; sons de página, carimbo, vento e tiros abafados;
+- fatos históricos: confirme datas; quando as fontes divergem (ex.: nascimento de Lampião, 1897 ou 1898), não cite o ano. Violência sem detalhes gráficos.
+- Títulos em Rye, versos em IM Fell English. Não copiar a arte da abertura da novela "Cordel Encantado": só a estética da xilogravura.
+
 ## Voz
 
 - **Padrão: voz neural** `pt-BR-AntonioNeural` (edge-tts, `+12%`), bem menos robótica que a Piper. `scripts/tts.py` já aponta o edge-tts para o CA do proxy (`/root/.ccr/ca-bundle.crt`), sem desligar a verificação. `scripts/narracao_neural.py <tts.py> pt-BR-AntonioNeural +12% roteiro.json public/<nome>/voz.wav src/timeline-<nome>.json` gera voz, tempo real de cada palavra (`wAt(i,'palavra')`), gaguejadas (`stutters`) e corta o silêncio do fim de cada frase.
