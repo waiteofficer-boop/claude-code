@@ -26,7 +26,11 @@
   "encouracados",
   "atacar",
   "tora",
-  "exercicio"
+  "exercicio",
+  "kamikazes",
+  "suicidas",
+  "bombas",
+  "ilha"
  ],
  "segments": [
   {
@@ -52,6 +56,10 @@
   {
    "id": "w1",
    "text": "E não, não eram mísseis. Em mil novecentos e quarenta e um, as armas eram torpedos, bombas e metralhadoras."
+  },
+  {
+   "id": "w1b",
+   "text": "E também não eram kamikazes. Os ataques suicidas só começariam três anos depois, em mil novecentos e quarenta e quatro."
   },
   {
    "id": "w2",
@@ -110,6 +118,10 @@
    "text": "Tora, Tora, Tora."
   },
   {
+   "id": "s15b",
+   "text": "Às sete e cinquenta e cinco, as bombas começam a cair sobre a Ilha Ford."
+  },
+  {
    "id": "s16",
    "text": "Às sete e cinquenta e oito, sai a mensagem: Ataque aéreo, Pearl Harbor. Isto não é um exercício."
   }
@@ -163,7 +175,15 @@
   "kate2N": "× 49",
   "bomb800": "BOMBA PERFURANTE 800 KG",
   "shell": "PROJÉTIL NAVAL DE 41 CM",
-  "high": "lançada do alto"
+  "high": "lançada do alto",
+  "kamikaze": "KAMIKAZE?",
+  "k1941": "DEZ 1941",
+  "k1944": "OUT 1944",
+  "kPH": "PEARL HARBOR",
+  "kSuic": "ATAQUES SUICIDAS",
+  "kNote": "em Pearl Harbor: atacar e voltar ao porta-aviões",
+  "ford": "ILHA FORD",
+  "firstBombs": "AS PRIMEIRAS BOMBAS"
  },
  "cues": {
   "s10_american": [
@@ -333,6 +353,34 @@
   "w5_encouracado": [
    "w5",
    "encouracado"
+  ],
+  "w1b_kamikazes": [
+   "w1b",
+   "kamikazes"
+  ],
+  "w1b_suicidas": [
+   "w1b",
+   "suicidas"
+  ],
+  "w1b_tres": [
+   "w1b",
+   "tres"
+  ],
+  "w1b_quatro": [
+   "w1b",
+   "quatro"
+  ],
+  "s15b_sete": [
+   "s15b",
+   "sete"
+  ],
+  "s15b_bombas": [
+   "s15b",
+   "bombas"
+  ],
+  "s15b_ilha": [
+   "s15b",
+   "ilha"
   ]
  }
 }

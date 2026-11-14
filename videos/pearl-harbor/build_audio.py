@@ -273,7 +273,7 @@ def main(script, model, outdir, pitch=1.0, length=1.08, style=""):
     write(outdir / "music.wav", music(total))
     lang = cfg["lang"]
     timeline = {"duration": round(total, 3), "lang": lang, "keywords": cfg["keywords"], "segments": segs,
-                "strings": cfg["strings"], "cues": cfg["cues"]}
+                "strings": cfg["strings"], "cues": cfg["cues"], "clockFmt": cfg.get("clockFmt", "en")}
     (outdir / "timeline.json").write_text(json.dumps(timeline, ensure_ascii=False, indent=1))
     (HERE / f"timeline_{lang}.json").write_text(json.dumps(timeline, ensure_ascii=False, indent=1))
     (HERE / f"timeline_{lang}.js").write_text("window.TL = " + json.dumps(timeline, ensure_ascii=False) + ";\n")

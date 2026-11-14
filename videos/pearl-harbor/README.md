@@ -2,10 +2,29 @@
 
 | Versão | Arquivo | Duração | Planos | Voz |
 |---|---|---|---|---|
-| **Português** (com bloco de armamentos) | `pearl-harbor-ultimos-minutos.mp4` | 2 min 4 s | **30** | Piper `pt_BR-cadu-medium`, tom −18 % (~111 Hz), fala 15 % mais lenta, estilo `sabio` |
+| **Português** (com bloco de armamentos) | `pearl-harbor-ultimos-minutos.mp4` | 2 min 17 s | **33** | Piper `pt_BR-cadu-medium`, tom −18 % (~111 Hz), fala 15 % mais lenta, estilo `sabio` |
 | Inglês | `pearl-harbor-last-minutes.mp4` | 1 min 14 s | 23 | Piper `en_US-norman-medium`, estilo `sabio` (~107 Hz) |
 
 Os dois roteiros ficam em `script_pt.json` e `script_en.json`, com a fala, os textos da tela (`strings`) e as palavras que disparam cada animação (`cues`). O motor é o mesmo: `index.html?lang=pt` ou `?lang=en`, e no render use `VLANG=pt|en`.
+
+## Novidades da versão em português
+
+- **Sem barras de progresso no topo.**
+- **Kamikazes:** a fala "também não eram kamikazes" vem com um plano 2D de "KAMIKAZE?" riscado e uma linha do tempo de dezembro de 1941 a outubro de 1944. Os ataques suicidas organizados só começaram em outubro de 1944. Em Pearl Harbor, os aviões atacavam e voltavam ao porta-aviões.
+- **Aviões refeitos:**
+  - fuselagem torneada (LatheGeometry), asas e cauda com perfil afunilado e ponta arredondada;
+  - capota de vidro com armação, hélice de 3 pás com disco de movimento, escapamentos e antena;
+  - pintura em textura com linhas de painel, rebites, desgaste e manchas de escapamento, mais hinomarus e código de cauda (AI-102 etc.);
+  - material com brilho especular, **luz principal quente com sombras suaves e luz de contorno fria**;
+  - o Val tem trem fixo com carenagem e freios de mergulho.
+- **Luz de explosões e telas em quem está perto:**
+  - **Zero:** uma luz pontual pisca na asa a cada rajada;
+  - **explosão na Ilha Ford (3D, novo):** bola de fogo, luz pontual laranja que ilumina hangares e encouraçados, reflexo na água, fumaça subindo e tremor de câmera;
+  - **reação (2D, novo):** close de um marinheiro com o rosto iluminado de laranja pelo lado da explosão e em sombra do outro, com brilho nos olhos, cintilação do fogo e uma segunda explosão;
+  - **artilheiro do Ward:** iluminado pelo clarão do canhão, com a luz decaindo aos poucos;
+  - **operador do radar:** rosto verde pela tela do osciloscópio.
+
+A técnica de luz 2D (`litFigure`) recorta um gradiente radial pela silhueta (blend *screen*) e escurece o lado oposto (blend *multiply*).
 
 ## Bloco de armamentos (só na versão em português, entre as 6h00 e as 6h45)
 
