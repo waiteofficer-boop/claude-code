@@ -167,9 +167,9 @@ const Burst = ({x, y, r = 50}) => (
   <g transform={`translate(${x} ${y})`}>{[...Array(12)].map((_, i) => <path key={i} d={`M -6 0 L 0 ${-r} L 6 0 Z`} fill={i % 2 ? INK : PAPER} stroke={INK} strokeWidth="2" transform={`rotate(${i * 30})`} />)}<circle r={r * 0.3} fill={PAPER} stroke={INK} strokeWidth="4" /></g>
 );
 // personagens de corpo inteiro (origem nos pés)
-const Leg = ({x, rot, boot = true}) => (
+const Leg = ({x, rot, boot = true, edge}) => (
   <g transform={`translate(${x} -270) rotate(${rot})`}>
-    <rect x="-22" y="0" width="44" height="245" fill={INK} />
+    <rect x="-22" y="0" width="44" height="245" fill={INK} stroke={edge} strokeWidth={edge ? 5 : 0} />
     <line x1="0" y1="10" x2="0" y2="235" stroke={PAPER} strokeWidth="3" />
     {boot && <rect x="-26" y="215" width="58" height="42" rx="6" fill={INK} stroke={PAPER} strokeWidth="3" />}
   </g>
@@ -246,17 +246,18 @@ const Soldier = ({x, y, s = 1, f, walk = 1, flip}) => {
   const step = Math.sin(st2(f) / 3) * 18 * walk;
   return (
     <g transform={`translate(${x} ${y}) scale(${flip ? -s : s} ${s})`}>
-      <Leg x={-24} rot={step} /><Leg x={24} rot={-step} />
-      <path d="M-82 -470 Q-92 -300 -66 -258 L66 -258 Q92 -300 82 -470 Q0 -500 -82 -470 Z" fill={INK} />
+      <Leg x={-24} rot={step} edge={PAPER} /><Leg x={24} rot={-step} edge={PAPER} />
+      <path d="M-82 -470 Q-92 -300 -66 -258 L66 -258 Q92 -300 82 -470 Q0 -500 -82 -470 Z" fill={INK} stroke={PAPER} strokeWidth="6" />
       {[0, 1, 2, 3, 4].map((i) => <circle key={i} cx="0" cy={-450 + i * 38} r="6" fill={PAPER} />)}
+      <path d="M-84 -455 Q-20 -420 100 -415" stroke={PAPER} strokeWidth="40" fill="none" strokeLinecap="round" />
       <path d="M-84 -455 Q-20 -420 100 -415" stroke={INK} strokeWidth="30" fill="none" strokeLinecap="round" />
-      <Rifle x={10} y={-430} rot={-6} s={0.95} />
+      <Rifle x={10} y={-430} rot={-6} s={0.95} c={PAPER} />
       <g transform="translate(0 -560)">
         <ellipse rx="54" ry="62" fill={PAPER} stroke={INK} strokeWidth="7" />
         <circle cx="-20" cy="0" r="5" fill={INK} /><circle cx="20" cy="0" r="5" fill={INK} />
         <path d="M-18 36 L18 36" stroke={INK} strokeWidth="5" />
-        <rect x="-58" y="-80" width="116" height="44" fill={INK} />
-        <rect x="-62" y="-40" width="124" height="12" fill={INK} />
+        <rect x="-58" y="-80" width="116" height="44" fill={INK} stroke={PAPER} strokeWidth="4" />
+        <rect x="-62" y="-40" width="124" height="12" fill={INK} stroke={PAPER} strokeWidth="3" />
         <circle cx="0" cy="-58" r="8" fill={PAPER} />
       </g>
     </g>
