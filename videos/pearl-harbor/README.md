@@ -24,6 +24,14 @@ Os dois roteiros ficam em `script_pt.json` e `script_en.json`, com a fala, os te
   - **artilheiro do Ward:** iluminado pelo clarão do canhão, com a luz decaindo aos poucos;
   - **operador do radar:** rosto verde pela tela do osciloscópio.
 
+- **Personagens com esqueleto (`rigOps`):**
+  - quadril → tronco → pescoço → cabeça; ombro → braço → cotovelo → mão; quadril → coxa → joelho → pé;
+  - **joelhos e cotovelos por IK de 2 ossos:** os pés ficam plantados no chão e os joelhos dobram quando o corpo agacha; as mãos alcançam objetos (bandeira, telefone, volante do canhão, aba do chapéu) e o cotovelo se ajusta sozinho;
+  - **a cabeça fica sempre presa ao pescoço** e gira em volta dele com **física de mola** (`springAt`, mola amortecida simulada desde o início do plano): ela atrasa, passa um pouco do ponto e se acomoda, como no susto do clarão, no recuo do canhão ou ao olhar para cima;
+  - **vida própria:** cada personagem tem uma semente que define respiração, troca de peso entre as pernas, olhar, piscada, fala e gestos, então ninguém se mexe em sincronia;
+  - o mesmo esqueleto desenha em SVG (cenas 2D) e em Canvas (cenas 2.5D, onde a textura é redesenhada a cada frame com `animLayer`);
+  - em quem está perto da luz, ela é aplicada por máscara da silhueta (`litRig`).
+
 A técnica de luz 2D (`litFigure`) recorta um gradiente radial pela silhueta (blend *screen*) e escurece o lado oposto (blend *multiply*).
 
 ## Bloco de armamentos (só na versão em português, entre as 6h00 e as 6h45)

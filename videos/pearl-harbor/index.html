@@ -82,6 +82,7 @@ const DEFS = `<defs>
 <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3ead2"/><stop offset="1" stop-color="#e2d4b0"/></linearGradient>
 <linearGradient id="dawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b4a7a"/><stop offset=".6" stop-color="#c98a8a"/><stop offset="1" stop-color="#f3b27a"/></linearGradient>
 <linearGradient id="morning" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fa6cf"/><stop offset="1" stop-color="#f1d6a6"/></linearGradient>
+<filter id="toWhite"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/></filter>
 <clipPath id="binoc"><circle cx="370" cy="900" r="330"/><circle cx="710" cy="900" r="330"/></clipPath>
 <clipPath id="scope"><circle cx="540" cy="880" r="360"/></clipPath>
 <clipPath id="windshield"><path d="M90 300 L990 300 L1040 1150 L40 1150Z"/></clipPath>
@@ -260,6 +261,137 @@ function layer(wPx, hPx, draw, wU, x, y, z) {
 }
 const BG_ONLY = stops => { const sc = new THREE.Scene(); sc.background = gradTex(stops); return sc; };
 
+// ═════════════════════════ RIG DE PERSONAGEM (esqueleto 2D com IK e física de cabeça) ═════════════════════════
+// Unidades em px locais, origem no chão entre os pés, y para baixo. Ângulos em radianos (0 = membro apontando para baixo).
+const V2 = { add: (a, b) => [a[0] + b[0], a[1] + b[1]], rot: (v, a) => [v[0] * Math.cos(a) - v[1] * Math.sin(a), v[0] * Math.sin(a) + v[1] * Math.cos(a)], lerp: (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)] };
+function ik2(A, B, l1, l2, bend) { // junta do meio (joelho/cotovelo) por lei dos cossenos
+  const dx = B[0] - A[0], dy = B[1] - A[1]; let d = Math.hypot(dx, dy); d = clamp(d, Math.abs(l1 - l2) + .01, l1 + l2 - .01);
+  const a = Math.atan2(dy, dx), c = clamp((l1 * l1 + d * d - l2 * l2) / (2 * l1 * d), -1, 1), ang = a + bend * Math.acos(c);
+  const J = [A[0] + l1 * Math.cos(ang), A[1] + l1 * Math.sin(ang)];
+  const e = Math.atan2(B[1] - J[1], B[0] - J[0]); return { J, E: [J[0] + l2 * Math.cos(e), J[1] + l2 * Math.sin(e)] };
+}
+// mola amortecida simulada desde o início do plano → cabeça/tronco atrasam e "passam do ponto" de forma natural
+function springAt(target, t0, t, k = 70, c = 9, dt = 1 / 120) {
+  let x = target(t0), v = 0;
+  for (let s = t0; s < t; s += dt) { const a = -k * (x - target(s)) - c * v; v += a * dt; x += v * dt; }
+  return x;
+}
+const wob = (t, sd, f = 1) => Math.sin(t * .9 * f + sd * 3.1) * .6 + Math.sin(t * 1.7 * f + sd * 7.3) * .3 + Math.sin(t * 3.1 * f + sd * 1.9) * .1; // ruído suave por personagem
+const ease01 = (t, t0, d) => E.io(clamp((t - t0) / d));
+const RIGL = { shin: 78, thigh: 84, torso: 136, neck: 22, headR: 42, ua: 68, fa: 62, hipW: 22, shW: 46 };
+// pose → lista de operações de desenho (servem para SVG e para Canvas)
+function rigOps(cfg, p) {
+  const L = RIGL, ops = [], ink = INK;
+  const P = [p.px || 0, -(L.shin + L.thigh - 6) + (p.crouch || 0)], ta = p.torso || 0;
+  const N = V2.add(P, V2.rot([0, -L.torso], ta));
+  const hipL = V2.add(P, V2.rot([-L.hipW, -4], ta)), hipR = V2.add(P, V2.rot([L.hipW, -4], ta));
+  const shL = V2.add(N, V2.rot([-L.shW, 14], ta)), shR = V2.add(N, V2.rot([L.shW, 14], ta));
+  const feet = p.feet || [[-26, 0], [26, 0]];
+  const legL = ik2(hipL, feet[0], L.thigh, L.shin, p.kneeL ?? .35), legR = ik2(hipR, feet[1], L.thigh, L.shin, p.kneeR ?? -.35);
+  const arm = (sh, a, side) => {
+    if (a.target) { const r = ik2(sh, a.target, L.ua, L.fa, a.bend ?? side); return [sh, r.J, r.E]; }
+    const e = V2.add(sh, V2.rot([0, L.ua], ta + (a.sh || 0))); return [sh, e, V2.add(e, V2.rot([0, L.fa], ta + (a.sh || 0) + (a.el || 0)))];
+  };
+  const aL = arm(shL, p.armL || { sh: .12, el: -.1 }, 1), aR = arm(shR, p.armR || { sh: -.12, el: .1 }, -1);
+  const limb = (pts, w, col) => ops.push({ type: 'poly', pts, w, col });
+  // pernas (calça) e sapatos
+  for (const [hip, lg] of [[hipL, legL], [hipR, legR]]) { limb([hip, lg.J, lg.E], 30, cfg.pants); ops.push({ type: 'ellipse', x: lg.E[0] + 6, y: lg.E[1] - 2, rx: 22, ry: 10, fill: cfg.shoes }); }
+  // braço de trás (desenhado antes do tronco quando cfg.backArm)
+  const drawArm = (a, hand = true) => { limb([a[0], a[1], a[2]], 24, cfg.sleeve || cfg.shirt); if (cfg.forearmSkin) limb([V2.lerp(a[1], a[2], .55), a[2]], 18, cfg.skin); if (hand) ops.push({ type: 'circle', x: a[2][0], y: a[2][1], r: 12, fill: cfg.skin }); };
+  if (p.backArm === 'L') drawArm(aL);
+  if (p.backArm === 'R') drawArm(aR);
+  // tronco
+  const wL = V2.add(P, V2.rot([-L.hipW - 10, -60], ta)), wR = V2.add(P, V2.rot([L.hipW + 10, -60], ta));
+  ops.push({ type: 'shape', pts: [V2.add(shL, [-4, -6]), V2.add(N, V2.rot([0, -4], ta)), V2.add(shR, [4, -6]), wR, V2.add(hipR, [6, 6]), V2.add(hipL, [-6, 6]), wL], fill: cfg.shirt });
+  if (cfg.belt) ops.push({ type: 'poly', pts: [V2.add(P, V2.rot([-L.hipW - 8, -14], ta)), V2.add(P, V2.rot([L.hipW + 8, -14], ta))], w: 8, col: cfg.belt, noInk: true });
+  if (cfg.collar) ops.push({ type: 'shape', pts: [V2.add(shL, [6, -4]), V2.add(N, V2.rot([0, 46], ta)), V2.add(shR, [-6, -4]), V2.add(N, V2.rot([0, 6], ta))], fill: cfg.collar });
+  if (cfg.tie) ops.push({ type: 'shape', pts: [V2.add(N, V2.rot([-9, 30], ta)), V2.add(N, V2.rot([9, 30], ta)), V2.add(N, V2.rot([0, 62], ta))], fill: cfg.tie });
+  // pescoço → cabeça (presa ao pescoço; ângulo vem da física)
+  const ha = ta + (p.head || 0), Nt = V2.add(N, V2.rot([0, -L.neck], ta + (p.head || 0) * .4));
+  limb([V2.add(N, V2.rot([0, 6], ta)), Nt], 26, cfg.skin);
+  const C = V2.add(Nt, V2.rot([0, -L.headR * .82], ha));
+  const yaw = clamp(p.yaw || 0, -1, 1), fx = yaw * L.headR * .42, gz = p.gaze || [0, 0], bl = p.blink ?? 1;
+  const head = [];
+  head.push({ type: 'circle', x: 0, y: 0, r: L.headR, fill: cfg.skin });
+  head.push({ type: 'circle', x: -fx * 1.55 + (yaw >= 0 ? -L.headR * .86 : L.headR * .86), y: 6, r: 9, fill: cfg.skin, alpha: Math.abs(yaw) > .15 ? 1 : 0 }); // orelha do lado oposto ao rosto
+  for (const ex of [-13, 13]) head.push({ type: 'ellipse', x: fx + ex + gz[0] * 3, y: -4 + gz[1] * 3, rx: 4.6, ry: 5.8 * bl, fill: ink, noInk: true });
+  head.push({ type: 'poly', pts: [[fx - 20, -15 + (p.brow || 0)], [fx - 7, -18 + (p.brow || 0)]], w: 3.5, col: ink, noInk: true });
+  head.push({ type: 'poly', pts: [[fx + 7, -18 + (p.brow || 0)], [fx + 20, -15 + (p.brow || 0)]], w: 3.5, col: ink, noInk: true });
+  head.push({ type: 'poly', pts: [[fx + yaw * 6, 2], [fx + yaw * 10 + 3, 12], [fx + yaw * 6 - 2, 14]], w: 3, col: ink, noInk: true }); // nariz
+  const mo = p.mouth || 0; head.push({ type: 'ellipse', x: fx, y: 22, rx: 8, ry: 1.6 + mo * 6, fill: mo > .1 ? '#5a2a22' : ink, noInk: true });
+  if (cfg.beard) head.push({ type: 'path', d: 'M-40 4 Q-36 44 0 46 Q36 44 40 4 Q20 20 0 18 Q-20 20 -40 4Z', fill: cfg.beard });
+  // chapéus
+  if (cfg.hat === 'dixie') { head.push({ type: 'path', d: 'M-44 -22 Q-40 -64 0 -66 Q40 -64 44 -22 Q0 -34 -44 -22Z', fill: '#f6f4ee' }); head.push({ type: 'path', d: 'M-50 -24 Q0 -38 50 -24 L48 -14 Q0 -26 -48 -14Z', fill: '#f6f4ee' }); }
+  if (cfg.hat === 'helmet') head.push({ type: 'path', d: 'M-62 -16 Q-50 -26 -36 -30 Q-30 -64 0 -66 Q30 -64 36 -30 Q50 -26 62 -16 Q0 -24 -62 -16Z', fill: cfg.hatCol || '#5d6b3d' });
+  if (cfg.hat === 'cap') { head.push({ type: 'path', d: 'M-42 -20 Q-40 -60 0 -62 Q40 -60 42 -20Z', fill: cfg.hatCol || '#8a7a52' }); head.push({ type: 'path', d: `M${-10 + fx} -22 L${46 + fx * 1.4} -18 L${40 + fx} -10 L${-6 + fx} -14Z`, fill: '#2a2a28' }); }
+  if (cfg.hat === 'garrison') head.push({ type: 'path', d: 'M-40 -26 Q-36 -52 0 -58 Q36 -52 40 -26 Q0 -40 -40 -26Z', fill: cfg.hatCol || '#b9a77a' });
+  if (cfg.hat === 'hachimaki') head.push({ type: 'path', d: 'M-44 -18 Q0 -34 44 -18 L44 -8 Q0 -24 -44 -8Z', fill: '#f4f2ea' }, { type: 'circle', x: fx, y: -16, r: 6, fill: '#c23a2c', noInk: true });
+  if (p.headItem) head.push(...p.headItem);
+  ops.push({ type: 'group', x: C[0], y: C[1], rot: ha, ops: head });
+  // braços da frente + objetos nas mãos
+  if (p.backArm !== 'L') drawArm(aL);
+  if (p.backArm !== 'R') drawArm(aR);
+  if (p.props) ops.push(...p.props({ handL: aL[2], handR: aR[2], elbowL: aL[1], elbowR: aR[1], head: C, headAng: ha, N, P }));
+  return { ops, head: C, headAng: ha, hands: [aL[2], aR[2]], N, P };
+}
+function opsToSvg(ops) {
+  return ops.map(o => {
+    const sw = o.noInk ? 0 : 5;
+    if (o.type === 'group') return `<g transform="translate(${f1(o.x)},${f1(o.y)}) rotate(${f1(o.rot * 180 / Math.PI)})">${opsToSvg(o.ops)}</g>`;
+    if (o.type === 'poly') { const d = 'M' + o.pts.map(q => `${f1(q[0])} ${f1(q[1])}`).join(' L'); return (o.noInk ? '' : `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${o.w + 9}" stroke-linecap="round" stroke-linejoin="round"/>`) + `<path d="${d}" fill="none" stroke="${o.col}" stroke-width="${o.w}" stroke-linecap="round" stroke-linejoin="round"/>`; }
+    if (o.type === 'shape') return `<path d="M${o.pts.map(q => `${f1(q[0])} ${f1(q[1])}`).join(' L')}Z" fill="${o.fill}" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/>`;
+    if (o.type === 'circle') return o.alpha === 0 ? '' : `<circle cx="${f1(o.x)}" cy="${f1(o.y)}" r="${f1(o.r)}" fill="${o.fill}" stroke="${INK}" stroke-width="${sw}"/>`;
+    if (o.type === 'ellipse') return `<ellipse cx="${f1(o.x)}" cy="${f1(o.y)}" rx="${f1(o.rx)}" ry="${f1(Math.max(.5, o.ry))}" fill="${o.fill}" stroke="${INK}" stroke-width="${sw}"/>`;
+    if (o.type === 'path') return `<path d="${o.d}" fill="${o.fill}" stroke="${o.noInk ? 'none' : INK}" stroke-width="5" stroke-linejoin="round"/>`;
+    if (o.type === 'line') return `<path d="M${f1(o.a[0])} ${f1(o.a[1])} L${f1(o.b[0])} ${f1(o.b[1])}" stroke="${o.col}" stroke-width="${o.w}" stroke-linecap="round"/>`;
+    return '';
+  }).join('');
+}
+function opsToCtx(x, ops) {
+  for (const o of ops) {
+    x.lineCap = 'round'; x.lineJoin = 'round';
+    if (o.type === 'group') { x.save(); x.translate(o.x, o.y); x.rotate(o.rot); opsToCtx(x, o.ops); x.restore(); continue; }
+    if (o.type === 'poly') { x.beginPath(); o.pts.forEach((q, i) => i ? x.lineTo(q[0], q[1]) : x.moveTo(q[0], q[1])); if (!o.noInk) { x.strokeStyle = INK; x.lineWidth = o.w + 9; x.stroke(); } x.strokeStyle = o.col; x.lineWidth = o.w; x.stroke(); continue; }
+    if (o.type === 'line') { x.beginPath(); x.moveTo(o.a[0], o.a[1]); x.lineTo(o.b[0], o.b[1]); x.strokeStyle = o.col; x.lineWidth = o.w; x.stroke(); continue; }
+    if (o.type === 'circle' && o.alpha === 0) continue;
+    const p = new Path2D();
+    if (o.type === 'shape') { o.pts.forEach((q, i) => i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1])); p.closePath(); }
+    if (o.type === 'circle') p.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+    if (o.type === 'ellipse') p.ellipse(o.x, o.y, o.rx, Math.max(.5, o.ry), 0, 0, Math.PI * 2);
+    const pp = o.type === 'path' ? new Path2D(o.d) : p;
+    x.fillStyle = o.fill; x.fill(pp); if (!o.noInk) { x.strokeStyle = INK; x.lineWidth = 5; x.stroke(pp); }
+  }
+}
+// camada 2.5D animada: a textura é redesenhada a cada quadro
+function animLayer(wPx, hPx, wU, x, y, z, draw) {
+  const c = document.createElement('canvas'); c.width = wPx; c.height = hPx; const ctx = c.getContext('2d');
+  const tex = new THREE.CanvasTexture(c); tex.anisotropy = 4;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(wU, wU * hPx / wPx), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, fog: false }));
+  m.position.set(x, y, z); m.renderOrder = z;
+  m.userData.redraw = (t, lt) => { ctx.clearRect(0, 0, wPx, hPx); draw(ctx, t, lt); tex.needsUpdate = true; };
+  return m;
+}
+const blinkK = (t, sd) => { const per = 2.4 + (sd * 1.37 % 1.6), ph = (t + sd * 2.3) % per; return ph < .12 ? Math.abs(ph - .06) / .06 * .9 + .1 : 1; };
+const talk = (t, sd, on) => on ? clamp(.5 + .5 * Math.sin(t * 13 + sd) * Math.sin(t * 7.3 + sd * 2), 0, 1) : 0;
+// ─── comportamentos (cada personagem com semente própria) ───
+const CFG = {
+  sailor: { skin: '#e6b88e', shirt: '#f4f2ea', pants: '#f0eee6', shoes: '#1d1c22', hat: 'dixie', collar: '#2c3a6a', tie: '#1b1b22' },
+  soldier: { skin: '#dcae84', shirt: '#7a8650', pants: '#6a7444', shoes: '#3a2a1e', hat: 'helmet', belt: '#4a3a24' },
+  officer: { skin: '#e2b48a', shirt: '#c9b98a', pants: '#b9a77a', shoes: '#3a2a1e', hat: 'garrison', tie: '#6b5a3a', belt: '#5a4630' },
+  deckcrew: { skin: '#e2b48a', shirt: '#e8e2cc', pants: '#3a3a48', shoes: '#2a2a28', hat: 'hachimaki', belt: '#2a2a28' },
+  gunner: { skin: '#e6b88e', shirt: '#3b4a7a', pants: '#2f3c66', shoes: '#1d1c22', hat: 'dixie', forearmSkin: true },
+};
+function poseIdle(t, t0, sd, extra = {}) { // parado com vida: respiração, troca de peso, olhar, piscar — cabeça com mola
+  const look = s => .1 * wob(s, sd, .5) + (extra.lookUpAt != null ? -.32 * ease01(s, extra.lookUpAt, .35) : 0) + (extra.turnAt != null ? .25 * ease01(s, extra.turnAt, .3) * (1 - ease01(s, extra.turnAt + 1.6, .4)) : 0);
+  const shift = Math.sin(t * .55 + sd * 2) * 6;
+  return {
+    px: shift, crouch: 3 + 2 * Math.sin(t * 2.1 + sd) + Math.abs(shift) * .25, torso: -.02 * Math.sin(t * .55 + sd * 2) + .015 * Math.sin(t * 2.1 + sd),
+    head: springAt(look, t0, t, 60, 8), yaw: (extra.turnAt != null ? -.8 * ease01(t, extra.turnAt, .3) * (1 - ease01(t, extra.turnAt + 1.6, .4)) : 0) + .25 * wob(t, sd + 4, .4),
+    gaze: [wob(t, sd + 1, .7) * .6, extra.lookUpAt != null ? -.9 * ease01(t, extra.lookUpAt, .3) : 0], blink: blinkK(t, sd),
+    brow: extra.lookUpAt != null ? -4 * ease01(t, extra.lookUpAt, .3) : 0,
+  };
+}
+
 // ═════════════════════════ PLANOS 3D ═════════════════════════
 // 1 · oceano à noite
 function sh_ocean() {
@@ -299,13 +431,21 @@ function sh_deck() {
   const sun = glowSprite('#ffe0b0', 500, .9); sun.position.set(200, 30, -900); sc.add(sun);
   const planes = [0, 1, 2].map(i => { const p = makePlane(); p.position.set(i === 0 ? 0 : (i % 2 ? -2.2 : 2.2), 5.6 + .1, 28 + i * 7); sc.add(p); return p; });
   // tripulante sinalizando (sprite 2D dentro do 3D)
-  const crew = layer(256, 512, (x) => { P2(x, 'M128 120 a40 40 0 1 0 0.1 0Z', '#e8c39a'); P2(x, 'M88 170 L168 170 L180 360 L76 360Z', '#e9e2cc'); P2(x, 'M96 360 L100 470 L126 470 L128 380 L132 470 L158 470 L162 360Z', '#3a3a48'); P2(x, 'M168 180 L238 90', null, INK, 14); P2(x, 'M232 50 h40 v40 h-40z', '#d23a2a'); P2(x, 'M88 180 L30 250', null, INK, 14); }, 2.2, -3.2, 6.6, -12);
+  const crew = animLayer(512, 1024, 2.6, -3.2, 7.1, -12, (x, t, lt) => {
+    const sd = 3.3, w = t * 5.2, sway = Math.sin(t * 2.6);
+    const pose = { px: 6 * sway, crouch: 22 + 8 * Math.sin(t * 5.2), feet: [[-46, 0], [46, 0]], torso: .07 * sway, kneeL: .5, kneeR: -.5,
+      head: springAt(s2 => .1 * Math.sin(s2 * 2.6) - .12, Math.max(0, t - 3), t, 55, 7), yaw: .35 + .2 * sway, gaze: [.8, -.5], blink: blinkK(t, sd), mouth: talk(t, sd, true) * .6,
+      armR: { target: [70 + 34 * Math.cos(w), -398 + 30 * Math.sin(w)], bend: -1 }, armL: { target: [-150 + 12 * sway, -222], bend: 1 },
+      props: h => { const f = (hd, up, col, ph) => { const tip = V2.add(hd, up); const wv = Math.sin(t * 9 + ph) * 10; return [{ type: 'line', a: hd, b: tip, col: INK, w: 7 }, { type: 'path', d: `M${f1(tip[0])} ${f1(tip[1])} Q${f1(tip[0] + 30)} ${f1(tip[1] - 6 + wv)} ${f1(tip[0] + 62)} ${f1(tip[1] + wv * .6)} L${f1(tip[0] + 60)} ${f1(tip[1] + 40 + wv * .6)} Q${f1(tip[0] + 30)} ${f1(tip[1] + 34 + wv)} ${f1(tip[0])} ${f1(tip[1] + 40)}Z`, fill: col }]; };
+        return [...f(h.handR, [0, -70], '#d23a2a', 0), ...f(h.handL, [-10, -60], '#f4f2ea', 2)]; } };
+    x.save(); x.translate(256, 1000); x.scale(1.9, 1.9); opsToCtx(x, rigOps(CFG.deckcrew, pose).ops); x.restore();
+  });
   sc.add(crew);
   const c = cam(55);
   return { sc, c, update(lt, t) {
     sea.userData.tex.offset.set(0, -t * .03);
     planes.forEach((p, i) => { const s = Math.max(0, lt - i * 1.1); const d = 9 * s * s; p.position.z = 28 + i * 7 - d; p.position.y = 5.7 + Math.max(0, -p.position.z - 25) * .18; p.rotation.x = Math.max(0, -p.position.z - 25) * .006; spin(p).rotation.z = t * 40; });
-    crew.rotation.z = .05 * Math.sin(t * 6);
+    crew.userData.redraw(t, lt);
     c.position.set(-6.5 + lt * .3, 6.6 + Math.sin(t * 1.4) * .08, 16 - lt * 1.4); c.lookAt(-.5, 7.2, -40);
   } };
 }
@@ -339,12 +479,17 @@ function sh_radar() {
   const grid = canvasTex(256, 160, (x, w, h) => { x.clearRect(0, 0, w, h); x.strokeStyle = '#2b1d16'; x.lineWidth = 5; for (let i = 0; i <= 8; i++) { x.beginPath(); x.moveTo(i * w / 8, 0); x.lineTo(i * w / 8, h); x.stroke(); } for (let j = 0; j <= 5; j++) { x.beginPath(); x.moveTo(0, j * h / 5); x.lineTo(w, j * h / 5); x.stroke(); } x.fillStyle = '#9a9a8c'; for (let i = 0; i < 8; i++) for (let j = 0; j < 5; j++) x.fillRect(i * w / 8 + 6, j * h / 5 + 6, 10, 10); });
   const ant = new THREE.Group(); ant.position.set(-2, 9.5, -2); top.add(ant);
   ant.add(new THREE.Mesh(new THREE.PlaneGeometry(9, 5.6), new THREE.MeshBasicMaterial({ map: grid, transparent: true, side: THREE.DoubleSide })));
-  for (let i = 0; i < 3; i++) { const s = layer(200, 420, (x) => { P2(x, 'M100 40 a34 34 0 1 0 0.1 0Z', '#e2b48a'); P2(x, 'M58 34 Q100 0 142 34 L142 52 L58 52Z', '#5d6b3d'); P2(x, 'M62 100 L138 100 L148 300 L52 300Z', '#6f7d4c'); P2(x, 'M64 300 L68 410 L96 410 L100 320 L104 410 L132 410 L136 300Z', '#5d6b3d'); }, 1.8, 6 + i * 2.4, 1.9, 9 - i * .6); if (i < 2) top.add(s); }
+  const soldiers = [0, 1].map(i => { const L2 = animLayer(300, 700, 2.0, 9.5 + i * 2.6, 2.3, -5 + i * 1.6, (x, t, lt) => {
+    const sd = 5 + i * 3.7, base = poseIdle(t, Math.max(0, t - 3), sd, i === 0 ? { lookUpAt: SHOT_T0.radar + 1.4 } : { turnAt: SHOT_T0.radar + 2.2 });
+    if (i === 0) Object.assign(base, { armL: { target: [-52, -168], bend: -1 }, armR: { target: [52, -168], bend: 1 } });
+    else { const pt = ease01(t, SHOT_T0.radar + .8, .5) * (1 - ease01(t, SHOT_T0.radar + 3.2, .5)); Object.assign(base, { armR: pt > .02 ? { target: V2.lerp([40, -150], [170, -330], pt), bend: 1 } : { sh: -.1, el: .15 }, mouth: talk(t, sd, pt > .5) }); }
+    x.save(); x.translate(150, 690); x.scale(1.5, 1.5); opsToCtx(x, rigOps(CFG.soldier, base).ops); x.restore(); });
+    top.add(L2); return L2; });
   const sun = glowSprite('#ffe2b0', 500, 1); sun.position.set(500, 60, -500); sc.add(sun);
   const c = cam(52);
   return { sc, c, update(lt, t) {
-    ant.rotation.y = t * 1.2; sea.userData.tex.offset.set(t * .003, 0);
-    const a = lerp(2.6, 1.7, E.sine(clamp(lt / 4.7))); c.position.set(Math.sin(a) * 30 - 2, -18.5 + lerp(1.5, 6, E.io(clamp(lt / 4.7))), Math.cos(a) * 30 - 2); c.lookAt(-2, -9.5, -2);
+    ant.rotation.y = t * 1.2; sea.userData.tex.offset.set(t * .003, 0); soldiers.forEach(L2 => L2.userData.redraw(t, lt));
+    const a = lerp(2.6, 1.7, E.sine(clamp(lt / 4.7))); c.position.set(Math.sin(a) * 30 - 2, -18.5 + lerp(1.5, 6, E.io(clamp(lt / 4.7))), Math.cos(a) * 30 - 2); c.lookAt(-2, -9.5, -2); soldiers.forEach(L2 => { const w = new THREE.Vector3(); L2.getWorldPosition(w); L2.lookAt(c.position.x, w.y, c.position.z); });
   } };
 }
 // 16 · acima das nuvens, chegando a Oahu
@@ -464,14 +609,18 @@ function sh_info() {
   }, 160, 0, 30, -120));
   sc.add(layer(2048, 700, (x) => { P2(x, 'M100 200 L1950 200 L2048 700 L0 700Z', '#6b4a30', INK, 10); P2(x, 'M300 260 L1700 260 L1800 600 L200 600Z', '#bfae84', INK, 8); for (let i = 0; i < 8; i++) P2(x, `M${400 + i * 150} ${360 + rnd(i) * 160} l24 -40 l24 40z`, '#3a3a48', INK, 4); }, 140, 0, -40, -60));
   const lamp = layer(512, 512, (x) => { const gr = x.createRadialGradient(256, 256, 0, 256, 256, 256); gr.addColorStop(0, '#ffe2a0cc'); gr.addColorStop(1, '#ffe2a000'); x.fillStyle = gr; x.fillRect(0, 0, 512, 512); }, 80, -30, 40, -50); sc.add(lamp);
-  const officer = layer(600, 1100, (x) => {
-    P2(x, 'M300 230 a110 110 0 1 0 0.1 0Z', '#e2b48a'); P2(x, 'M190 200 Q300 80 410 200 L410 230 L190 230Z', '#4a4a3a');
-    P2(x, 'M150 360 Q300 320 450 360 L500 1100 L100 1100Z', '#7a6a4a'); P2(x, 'M260 360 L300 470 L340 360', '#e9e2cc', INK, 5);
-    P2(x, 'M430 400 Q520 330 470 250', null, INK, 40); P2(x, 'M430 400 Q520 330 470 250', null, '#7a6a4a', 28); P2(x, 'M440 240 l50 -20 l20 60 l-50 20z', '#222', INK, 5);
-  }, 34, 22, -12, -25);
+  const officer = animLayer(600, 1100, 34, 22, -12, -25, (x, t, lt) => {
+    const sd = 9.1, t0 = SHOT_T0['info-center'];
+    const nods = s2 => .08 * Math.sin(s2 * 1.3) + .1 * (ease01(s2, t0 + 1.2, .2) - ease01(s2, t0 + 1.5, .25)) + .1 * (ease01(s2, t0 + 2.6, .2) - ease01(s2, t0 + 2.9, .25)) - .06;
+    const pose = { px: 4 * Math.sin(t * .6), crouch: 4, torso: .04 + .02 * Math.sin(t * .6), head: springAt(nods, Math.max(0, t - 3), t, 65, 8), yaw: .45, gaze: [.6, .2], blink: blinkK(t, sd), mouth: talk(t, sd, lt > .5 && lt < 3.6),
+      armL: { target: [-40 + 34 * Math.sin(t * 2.2), -205 + 18 * Math.cos(t * 3.1)], bend: 1 }, backArm: 'L' };
+    const r0 = rigOps(CFG.officer, pose); pose.armR = { target: V2.add(r0.head, V2.rot([38, 18], r0.headAng)), bend: 1 };
+    pose.props = h => [{ type: 'group', x: h.handR[0], y: h.handR[1], rot: r0.headAng + .3, ops: [{ type: 'path', d: 'M-6 -38 Q4 -46 12 -36 L10 34 Q2 44 -8 36Z', fill: '#1d1c1e' }] }];
+    x.save(); x.translate(300, 1090); x.scale(2.4, 2.4); opsToCtx(x, rigOps(CFG.officer, pose).ops); x.restore();
+  });
   sc.add(officer);
   const c = cam(50);
-  return { sc, c, update(lt, t) { const p = clamp(lt / 4.2); c.position.set(lerp(-40, 18, E.sine(p)), lerp(4, -2, p), lerp(40, 22, p)); c.lookAt(lerp(-10, 14, p), 0, -100); officer.rotation.z = .01 * Math.sin(t * 1.3); } };
+  return { sc, c, update(lt, t) { const p = clamp(lt / 4.2); c.position.set(lerp(-40, 18, E.sine(p)), lerp(4, -2, p), lerp(40, 22, p)); c.lookAt(lerp(-10, 14, p), 0, -100); officer.userData.redraw(t, lt); } };
 }
 function sh_colors() {
   const sc = BG_ONLY([[0, '#5f8cc4'], [1, '#e8d6b0']]);
@@ -484,13 +633,23 @@ function sh_colors() {
   const flagGeo = new THREE.PlaneGeometry(19, 10, 24, 8), flag = new THREE.Mesh(flagGeo, new THREE.MeshBasicMaterial({ map: flagTex, side: THREE.DoubleSide })); sc.add(flag);
   const flagBase = flagGeo.attributes.position.array.slice();
   sc.add(layer(64, 1024, (x) => P2(x, 'M24 0 L40 0 L40 1024 L24 1024Z', '#d8d0c0', INK, 6), 1.4, -10.5, 2, -30));
-  const sailors = layer(2048, 600, (x) => { for (let i = 0; i < 11; i++) { const px = 120 + i * 180; P2(x, `M${px} 200 a46 46 0 1 0 0.1 0Z`, '#e2b48a'); P2(x, `M${px - 52} 170 Q${px} 130 ${px + 52} 170 L${px + 46} 186 L${px - 46} 186Z`, '#f4f2ea', INK, 5); P2(x, `M${px - 60} 260 L${px + 60} 260 L${px + 70} 600 L${px - 70} 600Z`, '#f4f2ea', INK, 6); P2(x, `M${px - 40} 262 L${px} 320 L${px + 40} 262`, '#2c3a6a', INK, 4); } }, 120, 0, -40, -40);
+  const sailors = animLayer(2048, 600, 120, 0, -40, -40, (x, t, lt) => {
+    for (let i = 0; i < 9; i++) {
+      const sd = 11 + i * 2.9, t0 = SHOT_T0.colors, ex = {};
+      if ([1, 4, 7].includes(i)) ex.lookUpAt = t0 + 3.0 + i * .12; if (i === 5) ex.turnAt = t0 + .8;
+      const pose = poseIdle(t, Math.max(0, t - 3), sd, ex);
+      pose.armL = { target: [-36 + pose.px, -92], bend: -1 }; pose.armR = { target: [36 + pose.px, -92], bend: 1 };
+      if (i === 2) { const q = ease01(t, t0 + 1.0, .4) * (1 - ease01(t, t0 + 2.2, .4)); if (q > .02) { const r0 = rigOps(CFG.sailor, pose); pose.armR = { target: V2.lerp([36, -92], V2.add(r0.head, V2.rot([26, -52], r0.headAng)), q), bend: 1 }; } }
+      if (i === 5) pose.mouth = talk(t, sd, t > t0 + 1 && t < t0 + 2.4);
+      x.save(); x.translate(150 + i * 220, 760); x.scale(1.28, 1.28); opsToCtx(x, rigOps(CFG.sailor, pose).ops); x.restore();
+    }
+  });
   sc.add(sailors);
   sc.add(layer(2048, 300, (x) => { x.strokeStyle = INK; x.lineWidth = 14; for (const y of [60, 150]) { x.beginPath(); x.moveTo(0, y); x.lineTo(2048, y); x.stroke(); } for (let i = 0; i < 14; i++) { x.beginPath(); x.moveTo(i * 160, 40); x.lineTo(i * 160, 300); x.stroke(); } }, 70, 0, -26, -12));
   const c = cam(50);
   return { sc, c, update(lt, t) {
     const pos = flagGeo.attributes.position; for (let i = 0; i < pos.count; i++) { const bx = flagBase[i * 3], by = flagBase[i * 3 + 1], u = (bx + 9.5) / 19; pos.setZ(i, Math.sin(bx * .5 - t * 5) * 1.2 * u); pos.setY(i, by + Math.sin(bx * .4 - t * 4) * .4 * u); } pos.needsUpdate = true;
-    flag.position.set(-.5, 20, -30);
+    flag.position.set(-.5, 20, -30); sailors.userData.redraw(t, lt);
     const p = clamp(lt / 5.3); c.position.set(lerp(10, -4, p), lerp(-26, 2, E.io(p)), 34); c.lookAt(lerp(5, -2, p), lerp(-30, 16, E.io(p)), -60);
   } };
 }
@@ -530,8 +689,15 @@ function s2_gun(lt, t) {
   s += g(`translate(${f1(rec)},${f1(-rec * .5)})`, `<path d="M540 1260 L120 1020 L140 980 L580 1210Z" fill="#3a3d4a" stroke="${INK}" stroke-width="8"/><path d="M480 1150 Q560 1080 680 1140 L720 1340 L460 1360Z" fill="#5a5e6e" stroke="${INK}" stroke-width="8"/>`);
   for (const f of fire) { const q = clamp((lt - f) / 1.4); if (q > 0 && q < 1) s += `<circle cx="${f1(100 - q * 120)}" cy="${f1(980 - q * 160)}" r="${f1(60 + q * 160)}" fill="#d8d0c8" opacity="${(.7 * (1 - q)).toFixed(2)}" stroke="${INK}" stroke-width="4"/>`; }
   if (fl > 0) s += glowDot(110, 990, 380 * fl, fl, 'glR') + `<path d="M120 1000 l-160 -60 l40 70 l-140 10 l140 40 l-60 70 l170 -70z" fill="#fff0b0" opacity="${fl.toFixed(2)}"/>`;
-  s += litFigure('gunner', [['M750 980 L890 980 L910 1240 L730 1240Z', '#3b4a7a'], ['M766 920 a54 54 0 1 0 108 0 a54 54 0 1 0 -108 0Z', '#e2b48a'], ['M760 890 Q820 840 880 890 L880 910 L760 910Z', '#f4f2ea', 5]], { x: 110, y: 990, r: 1100, color: '#ffb060', k: .1 + 1.2 * sk, shadow: .5, sx: 1 });
-  s += `<ellipse cx="800" cy="918" rx="7" ry="${f1(9 - 6 * fl)}" fill="${INK}"/><circle cx="797" cy="914" r="2.6" fill="#ffd8a0" opacity="${(.3 + .7 * sk).toFixed(2)}"/>`;
+  { // artilheiro: agachado, mãos no volante do canhão (IK), recuo e cabeça com mola a cada disparo
+    const imp = s2 => fire.reduce((acc, f) => acc + (s2 > f ? Math.exp(-(s2 - f) * 7) * Math.min(1, (s2 - f) * 30) : 0), 0);
+    const sd = 2.2, ox = 800, oy = 1250, sc2 = 1.05;
+    const tor = springAt(s2 => .26 - .3 * imp(s2), 0, lt, 90, 10), hd = springAt(s2 => -.05 + .35 * imp(s2) + .05 * Math.sin(s2 * 2), 0, lt, 55, 6);
+    const wheel = [(600 - ox) / sc2 + 8 * Math.sin(t * 3), (1150 - oy) / sc2];
+    const pose = { px: -10 - 18 * imp(lt), crouch: 46 + 6 * Math.sin(t * 2.3), feet: [[-58, 0], [44, 0]], kneeL: .9, kneeR: -.4, torso: -tor, head: hd, yaw: -.6, gaze: [-.8, 0], blink: Math.max(.15, blinkK(t, sd) - .8 * imp(lt)), brow: 4 * imp(lt), mouth: .2 * imp(lt),
+      armL: { target: V2.add(wheel, [-10, 10]), bend: 1 }, armR: { target: V2.add(wheel, [16, -6]), bend: 1 }, backArm: 'R' };
+    s += litRig('gunner', g(`translate(${ox},${oy}) scale(${sc2})`, opsToSvg(rigOps(CFG.gunner, pose).ops)), { x: 110, y: 990, r: 1100, color: '#ffb060', k: .1 + 1.2 * sk, shadow: .5, sx: 1 });
+  }
   return g(`translate(${f1(hx)},${f1(hy)})`, camWrap(s, lerp(560, 480, clamp(lt / 2)), 1080, lerp(1.0, 1.12, clamp(lt / 2)))) + (fl > .5 ? `<rect width="1080" height="1920" fill="#fff4d0" opacity="${((fl - .5) * .5).toFixed(2)}"/>` : '') + label('USS WARD', 540, 560, t, C('s6_fires') - .3, -3, 48);
 }
 const WARD_MSG = 'WE HAVE ATTACKED FIRED UPON AND DROPPED DEPTH CHARGES UPON SUBMARINE OPERATING IN DEFENSIVE SEA AREA';
@@ -559,8 +725,9 @@ function s2_scope(lt, t) {
   s += `<path d="${d}" stroke="#b9ffb0" stroke-width="5" fill="none" filter="url(#glow)"/>` + glowDot(640, 1040 - 330 * grow, 120 * grow, .5 * grow, 'glG') + `</g>`;
   for (let i = 0; i < 4; i++) s += `<circle cx="${220 + i * 210}" cy="1360" r="40" fill="#2a2a28" stroke="${INK}" stroke-width="6"/><line x1="${220 + i * 210}" y1="1360" x2="${220 + i * 210 + 24}" y2="1340" stroke="#e8e0d0" stroke-width="5"/>`;
   const opK = .45 + .45 * grow + .06 * Math.sin(t * 37);
-  const op = litFigure('op', [['M-60 1520 Q-10 1260 190 1240 Q330 1260 390 1520Z', '#5d6b3d'], ['M40 1060 Q60 960 170 950 Q250 955 270 1030 L285 1075 L265 1085 L270 1120 Q255 1170 200 1175 L190 1245 L60 1245 Q20 1160 40 1060Z', '#d8a880'], ['M80 990 Q170 890 262 995 L246 1006 Q170 925 98 1002Z', '#2a2a28', 5], ['M100 1045 a38 48 0 1 0 0.1 0Z', '#2a2a28', 5]], { x: 700, y: 900, r: 900, color: '#7dff8a', k: opK, shadow: .65, sx: -1 }) +
-    `<ellipse cx="236" cy="1036" rx="7" ry="9" fill="${INK}"/><circle cx="239" cy="1032" r="2.6" fill="#b9ffb0"/>`;
+  const lean = springAt(s2 => 3 * Math.sin(s2 * .9) + 12 * E.out(clamp((s2 - .2) / 1.4)), 0, lt, 50, 7), hT = `rotate(${f1(lean)} 170 1230)`, bT = `translate(${f1(lean * .8)} 0)`;
+  const op = litFigure('op', [['M-60 1520 Q-10 1260 190 1240 Q330 1260 390 1520Z', '#5d6b3d', 6, bT], ['M40 1060 Q60 960 170 950 Q250 955 270 1030 L285 1075 L265 1085 L270 1120 Q255 1170 200 1175 L190 1245 L60 1245 Q20 1160 40 1060Z', '#d8a880', 6, hT], ['M80 990 Q170 890 262 995 L246 1006 Q170 925 98 1002Z', '#2a2a28', 5, hT], ['M100 1045 a38 48 0 1 0 0.1 0Z', '#2a2a28', 5, hT]], { x: 700, y: 900, r: 900, color: '#7dff8a', k: opK, shadow: .65, sx: -1 }) +
+    `<g transform="${hT}"><ellipse cx="236" cy="1036" rx="7" ry="${f1(9 * blinkK(t, 4.4))}" fill="${INK}"/><circle cx="239" cy="1032" r="2.6" fill="#b9ffb0"/></g>`;
   return camWrap(s, lerp(540, 600, clamp(lt / 3)), lerp(900, 860, clamp(lt / 3)), lerp(1.0, 1.3, E.io(clamp(lt / 3.5)))) + op + label(T('planes50'), 300, 470, t, C('s9_fifty'), -4, 46) + label(T('miles130'), 780, 560, t, C('s9_thirty'), 3, 46);
 }
 function s2_phone(lt, t) {
@@ -586,7 +753,9 @@ function s2_cockpit(lt, t) {
   s += `<path d="M90 300 L990 300 L1040 1150 L40 1150Z M540 300 L540 1150 M60 700 L1020 700" fill="none" stroke="#3a3a32" stroke-width="22"/>`;
   s += `<path d="M0 1150 L1080 1150 L1080 1920 L0 1920Z" fill="#3c3a30" stroke="${INK}" stroke-width="8"/>`;
   for (let i = 0; i < 5; i++) s += `<circle cx="${180 + i * 180}" cy="1300" r="62" fill="#1d1c1a" stroke="${INK}" stroke-width="6"/><line x1="${180 + i * 180}" y1="1300" x2="${f1(180 + i * 180 + 45 * Math.cos(t * (1 + i * .3) + i))}" y2="${f1(1300 + 45 * Math.sin(t * (1 + i * .3) + i))}" stroke="#e8e0d0" stroke-width="5"/>`;
-  s += `<path d="M300 1920 Q300 1460 540 1420 Q780 1460 780 1920Z" fill="#3a3326" stroke="${INK}" stroke-width="8"/><path d="M380 1560 Q540 1380 700 1560 Q700 1460 540 1420 Q380 1460 380 1560Z" fill="#5a4a32" stroke="${INK}" stroke-width="6"/>`;
+  const pr = springAt(s2 => 9 * Math.sin(s2 * .8) + (s2 > C('s14_attack') - SHOT_T0.cockpit ? -10 : 0), 0, lt, 60, 7), pb = 1 + .015 * Math.sin(t * 3.4);
+  s += g(`translate(540 1920) scale(1 ${pb.toFixed(4)}) translate(-540 -1920)`, `<path d="M240 1920 Q250 1640 420 1600 L660 1600 Q830 1640 840 1920Z" fill="#3a3326" stroke="${INK}" stroke-width="8"/><path d="M470 1610 L470 1560 L610 1560 L610 1610Z" fill="#c9a07a" stroke="${INK}" stroke-width="6"/><path d="M380 1650 Q540 1610 700 1650" stroke="#f4f2ea" stroke-width="16" fill="none"/>`);
+  s += g(`rotate(${f1(pr)} 540 1590)`, `<path d="M410 1560 Q400 1360 540 1350 Q680 1360 670 1560 Q540 1590 410 1560Z" fill="#5a4a32" stroke="${INK}" stroke-width="6"/><path d="M412 1470 Q540 1440 668 1470" stroke="#3a2e20" stroke-width="18" fill="none"/><path d="M420 1500 Q540 1470 660 1500" stroke="#f4f2ea" stroke-width="10" fill="none"/><circle cx="540" cy="1482" r="9" fill="#c23a2c"/>`);
   const key = [0, .5, 1.0].some(k => lt > k + .2 && lt < k + .45);
   s += g(`translate(870,1680)`, `<rect x="-90" y="0" width="180" height="40" fill="#2a2a28" stroke="${INK}" stroke-width="5"/><path d="M-60 ${key ? -6 : -20} L80 ${key ? -6 : -20}" stroke="#8a6a40" stroke-width="18" stroke-linecap="round"/><path d="M40 ${key ? -60 : -76} q50 -30 90 10 l-20 40 q-40 0 -70 -20z" fill="#d8b48a" stroke="${INK}" stroke-width="5"/>`);
   return g(`translate(${f1(hx)},${f1(hy)})`, s) + italic(T('to'), 540, 1380, t, S('s14') + .2, 52) + label(T('attack'), 540, 560, t, C('s14_attack'), -3, 56);
@@ -875,12 +1044,19 @@ function s2_apbomb(lt, t) {
 // ═════════════════════════ LUZ 2D: iluminar figuras por uma fonte (clarão, tela, fogo) ═════════════════════════
 // fig: [[d, fill], ...]; a luz é um gradiente radial recortado pela silhueta (screen) + sombra do lado oposto (multiply)
 function litFigure(id, fig, light) {
-  const draw = fig.map(([d, fill, sw = 6]) => `<path d="${d}" fill="${fill}" stroke="${INK}" stroke-width="${sw}" stroke-linejoin="round"/>`).join('');
-  const clip = `<clipPath id="${id}">${fig.filter(f => f[1] !== 'none').map(([d]) => `<path d="${d}"/>`).join('')}</clipPath>`;
+  const draw = fig.map(([d, fill, sw = 6, tr = '']) => `<path d="${d}" fill="${fill}" stroke="${INK}" stroke-width="${sw}" stroke-linejoin="round" transform="${tr}"/>`).join('');
+  const clip = `<clipPath id="${id}">${fig.filter(f => f[1] !== 'none').map(([d, , , tr = '']) => `<path d="${d}" transform="${tr}"/>`).join('')}</clipPath>`;
   const { x, y, r, color, k, shadow = .5, sx = 1 } = light;
   const grad = `<radialGradient id="${id}L" gradientUnits="userSpaceOnUse" cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}"><stop offset="0" stop-color="${color}" stop-opacity="1"/><stop offset=".55" stop-color="${color}" stop-opacity=".45"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></radialGradient>` +
     `<linearGradient id="${id}S" x1="${sx > 0 ? 0 : 1}" y1="0" x2="${sx > 0 ? 1 : 0}" y2="0"><stop offset=".35" stop-color="#1a1020" stop-opacity="0"/><stop offset="1" stop-color="#1a1020" stop-opacity="${shadow}"/></linearGradient>`;
   return `<defs>${clip}${grad}</defs>${draw}<g clip-path="url(#${id})"><rect x="-500" y="-500" width="2400" height="3000" fill="url(#${id}S)" style="mix-blend-mode:multiply"/><rect x="-500" y="-500" width="2400" height="3000" fill="url(#${id}L)" opacity="${clamp(k).toFixed(3)}" style="mix-blend-mode:screen"/></g>`;
+}
+function litRig(id, svgInner, light) {
+  const { x, y, r, color, k, shadow = .5, sx = 1 } = light;
+  return `<defs><mask id="${id}" maskUnits="userSpaceOnUse" x="-3000" y="-3000" width="8000" height="8000"><g filter="url(#toWhite)">${svgInner}</g></mask>` +
+    `<radialGradient id="${id}L" gradientUnits="userSpaceOnUse" cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}"><stop offset="0" stop-color="${color}" stop-opacity="1"/><stop offset=".55" stop-color="${color}" stop-opacity=".45"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></radialGradient>` +
+    `<linearGradient id="${id}S" x1="${sx > 0 ? 0 : 1}" y1="0" x2="${sx > 0 ? 1 : 0}" y2="0"><stop offset=".35" stop-color="#1a1020" stop-opacity="0"/><stop offset="1" stop-color="#1a1020" stop-opacity="${shadow}"/></linearGradient></defs>` +
+    svgInner + `<g mask="url(#${id})"><rect x="-500" y="-500" width="2400" height="3000" fill="url(#${id}S)" style="mix-blend-mode:multiply"/><rect x="-500" y="-500" width="2400" height="3000" fill="url(#${id}L)" opacity="${clamp(k).toFixed(3)}" style="mix-blend-mode:screen"/></g>`;
 }
 function sailorBust(cx, cy, s = 1, look = -1) { // marinheiro de 3/4 olhando para cima/esquerda
   const T2 = (d) => 'M' + d.replace(/(-?\d+\.?\d*) (-?\d+\.?\d*)/g, (m, a, b) => `${f1(cx + (+a) * s)} ${f1(cy + (+b) * s)}`);
@@ -905,12 +1081,14 @@ function s2_reaction(lt, t) {
   for (let i = 0; i < 9; i++) { const q = (lt * .35 + i * .11) % 1; bg += `<circle cx="${f1(260 + Math.sin(i * 2 + q * 3) * 40 * q)}" cy="${f1(1120 - q * 900)}" r="${f1(60 + q * 160)}" fill="#2b2624" opacity="${(.85 * (1 - q * .6)).toFixed(2)}" stroke="${INK}" stroke-width="4"/>`; }
   bg += glowDot(270, 1130, 420 * (.6 + .6 * fl), .5 + .5 * fl, 'glR');
   for (let i = 0; i < 3; i++) { const px = ((lt * 260 + i * 330) % 1500) - 200; bg += g(`translate(${f1(px)},${300 + i * 90}) scale(.9)`, `<path d="M-60 0 L60 0 M-10 -6 L-10 6 M0 -30 L0 30" stroke="#1d1c22" stroke-width="12" stroke-linecap="round"/>`); }
-  const fig = sailorBust(690, 980, 1.15);
+  const hRot = springAt(s2 => -8 - 4 * Math.sin(s2 * 1.1) + flashT.reduce((a, f) => a + (s2 > f ? 14 * Math.exp(-(s2 - f) * 3) * Math.min(1, (s2 - f) * 25) : 0), 0), 0, lt, 60, 6);
+  const breathe = 1 + .02 * Math.sin(t * 4.2), hTr = `rotate(${f1(hRot)} 690 1176) translate(0 ${f1(-6 * (breathe - 1) * 50)})`, bTr = `translate(690 1600) scale(1 ${breathe.toFixed(4)}) translate(-690 -1600)`;
+  const fig = sailorBust(690, 980, 1.15).map((f, i) => i >= 4 ? [f[0], f[1], f[2] ?? 6, hTr] : [f[0], f[1], f[2] ?? 6, bTr]);
   const sailor = litFigure('rx', fig, { x: 250, y: 1050, r: 980, color: '#ffa04a', k, shadow: .55, sx: 1 });
   const eyes = [[620, 950], [740, 950]].map(([ex, ey]) => `<ellipse cx="${ex}" cy="${ey}" rx="15" ry="19" fill="${INK}"/><circle cx="${ex - 6}" cy="${ey - 6}" r="5.5" fill="#ffd8a0" opacity="${(.5 + .5 * k).toFixed(2)}"/>`).join('') +
     `<path d="M592 902 q28 -16 56 -4 M712 898 q28 -12 56 4" stroke="${INK}" stroke-width="7" fill="none" stroke-linecap="round"/><ellipse cx="680" cy="1070" rx="${f1(18 + 6 * fl)}" ry="${f1(12 + 10 * fl)}" fill="#5a2a22"/>`;
   const z = lerp(1.0, 1.12, E.io(clamp(lt / 3))), [hx, hy] = shake(t, 10 * fl, 30);
-  return g(`translate(${f1(hx)},${f1(hy)})`, camWrap(bg + sailor + eyes, lerp(600, 640, clamp(lt / 3)), lerp(960, 920, clamp(lt / 3)), z)) + `<rect width="1080" height="1920" fill="#ff9a40" opacity="${(.12 * fl).toFixed(3)}" style="mix-blend-mode:screen"/>`;
+  return g(`translate(${f1(hx)},${f1(hy)})`, camWrap(bg + sailor + `<g transform="${hTr}">${eyes}</g>`, lerp(600, 640, clamp(lt / 3)), lerp(960, 920, clamp(lt / 3)), z)) + `<rect width="1080" height="1920" fill="#ff9a40" opacity="${(.12 * fl).toFixed(3)}" style="mix-blend-mode:screen"/>`;
 }
 function s2_kamikaze(lt, t) {
   const tk = C('w1b_kamikazes') + .35, strike = E.out(clamp((t - tk) / .35)), tl = C('w1b_suicidas'), t44 = C('w1b_tres');
