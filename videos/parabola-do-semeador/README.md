@@ -3,7 +3,7 @@
 | Versão | Arquivo | Voz | Áudio |
 |---|---|---|---|
 | Português | `parabola-do-semeador.mp4` (57,7 s) | Piper `pt_BR-faber-medium` (~171 Hz) | voz + trilha + SFX |
-| Inglês | `parable-of-the-sower.mp4` (63,0 s) | Piper `en_US-norman-medium`, tom −8 % (~93 Hz, mais grave) | voz + SFX, **sem trilha** |
+| Inglês | `parable-of-the-sower.mp4` (63,8 s) | Piper `en_US-norman-medium`, tom −14 % (~88 Hz, voz grossa) + reforço de graves | voz + SFX e ambiências (os efeitos abaixam quando a voz fala), **sem trilha** |
 | Inglês, só efeitos | `parable-of-the-sower_sfx-only.mp4` (63,0 s) | **sem voz** (a história vem pela legenda) | só SFX + ambiências: grilos e lamparina, ondas e multidão, vento e passos, aves, sol, espinhos, trigo, drone, batidas de coração |
 
 Os roteiros ficam em `script_pt.json` e `script_en.json`. Cada um tem o texto da locução, os textos da tela (`strings`) e as palavras que disparam cada animação (`cues`).
@@ -57,7 +57,7 @@ Feito com a skill `explainer-cutout-animation`.
 pip install piper-tts numpy
 # voz: pt_BR-faber-medium (.onnx + .onnx.json) de huggingface.co/rhasspy/piper-voices
 python3 build_audio.py script_pt.json pt_BR-faber-medium.onnx build          # narração, trilha, timeline_pt.js
-# inglês, voz mais grave: python3 build_audio.py script_en.json en_US-norman-medium.onnx build_en 0.92
+# inglês, voz mais grave: python3 build_audio.py script_en.json en_US-norman-medium.onnx build_en 0.86
 node render.js frames 25 4                                     # VLANG=en para a versão em inglês (~3 min)
 python3 build_audio.py --sfx frames/sfx_events.json build/sfx.wav 57.641
 ffmpeg -i build/narration.wav -i build/music.wav -i build/sfx.wav -filter_complex \
