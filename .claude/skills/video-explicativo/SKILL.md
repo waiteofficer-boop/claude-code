@@ -36,6 +36,7 @@ Copie o exemplo mais próximo para `src/<nome>.jsx` e troque cenas, letreiros, c
 
 - **Padrão: voz neural** `pt-BR-AntonioNeural` (edge-tts, `+12%`), bem menos robótica que a Piper. `scripts/tts.py` já aponta o edge-tts para o CA do proxy (`/root/.ccr/ca-bundle.crt`), sem desligar a verificação. `scripts/narracao_neural.py <tts.py> pt-BR-AntonioNeural +12% roteiro.json public/<nome>/voz.wav src/timeline-<nome>.json` gera voz, tempo real de cada palavra (`wAt(i,'palavra')`), gaguejadas (`stutters`) e corta o silêncio do fim de cada frase.
 - Outras vozes: `pt-BR-FranciscaNeural`, `pt-BR-ThalitaMultilingualNeural`. Piper (`narracao.py`) fica como alternativa offline.
+- **Versão em inglês (gringa, RPM maior):** `en-US-AndrewNeural` (`+8%`), traduzir TODOS os textos da tela (letreiros, cards, gráficos, memes, etiquetas, fontes), usar unidades dos EUA (°F, $). Exemplo: `template/src/exemplo-pigs-english.jsx` + `scripts/script-example-pigs-en.json`.
 
 ## Setup (sessão nova)
 
