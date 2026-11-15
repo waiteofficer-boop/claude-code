@@ -71,3 +71,23 @@ As trilhas precisam estar em `build/<Nome_Da_Faixa>.wav` (48 kHz), convertidas a
   - um homem gritando no "Alguém grita";
   - os sons do mundo ficam abafados com zumbido no ouvido, e a narração continua limpa.
 - **Gritos reais:** o Commons só tem o "Wilhelm Scream", um clichê cômico, ou gritos CC BY-SA, licença que contaminaria o vídeo. Para gritos realistas, gere no **ElevenLabs Sound Effects** e coloque em `sfx/` como `{k:'file'}`.
+
+## v3: o que é dito aparece na tela
+
+- **Mapa da Europa de 1914 animado** (`mapdata.js`). Os países atuais do Natural Earth (domínio público) foram agrupados nos impérios da época; é uma simplificação: a Polônia e a Ucrânia aparecem dentro da Rússia, e as fronteiras são aproximadas.
+  - Sarajevo é marcada no início, na Bósnia anexada pela Áustria-Hungria.
+  - O "império" da fala acende no mapa, com 52 milhões de habitantes.
+  - Áustria-Hungria e Sérvia acendem quando são ditas.
+  - A seta de "GUERRA" entre Áustria-Hungria e Sérvia aparece em 28/07.
+  - O dominó segue a fala, um país por vez: a Rússia defende a Sérvia, a Alemanha declara guerra à Rússia e à França e invade a Bélgica, e a Grã-Bretanha entra.
+  - Nas "alianças", aparecem os blocos, com os Impérios Centrais em vermelho e a Entente em azul.
+  - Na "Europa", o continente inteiro acende e a câmera mergulha em Sarajevo com a faísca.
+- **Sequência de fotos do arquiduque** no início: retrato, foto de família, chegada a Sarajevo, medalhas e o mapa do império.
+- **Revisão frase a frase:**
+  - armas ("6 bombas · 4 pistolas · cápsulas de cianeto");
+  - o rio Miljacka no "rio quase seco";
+  - "hospital militar" como novo destino;
+  - o grito "motorista, errado!";
+  - a foto famosa com círculo e depois a **comparação lado a lado** com o verdadeiro Princip ("NÃO É ELE");
+  - "uma curva errada?" de volta ao mapa da rota.
+- São 37 planos, e o mapa tem som próprio: golpe grave a cada país que acende, whoosh nas setas e explosões na invasão da Bélgica.
