@@ -1,0 +1,100 @@
+{
+ "couple": {
+  "file": "File:Franz Ferdinand & Sophie Leave Sarajevo Guildhall.jpg",
+  "license": "CC0"
+ },
+ "arrival": {
+  "file": "File:Archduke Franz Ferdinand in Sarajevo, June 1914 Q91848.jpg",
+  "license": "Public domain"
+ },
+ "family": {
+  "file": "File:Franz Ferdinand Archduke of Austria with family 1908.jpg",
+  "license": "Public domain",
+  "artist": "New-York tribune"
+ },
+ "princip": {
+  "file": "File:Gavrilo Princip, cell, headshot, bw (cropped).jpg",
+  "license": "Public domain",
+  "artist": "Unknown author<span style=\"display: none;\">Unknown author</span>"
+ },
+ "trial": {
+  "file": "File:Sarajevo trial, accused, Čabrinović, Princip, Ilić.jpg",
+  "license": "Public domain",
+  "artist": "Unknown photographer"
+ },
+ "cabrinovic": {
+  "file": "File:Nedeljko Cabrinovic.jpg",
+  "license": "Public domain",
+  "artist": "Unknown author<span style=\"display: none;\">Unknown author</span>"
+ },
+ "petitjournal": {
+  "file": "File:L'assassinat de l'Archiduc héritier d'Autriche et de la Duchesse sa femme à Sarajevo supplément illustré du Petit Journal du 12 juillet 1914.jpg",
+  "license": "Public domain",
+  "artist": "<a href=\"https://fr.wikipedia.org/wiki/Le_Petit_Journal\" class=\"extiw\" title=\"fr"
+ },
+ "routemap": {
+  "file": "File:1914 Sarajevo assassination map.jpg",
+  "license": "Public domain",
+  "artist": "Sarajevo Archive"
+ },
+ "behr": {
+  "file": "File:Ferdinand Behr arrested in Sarajevo 1914.jpg",
+  "license": "Public domain",
+  "artist": "Unknown author<span style=\"display: none;\">Unknown author</span>"
+ },
+ "latin": {
+  "file": "File:The Latin Bridge, Sarajevo.jpg",
+  "license": "CC0",
+  "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:%C4%90ana_Tali%C4%87&amp"
+ },
+ "nyt": {
+  "file": "File:Headline of the New York Times June-29-1914.jpg",
+  "license": "Public domain",
+  "artist": "lebstock"
+ },
+ "telegram": {
+  "file": "File:Telegramm Kriegserklaerung 1914-07-27.jpg",
+  "license": "Public domain",
+  "artist": "Österreichisches Außenministerium 1914"
+ },
+ "apis": {
+  "file": "File:Dragutin Dimitrijević-Apis, ca. 1900.jpg",
+  "license": "Public domain",
+  "artist": "Unknown author<span style=\"display: none;\">Unknown author</span>"
+ },
+ "wilhelm": {
+  "file": "File:Kaiser Wilhelm II of Germany - 1902.jpg",
+  "license": "Public domain",
+  "artist": "<bdi>Studio of <a href=\"https://www.wikidata.org/wiki/Q27921748\" class=\"extiw\" t"
+ },
+ "mobil": {
+  "file": "File:Mobilization order is read out in Berlin, 1 August 1914.jpg",
+  "license": "Public domain",
+  "artist": "<div class=\"fn value\">\nUnknown author<span style=\"display: none;\">Unknown author"
+ },
+ "crowd": {
+  "file": "File:Crowd cheers the Kaiser at the Berliner Stadtschloss, 1914.jpg",
+  "license": "Public domain",
+  "artist": "<div class=\"fn value\">\nUnknown author<span style=\"display: none;\">Unknown author"
+ },
+ "trench": {
+  "file": "File:Breastwork trench at Armentieres 1916.jpg",
+  "license": "Public domain",
+  "artist": "Photo taken by a British official photographer."
+ },
+ "trench2": {
+  "file": "File:The Australian Imperial Force on the Western Front, 1916-1918. Q578.jpg",
+  "license": "Public domain",
+  "artist": "<bdi><a href=\"https://en.wikipedia.org/wiki/en:Ernest_Brooks_(photographer)\" cla"
+ },
+ "ff": {
+  "file": "File:Franz Ferdinand, Erzherzog von Österreich-Este (cropped).jpg",
+  "license": "Public domain",
+  "artist": "<bdi><a href=\"https://www.wikidata.org/wiki/Q34515028\" class=\"extiw\" title=\"d:Q3"
+ },
+ "nicholas": {
+  "file": "File:Nicholas II, 1914.jpg",
+  "license": "Public domain",
+  "artist": "Romanov court photographer"
+ }
+}

@@ -1,0 +1,5 @@
+node_modules/
+build/*
+!build/mix_*.m4a
+frames/
+__pycache__/

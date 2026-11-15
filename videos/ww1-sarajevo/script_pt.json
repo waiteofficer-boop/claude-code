@@ -1,0 +1,116 @@
+{
+ "lang": "pt",
+ "gap": 0.55,
+ "lead_in": 1.6,
+ "tail": 4.0,
+ "clockFmt": "pt",
+ "keywords": [
+  "sarajevo",
+  "herdeiro",
+  "armados",
+  "negra",
+  "granada",
+  "veneno",
+  "terminou",
+  "motorista",
+  "errada",
+  "princip",
+  "tiros",
+  "principio",
+  "behr",
+  "telegrama",
+  "mundial",
+  "milhoes",
+  "faisca"
+ ],
+ "segments": [
+  {
+   "id": "s1",
+   "text": "Vinte e oito de junho de mil novecentos e catorze. Sarajevo."
+  },
+  {
+   "id": "s2",
+   "text": "Um homem acorda para o seu último dia. Ele é o herdeiro de um império."
+  },
+  {
+   "id": "s3",
+   "text": "O arquiduque Francisco Ferdinando, da Áustria-Hungria. Ao lado dele, a esposa, Sofia."
+  },
+  {
+   "id": "s4",
+   "text": "Mas, naquela manhã, outros jovens também acordaram em Sarajevo. Todos armados."
+  },
+  {
+   "id": "s5",
+   "text": "Nacionalistas, com armas fornecidas por uma sociedade secreta sérvia: a Mão Negra."
+  },
+  {
+   "id": "s6",
+   "text": "Dez e dez da manhã. O cortejo passa pelo cais. Um deles atira uma granada."
+  },
+  {
+   "id": "s7",
+   "text": "Ela bate no carro, quica, e explode embaixo do carro de trás."
+  },
+  {
+   "id": "s8",
+   "text": "O arquiduque escapa. O atirador engole veneno e se joga no rio. O veneno estava velho. E o rio, quase seco."
+  },
+  {
+   "id": "s9",
+   "text": "Era para terminar aí. Mas não terminou."
+  },
+  {
+   "id": "s10",
+   "text": "Depois da recepção na prefeitura, Francisco Ferdinando decide visitar os feridos no hospital."
+  },
+  {
+   "id": "s11",
+   "text": "A rota muda. Só que ninguém avisa o motorista."
+  },
+  {
+   "id": "s12",
+   "text": "Perto da Ponte Latina, o carro entra na rua errada. Alguém grita. O motorista freia, e o carro para."
+  },
+  {
+   "id": "s13",
+   "text": "A um metro e meio dali está Gavrilo Princip. Dezenove anos.",
+   "say": "A um metro e meio dali está Gávrilo Príntsip. Dezenove anos."
+  },
+  {
+   "id": "s14",
+   "text": "Dois tiros."
+  },
+  {
+   "id": "s15",
+   "text": "Sofia é atingida no abdômen. Francisco Ferdinando, no pescoço. Em poucos minutos, os dois estão mortos."
+  },
+  {
+   "id": "s16",
+   "text": "E um detalhe que quase ninguém conhece: a foto mais famosa da prisão de Princip não mostra Princip. Mostra um espectador, Ferdinand Behr.",
+   "say": "E um detalhe que quase ninguém conhece: a foto mais famosa da prisão de Príntsip não mostra Príntsip. Mostra um espectador, Ferdinand Bêr."
+  },
+  {
+   "id": "s17",
+   "text": "Exatamente um mês depois, a Áustria-Hungria declara guerra à Sérvia. Por telegrama."
+  },
+  {
+   "id": "s18",
+   "text": "A Rússia se mobiliza para defender a Sérvia. A Alemanha declara guerra à Rússia. Depois, à França. Invade a Bélgica. E a Grã-Bretanha entra na guerra."
+  },
+  {
+   "id": "s19",
+   "text": "Em pouco mais de cinco semanas, as alianças transformaram dois tiros numa guerra mundial."
+  },
+  {
+   "id": "s20",
+   "text": "Cerca de vinte milhões de mortos."
+  },
+  {
+   "id": "s21",
+   "text": "Então, foi uma curva errada que começou a Primeira Guerra Mundial? Ou a Europa só esperava uma faísca?"
+  }
+ ],
+ "strings": {},
+ "cues": {}
+}
