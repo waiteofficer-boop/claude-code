@@ -1,0 +1,42 @@
+{
+ "monalisa": {
+  "file": "File:Mona Lisa, by Leonardo da Vinci, from C2RMF retouched.jpg",
+  "license": "Public domain",
+  "artist": "<bdi><a href=\"https://en.wikipedia.org/wiki/en:Leonardo_da_Vinci\" class=\"extiw\" title=\"w:en:Leonardo"
+ },
+ "leonardo": {
+  "file": "File:Leonardo da Vinci - presumed self-portrait - lossless.png",
+  "license": "Public domain",
+  "artist": "<bdi><a href=\"https://en.wikipedia.org/wiki/en:Leonardo_da_Vinci\" class=\"extiw\" title=\"w:en:Leonardo"
+ },
+ "francis": {
+  "file": "File:François Ier Louvre.jpg",
+  "license": "Public domain",
+  "artist": "<bdi><a href=\"https://en.wikipedia.org/wiki/en:Jean_Clouet\" class=\"extiw\" title=\"w:en:Jean Clouet\"><"
+ },
+ "napoleon": {
+  "file": "File:Antoine-Jean Gros - Portrait of Napoleon Bonaparte, full-length, as First Consul, 1803.jpg",
+  "license": "Public domain",
+  "artist": "<bdi><a href=\"https://en.wikipedia.org/wiki/en:Antoine-Jean_Gros\" class=\"extiw\" title=\"w:en:Antoine-"
+ },
+ "newspaper": {
+  "file": "File:Excelsior - Vincenzo Peruggia - Vol de La Joconde - Mona Lisa.jpg",
+  "license": "Public domain",
+  "artist": "Lafitte, Pierre (1872-1938). Directeur de publication"
+ },
+ "apollinaire": {
+  "file": "File:Amedeo Modigliani - Guillaume Apollinaire 1915.jpg",
+  "license": "Public domain",
+  "artist": "<bdi><a href=\"https://en.wikipedia.org/wiki/en:Amedeo_Modigliani\" class=\"extiw\" title=\"w:en:Amedeo M"
+ },
+ "florence": {
+  "file": "File:Francesco Rosselli (attribution). Pianta della Catena, 1470.jpg",
+  "license": "Public domain",
+  "artist": ""
+ },
+ "lisahome": {
+  "file": "File:After photo for the return of Gioconda at the Louvre Museum 1914.jpg",
+  "license": "Public domain",
+  "artist": "Roger-Violett"
+ }
+}

@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>A Gioconda — A História Real</title>
+<style>
+@font-face{font-family:TYPE;src:url(fonts/SpecialElite.ttf)}
+@font-face{font-family:CSC;src:url(fonts/CormorantSC.ttf)}
+@font-face{font-family:EBG;src:url(fonts/EBGaramond.ttf)}
+@font-face{font-family:EBGI;src:url(fonts/EBGaramond-Italic.ttf)}
+html,body{margin:0;background:#000;overflow:hidden}
+#stage{position:relative;width:1080px;height:1920px}
+#gl,#v{position:absolute;left:0;top:0;width:1080px;height:1920px}
+</style>
+<script src="node_modules/three/build/three.min.js"></script>
+<script src="timeline_pt.js"></script>
+<script src="mapdata.js"></script>
+</head>
+<body>
+<div id="stage"><canvas id="gl" width="1080" height="1920"></canvas><svg id="v" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"></svg></div>
+<script>
+'use strict';
+// ═════════════ utilidades ═════════════
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x)), lerp = (a, b, t) => a + (b - a) * t, f1 = n => (+n).toFixed(1);
+const E = { lin: t => t, io: t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2, out: t => 1 - Math.pow(1 - t, 3), in: t => t * t * t, sine: t => -(Math.cos(Math.PI * t) - 1) / 2,
+  back: t => { const c1 = 1.7, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); } };
+function kf(t, keys) { if (t <= keys[0][0]) return keys[0][1]; for (let i = 1; i < keys.length; i++) if (t <= keys[i][0]) { const [t0, v0] = keys[i - 1], [t1, v1, e] = keys[i], p = E[e || 'sine']((t - t0) / Math.max(1e-6, t1 - t0)); return Array.isArray(v0) ? v0.map((a, j) => lerp(a, v1[j], p)) : lerp(v0, v1, p); } return keys[keys.length - 1][1]; }
+const prog = (t, t0, d) => clamp((t - t0) / d), popS = (t, t0, d = .3) => { const p = prog(t, t0, d); return p <= 0 ? 0 : E.back(p); };
+function rnd(i) { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+const g = (tr, s, extra = '') => `<g transform="${tr}" ${extra}>${s}</g>`, esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const shake = (t, a, f = 23) => [a * (Math.sin(t * f) + .5 * Math.sin(t * f * 2.3 + 1)), a * (Math.cos(t * f * 1.1) + .5 * Math.sin(t * f * 1.9))];
+// timeline
+const SEG = Object.fromEntries(TL.segments.map(s => [s.id, s]));
+const norm = w => w.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+function wt(id, needle, n = 0) { const k = norm(needle), h = SEG[id].words.filter(w => norm(w.w).startsWith(k)); if (!h.length) throw new Error(`"${needle}" não está em ${id}`); return h[Math.min(n, h.length - 1)].s; }
+const S = id => SEG[id].s, Ee = id => SEG[id].e, KEY = new Set(TL.keywords.map(norm));
+const SFX = []; const sfx = (k, t, d = 0, extra = {}) => SFX.push({ k, t: +t.toFixed(3), d: +(+d).toFixed(3), ...extra });
+const RED = '#c0281f', PAPER = '#e9dfc6', INKT = '#1d1a17';
+
+// ═════════════ fotos (dimensões dos arquivos tratados) ═════════════
+const PH = { apollinaire: [1280, 1806], florence: [1280, 554], francis: [1280, 1656], leonardo: [1280, 1994], leonardo_eng: [512, 640], lisahome: [1280, 912], monalisa: [1280, 1908], napoleon: [512, 842], newspaper: [1280, 1866], notebook1: [514, 640], notebook2: [516, 640], puck1911a: [428, 640], puck1911b: [640, 416] };
+const imgURL = n => `photos/${n}.jpg`;
+
+// ═════════════ SVG: defs ═════════════
+function grainURL(seed) { const c = document.createElement('canvas'); c.width = 360; c.height = 640; const x = c.getContext('2d'), d = x.createImageData(360, 640); let s = seed * 9973 + 1; for (let i = 0; i < d.data.length; i += 4) { s = (s * 16807) % 2147483647; d.data[i] = d.data[i + 1] = d.data[i + 2] = s % 255; d.data[i + 3] = 255; } x.putImageData(d, 0, 0); return c.toDataURL('image/png'); }
+const GRAIN = [0, 1, 2, 3, 4, 5].map(grainURL);
+const DEFS = `<defs>
+<filter id="bgblur" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="28"/></filter>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity=".75"/></filter>
+<filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter>
+<filter id="whip" x="-20%" y="0" width="140%" height="100%"><feGaussianBlur stdDeviation="38 0"/></filter>
+<filter id="redtint"><feColorMatrix type="matrix" values="1.1 .3 .1 0 .05  .1 .3 .1 0 0  .05 .15 .2 0 0  0 0 0 1 0"/></filter>
+<radialGradient id="vig" cx="50%" cy="48%" r="72%"><stop offset=".38" stop-color="#000" stop-opacity="0"/><stop offset=".78" stop-color="#000" stop-opacity=".72"/><stop offset="1" stop-color="#000" stop-opacity=".97"/></radialGradient>
+<linearGradient id="vigTB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".85"/><stop offset=".14" stop-color="#000" stop-opacity="0"/><stop offset=".82" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".9"/></linearGradient>
+<radialGradient id="leak"><stop offset="0" stop-color="#ff9a4a" stop-opacity=".9"/><stop offset="1" stop-color="#ff5a1c" stop-opacity="0"/></radialGradient>
+<radialGradient id="flash"><stop offset="0" stop-color="#fff6e0" stop-opacity="1"/><stop offset="1" stop-color="#ffd8a0" stop-opacity="0"/></radialGradient>
+</defs>`;
+
+// ═════════════ Ken Burns: foto com fundo desfocado preenchendo a tela vertical ═════════════
+// keys: [[lt, fx, fy, zoom]] — (fx,fy) ponto da foto (0..1) no centro da tela; zoom 1 = foto com a largura da tela
+function kbXform(name, lt, keys, cy = 900) { const [iw, ih] = PH[name], [fx, fy, z] = kf(lt, keys.map(k => [k[0], [k[1], k[2], k[3]], k[4]])), W = 1080 * z, H = W * ih / iw; return { x: 540 - fx * W, y: cy - fy * H, W, H, iw, ih, z }; }
+const toScr = (X, px, py) => [X.x + px / X.iw * X.W, X.y + py / X.ih * X.H];
+function kbPhoto(name, X, opts = {}) {
+  const [iw, ih] = PH[name], cs = Math.max(1080 / iw, 1920 / ih) * 1.15, bw = iw * cs, bh = ih * cs;
+  let s = `<rect width="1080" height="1920" fill="#0b0907"/>`;
+  if (opts.bg !== false) s += `<image href="${imgURL(name)}" x="${f1(540 - bw / 2)}" y="${f1(960 - bh / 2)}" width="${f1(bw)}" height="${f1(bh)}" preserveAspectRatio="none" filter="url(#bgblur)" opacity=".42"/>`;
+  s += `<image href="${imgURL(name)}" x="${f1(X.x)}" y="${f1(X.y)}" width="${f1(X.W)}" height="${f1(X.H)}" preserveAspectRatio="none" ${opts.filter ? `filter="url(#${opts.filter})"` : ''}/>`;
+  return s;
+}
+// anotações em vermelho (caneta), desenhadas progressivamente
+function wobbleEllipse(cx, cy, rx, ry, seed) { let d = ''; const n = 40; for (let i = 0; i <= n + 4; i++) { const a = i / n * Math.PI * 2 - .6, w = 1 + .05 * Math.sin(i * .9 + seed) + .03 * rnd(i + seed); d += (i ? 'L' : 'M') + f1(cx + rx * w * Math.cos(a)) + ' ' + f1(cy + ry * w * Math.sin(a)); } return d; }
+const pen = (d, p, w = 9, col = RED, op = 1) => p <= 0 ? '' : `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="${p.toFixed(3)} 2" opacity="${op}" filter="url(#ink)"/>`;
+function redCircle(cx, cy, rx, ry, t, t0, d = .55, seed = 1) { return pen(wobbleEllipse(cx, cy, rx, ry, seed), E.out(prog(t, t0, d))); }
+function redX(cx, cy, r, t, t0) { const p1 = E.out(prog(t, t0, .25)), p2 = E.out(prog(t, t0 + .2, .25)); return pen(`M${cx - r} ${cy - r} L${cx + r} ${cy + r}`, p1, 12) + pen(`M${cx + r} ${cy - r} L${cx - r} ${cy + r}`, p2, 12); }
+// recorte de papel datilografado (com fita adesiva); as letras aparecem como numa máquina
+function note(lines, x, y, t, t0, opts = {}) {
+  if (t < t0) return '';
+  const size = opts.size || 40, rot = opts.rot ?? -2, cps = opts.cps || 26, w = Math.max(...lines.map(l => l.length)) * size * .62 + 70, h = lines.length * size * 1.25 + 46;
+  const s = popS(t, t0, .25); let left = Math.floor((t - t0) * cps), tx = '';
+  lines.forEach((l, i) => { const n = clamp(left, 0, l.length); left -= l.length; tx += `<text x="${f1(-w / 2 + 34)}" y="${f1(-h / 2 + 30 + size * (.95 + i * 1.25))}" font-family="TYPE" font-size="${size}" fill="${opts.red && i === 0 ? RED : INKT}">${esc(l.slice(0, n))}</text>`; });
+  return g(`translate(${f1(x)},${f1(y)}) rotate(${rot}) scale(${s.toFixed(3)})`, `<rect x="${f1(-w / 2)}" y="${f1(-h / 2)}" width="${f1(w)}" height="${f1(h)}" fill="${PAPER}" filter="url(#shadow)"/>` +
+    `<rect x="-60" y="${f1(-h / 2 - 18)}" width="120" height="34" fill="#d8cfa8" opacity=".75" transform="rotate(${rot > 0 ? -4 : 4})"/>` + tx);
+}
+function stamp(text, x, y, t, t0, opts = {}) {
+  if (t < t0) return ''; const p = prog(t, t0, .18), sc = lerp(1.6, 1, E.out(p)), size = opts.size || 64, w = text.length * size * .66 + 60;
+  return g(`translate(${f1(x)},${f1(y)}) rotate(${opts.rot ?? -8}) scale(${sc.toFixed(3)})`, `<g filter="url(#ink)" opacity="${(.92 * p).toFixed(2)}"><rect x="${f1(-w / 2)}" y="${-size * .85}" width="${f1(w)}" height="${size * 1.45}" fill="none" stroke="${RED}" stroke-width="7"/><text x="0" y="${size * .3}" text-anchor="middle" font-family="TYPE" font-size="${size}" fill="${RED}" letter-spacing="3">${esc(text)}</text></g>`);
+}
+function typed(text, x, y, t, t0, size = 64, cps = 18, col = '#e9dfc6', anchor = 'middle') {
+  if (t < t0) return ''; const n = Math.floor((t - t0) * cps), cur = (Math.floor(t * 2.2) % 2 && n < text.length + 8) ? '▌' : '';
+  return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="TYPE" font-size="${size}" fill="${col}" letter-spacing="2">${esc(text.slice(0, n))}${cur}</text>`;
+}
+// legenda karaokê
+const CHUNKS = []; for (const s of TL.segments) { let cur = []; s.words.forEach((w, i) => { cur.push(w); if (/[.,:?]$/.test(w.w) && cur.length >= 3 || cur.length >= 5 || i === s.words.length - 1) { CHUNKS.push({ seg: s.id, words: cur }); cur = []; } }); }
+for (let i = CHUNKS.length - 1; i > 0; i--) if (CHUNKS[i].words.length <= 2 && CHUNKS[i - 1].seg === CHUNKS[i].seg && CHUNKS[i - 1].words.length <= 5) { CHUNKS[i - 1].words.push(...CHUNKS[i].words); CHUNKS.splice(i, 1); }
+function subtitle(t) {
+  let c = null; for (let i = 0; i < CHUNKS.length; i++) { const st = CHUNKS[i].words[0].s - .08, nx = CHUNKS[i + 1] ? CHUNKS[i + 1].words[0].s - .08 : 1e9, en = CHUNKS[i].words[CHUNKS[i].words.length - 1].e + .6; if (t >= st && t < Math.min(nx, en)) { c = CHUNKS[i]; break; } }
+  if (!c) return '';
+  return `<text x="540" y="1520" text-anchor="middle" font-family="EBG" font-size="56" filter="url(#shadow)">${c.words.map(w => { const on = t >= w.s, k = KEY.has(norm(w.w)); return `<tspan fill="${on && k ? '#e8483c' : '#f3eee2'}" fill-opacity="${on ? 1 : .38}">${esc(w.w)} </tspan>`; }).join('')}</text>`;
+}
+// ═════════════ pós: borda escura, granulado, cintilação, poeira, riscos, vazamento de luz ═════════════
+function post(t) {
+  const fr = Math.floor(t * 25); let s = `<rect width="1080" height="1920" fill="url(#vig)"/><rect width="1080" height="1920" fill="url(#vigTB)"/>`;
+  s += `<image href="${GRAIN[fr % 6]}" x="0" y="0" width="1080" height="1920" preserveAspectRatio="none" opacity=".11" style="mix-blend-mode:overlay"/>`;
+  const fl = .04 + .05 * rnd(fr * 3.1) + (rnd(fr * 7.7) > .97 ? .12 : 0); s += `<rect width="1080" height="1920" fill="#000" opacity="${fl.toFixed(3)}"/>`;
+  for (let i = 0; i < 7; i++) { const r = rnd(fr * 13 + i); if (r > .55) s += `<circle cx="${f1(rnd(fr * 5 + i * 3) * 1080)}" cy="${f1(rnd(fr * 9 + i * 7) * 1920)}" r="${f1(1 + rnd(fr + i) * 4)}" fill="${r > .85 ? '#f4ead0' : '#120d08'}" opacity=".7"/>`; }
+  if (rnd(fr * 2.3) > .6) { const x = rnd(Math.floor(t * 3)) * 1080; s += `<rect x="${f1(x)}" y="0" width="${f1(1 + rnd(fr) * 2)}" height="1920" fill="#e8dfc8" opacity="${(.15 + .2 * rnd(fr * 4)).toFixed(2)}"/>`; }
+  if (rnd(fr * 5.9) > .985) s += `<path d="M${f1(rnd(fr) * 1080)} ${f1(rnd(fr * 2) * 1920)} q40 30 20 90 q-20 50 30 100" stroke="#120d08" stroke-width="2.5" fill="none" opacity=".8"/>`;
+  const lk = .08 + .06 * Math.sin(t * .37); s += `<circle cx="${f1(1080 + 120 * Math.sin(t * .21))}" cy="${f1(300 + 200 * Math.sin(t * .13))}" r="700" fill="url(#leak)" opacity="${lk.toFixed(3)}" style="mix-blend-mode:screen"/>`;
+  return s;
+}
+
+// ═════════════ PAREDE DE INVESTIGAÇÃO (three.js) ═════════════
+const canvas = document.getElementById('gl');
+const R = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true }); R.setPixelRatio(1); R.setSize(1080, 1920, false);
+R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap; R.outputEncoding = THREE.sRGBEncoding;
+const ctex = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8; return t; };
+const WALL = {};
+function buildWall(tex) {
+  const sc = new THREE.Scene(); sc.background = new THREE.Color(0x050403);
+  const cork = ctex(1024, 1536, (x, w, h) => { x.fillStyle = '#7a5434'; x.fillRect(0, 0, w, h); for (let i = 0; i < 26000; i++) { const r = rnd(i); x.fillStyle = r > .5 ? `rgba(150,105,62,${(.3 + rnd(i * 3) * .5).toFixed(2)})` : `rgba(55,34,20,${(.3 + rnd(i * 5) * .5).toFixed(2)})`; x.fillRect(rnd(i * 7) * w, rnd(i * 11) * h, 1 + rnd(i * 13) * 4, 1 + rnd(i * 17) * 4); } for (let i = 0; i < 60; i++) { x.fillStyle = 'rgba(30,18,10,.5)'; x.beginPath(); x.arc(rnd(i * 19) * w, rnd(i * 23) * h, 2, 0, 7); x.fill(); } });
+  const board = new THREE.Mesh(new THREE.PlaneGeometry(28, 42), new THREE.MeshStandardMaterial({ map: cork, roughness: .95 })); board.receiveShadow = true; sc.add(board);
+  const wood = new THREE.MeshStandardMaterial({ color: 0x3a2414, roughness: .7 });
+  for (const [w, h, x, y] of [[29.6, .8, 0, 21.2], [29.6, .8, 0, -21.2], [.8, 43.2, 14.4, 0], [.8, 43.2, -14.4, 0]]) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, .7), wood); m.position.set(x, y, .2); m.castShadow = true; sc.add(m); }
+  const wallBg = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x1c1712, roughness: 1 })); wallBg.position.z = -.3; wallBg.receiveShadow = true; sc.add(wallBg);
+  sc.add(new THREE.AmbientLight(0xffe2c0, .10));
+  const fill = new THREE.DirectionalLight(0xffd9a8, .18); fill.position.set(-10, 20, 30); sc.add(fill);
+  const spot = new THREE.SpotLight(0xfff0d6, 3.2, 0, .32, .65, 1.2); spot.castShadow = true; spot.shadow.mapSize.set(1024, 1024); spot.shadow.bias = -.0004; sc.add(spot, spot.target);
+  const items = {}, pinMat = new THREE.MeshPhongMaterial({ color: 0xc0281f, shininess: 90, specular: 0xffffff });
+  const pinAt = (p, z = .12) => { const g2 = new THREE.Group(); const head = new THREE.Mesh(new THREE.SphereGeometry(.22, 16, 12), pinMat); head.position.z = .32; head.castShadow = true; const nd = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .4, 6).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xbbbbbb, metalness: .8, roughness: .3 })); nd.position.z = .15; g2.add(head, nd); g2.position.set(p[0], p[1], z); return g2; };
+  function addPhoto(id, name, x, y, w, rot = 0, t0 = 0) {
+    const [iw, ih] = PH[name], h = w * ih / iw, gp = new THREE.Group(); gp.position.set(x, y, .06); gp.rotation.z = rot;
+    const border = new THREE.Mesh(new THREE.PlaneGeometry(w + .5, h + .5), new THREE.MeshStandardMaterial({ color: 0xece4d0, roughness: .8 })); border.castShadow = border.receiveShadow = true; gp.add(border);
+    const ph = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: tex[name], roughness: .55 })); ph.position.z = .01; ph.receiveShadow = true; gp.add(ph);
+    const pin = pinAt([0, h / 2 - .1], .02); gp.add(pin);
+    sc.add(gp); items[id] = { g: gp, pin: () => gp.localToWorld(new THREE.Vector3(0, h / 2 - .1, .34)), w, h, t0 }; return items[id];
+  }
+  function addCard(id, lines, x, y, rot = 0, t0 = 0, opts = {}) {
+    const fs = opts.fs || 64, lw = Math.max(...lines.map(l => l.length)) * fs * .62 + 90, lh = lines.length * fs * 1.3 + 60;
+    const tx = ctex(Math.ceil(lw), Math.ceil(lh), (x2, w, h) => { x2.fillStyle = '#e9dfc6'; x2.fillRect(0, 0, w, h); for (let i = 0; i < 600; i++) { x2.fillStyle = `rgba(90,70,40,${(rnd(i) * .12).toFixed(2)})`; x2.fillRect(rnd(i * 3) * w, rnd(i * 5) * h, 3, 3); } x2.font = `${fs}px TYPE`; x2.fillStyle = '#1d1a17'; lines.forEach((l, i) => { x2.fillStyle = opts.red && i === 0 ? '#b0241c' : '#1d1a17'; x2.fillText(l, 45, 30 + fs * (1 + i * 1.3)); }); });
+    const w = lw / 120, h = lh / 120, gp = new THREE.Group(); gp.position.set(x, y, .07); gp.rotation.z = rot;
+    const mat = new THREE.MeshStandardMaterial({ map: tx, roughness: .9 }); const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); m.castShadow = m.receiveShadow = true; gp.add(m);
+    gp.add(pinAt([0, h / 2 - .2], .02)); sc.add(gp);
+    items[id] = { g: gp, mat, pin: () => gp.localToWorld(new THREE.Vector3(0, h / 2 - .2, .34)), w, h, t0 }; return items[id];
+  }
+  function addMark(id, onId, kind, t0, opts = {}) { // marca de caneta vermelha sobre um item (X, círculo, "?")
+    const it = items[onId], tx = ctex(512, 512, (x, w, h) => { x.strokeStyle = '#c0281f'; x.lineWidth = 26; x.lineCap = 'round'; x.globalAlpha = .9;
+      if (kind === 'x') { x.beginPath(); x.moveTo(80, 80); x.lineTo(430, 440); x.moveTo(440, 70); x.lineTo(70, 430); x.stroke(); }
+      if (kind === 'circle') { x.beginPath(); x.ellipse(256, 256, 210, 190, -.2, 0, Math.PI * 2.05); x.stroke(); }
+      if (kind === 'q') { x.font = 'bold 420px TYPE'; x.fillStyle = '#c0281f'; x.textAlign = 'center'; x.fillText('?', 256, 420); } });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(opts.s || it.w * .8, opts.s || it.w * .8), new THREE.MeshBasicMaterial({ map: tx, transparent: true, opacity: 0, depthWrite: false }));
+    m.position.set(opts.x || 0, opts.y || 0, .03); it.g.add(m); items[id] = { mark: m, t0 }; }
+  const strings = [];
+  function addString(a, b, t0, dur = .7, sag = .9) {
+    const A = items[a].pin(), B = items[b].pin(), mid = A.clone().add(B).multiplyScalar(.5); mid.y -= sag; mid.z += .1;
+    const geo = new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(A, mid, B), 48, .045, 6, false);
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xa3141c, roughness: .6 })); m.castShadow = true; sc.add(m);
+    strings.push({ m, t0, dur, n: geo.index.count }); }
+  // ─ composição da parede (o caso do roubo) ─
+  addPhoto('monalisa', 'monalisa', 0, 12.5, 8, 0);
+  addCard('obra', ['LA GIOCONDA', '77 × 53 cm', 'ÓLEO SOBRE MADEIRA'], -9, 16.5, .04, 0, { red: true, fs: 52 });
+  addPhoto('leonardo', 'leonardo_eng', -9.6, 8.6, 4.4, -.05); addPhoto('francis', 'francis', 9.6, 9, 4.6, .05);
+  addCard('roubo', ['ROUBADA', '21 · 08 · 1911'], -1.2, 2.6, -.04, 0, { red: true });
+  addCard('fechado', ['SEGUNDA-FEIRA', 'MUSEU FECHADO'], 8, 3.2, .05);
+  addPhoto('louvrec', 'puck1911b', -8.2, 1.4, 6.2, .04);
+  addCard('susp', ['SUSPEITOS'], 0, -4.4, .03, 0, { red: true });
+  addPhoto('apoll', 'apollinaire', -8.2, -8.6, 4.4, -.04); addCard('apollc', ['G. APOLLINAIRE', 'POETA · PRESO'], -8.2, -13.3, .04, 0, { fs: 48 });
+  addCard('picasso', ['PABLO PICASSO', 'PINTOR · INTERROGADO'], 7.4, -8, -.04, 0, { fs: 48 });
+  addPhoto('jornal', 'newspaper', 1.5, -15.4, 7.6, .03);
+  addCard('perug', ['VINCENZO PERUGGIA', 'VIDRACEIRO · ITALIANO', 'TRABALHOU NO LOUVRE'], -9, -18.4, -.03, 0, { red: true, fs: 46 });
+  addPhoto('volta', 'lisahome', 9.6, -17.2, 6.4, -.04);
+  WALL.items = items; WALL.strings = strings; WALL.addString = addString; WALL.addMark = addMark;
+  return { sc, spot, items, strings };
+}
+const wallCam = new THREE.PerspectiveCamera(40, 1080 / 1920, .1, 500);
+function wallFrame(t, camKeys, lightKeys, lt) {
+  const W = WALL.built; const [cx, cy, cz] = kf(lt, camKeys), [lx, ly] = kf(lt, lightKeys);
+  const [hx, hy] = shake(t, .03, 1.3); wallCam.position.set(cx + hx, cy + hy, cz); wallCam.lookAt(cx + hx * .5, cy + hy * .5, 0);
+  W.spot.position.set(cx - 3.5, cy + 4, cz * .9 + 2); W.spot.target.position.set(lx + .3 * Math.sin(t * 1.7), ly + .3 * Math.cos(t * 1.3), 0); W.spot.target.updateMatrixWorld();
+  W.spot.intensity = 3.2 * (.94 + .06 * Math.sin(t * 31) * Math.sin(t * 7)); W.spot.angle = .30 + cz * .002;
+  for (const s of W.strings) s.m.geometry.setDrawRange(0, Math.floor(s.n * E.out(prog(t, s.t0, s.dur)) / 3) * 3);
+  for (const [id, it] of Object.entries(W.items)) { if (it.mark) it.mark.material.opacity = .95 * prog(t, it.t0, .35); else if (it.g) { const v = t >= it.t0 - .001; it.g.visible = v; if (v && it.t0 > 0) { const p = E.back(prog(t, it.t0, .3)); it.g.scale.setScalar(Math.max(.01, p)); } } }
+  if (WALL.redden) for (const [id, t0] of WALL.redden) { const it = W.items[id]; it.mat.color.set(t >= t0 ? '#e88a80' : '#ffffff'); }
+  R.render(W.sc, wallCam);
+}
+
+// ═════════════ MAPA DA EUROPA (1914, simplificado) ═════════════
+// coordenadas do mapa: x=(lon-15)·cos50°·20, y=-(lat-50)·20  (ver mapdata.js)
+const MP = (lon, lat) => [(lon - 15) * Math.cos(50 * Math.PI / 180) * 20, -(lat - 50) * 20];
+const MAPC = { AH: MP(18, 47.6), DE: MP(10.4, 51.2), RU: MP(33, 55), SR: MP(20.9, 43.9), FR: MP(2.4, 46.6), BE: MP(4.6, 50.6), GB: MP(-1.8, 53), IT: MP(12.5, 42.6), OT: MP(33, 39.5) };
+const MAPN = { AH: 'ÁUSTRIA-HUNGRIA', DE: 'ALEMANHA', RU: 'RÚSSIA', SR: 'SÉRVIA', FR: 'FRANÇA', BE: 'BÉLGICA', GB: 'GRÃ-BRETANHA', IT: 'ITÁLIA', OT: 'IMP. OTOMANO' };
+const CENTRAL = '#a3241c', ENTENTE = '#3d5a80';
+function mapScene(t, cam, st = {}) {
+  const [cx, cy, z] = cam, toS = ([x, y]) => [540 + (x - cx) * z, 900 + (y - cy) * z];
+  let s = `<rect width="1080" height="1920" fill="#13100d"/>`;
+  let grid = ''; for (let lo = -10; lo <= 45; lo += 5) { const a = MP(lo, 30), b = MP(lo, 72); grid += `<path d="M${a[0]} ${a[1]} L${b[0]} ${b[1]}"/>`; } for (let la = 35; la <= 70; la += 5) { const a = MP(-15, la), b = MP(50, la); grid += `<path d="M${a[0]} ${a[1]} L${b[0]} ${b[1]}"/>`; }
+  let land = '';
+  for (const [id, d] of Object.entries(MAPDATA.paths)) {
+    let fill = '#3a3128', op = 1, glow = '';
+    const lit = st.lit && st.lit[id];
+    if (lit && t >= lit[0]) { const p = E.out(prog(t, lit[0], .5)); fill = mixC('#3a3128', lit[1], p); if (lit[2] !== false) glow = `<path d="${d}" fill="none" stroke="${lit[1]}" stroke-width="5" vector-effect="non-scaling-stroke" opacity="${(.5 * p * (.8 + .2 * Math.sin(t * 4))).toFixed(2)}" filter="url(#glow)"/>`; }
+    if (st.dim && !(lit && t >= lit[0])) op = .55;
+    land += `<path d="${d}" fill="${fill}" opacity="${op}" stroke="#7a6a56" stroke-width="1.4" vector-effect="non-scaling-stroke"/>` + glow;
+  }
+  s += g(`translate(540,900) scale(${z.toFixed(4)}) translate(${f1(-cx)},${f1(-cy)})`, `<g stroke="#3a3128" stroke-width="1" vector-effect="non-scaling-stroke" fill="none" opacity=".5">${grid}</g>` + land);
+  // setas (declarações, alianças, invasão)
+  for (const [a, b, t0, col, lab] of (st.arrows || [])) { if (t < t0) continue; const A = toS(MAPC[a]), B = toS(MAPC[b]), mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2 - Math.hypot(B[0] - A[0], B[1] - A[1]) * .25, p = E.out(prog(t, t0, .6));
+    s += pen(`M${f1(A[0])} ${f1(A[1])} Q${f1(mx)} ${f1(my)} ${f1(B[0])} ${f1(B[1])}`, p, 11, col);
+    if (p > .95) { const ang = Math.atan2(B[1] - my, B[0] - mx); s += `<path d="M${f1(B[0])} ${f1(B[1])} l${f1(-34 * Math.cos(ang - .45))} ${f1(-34 * Math.sin(ang - .45))} M${f1(B[0])} ${f1(B[1])} l${f1(-34 * Math.cos(ang + .45))} ${f1(-34 * Math.sin(ang + .45))}" stroke="${col}" stroke-width="11" stroke-linecap="round"/>`; }
+    if (lab && p > .5) s += `<text x="${f1(mx)}" y="${f1(my - 14)}" text-anchor="middle" font-family="TYPE" font-size="30" fill="#f0e6cc" filter="url(#shadow)">${esc(lab)}</text>`; }
+  // cidades e rotas (lon/lat)
+  for (const [a, b, t0, col, lab] of (st.routes || [])) { if (t < t0) continue; const A = toS(MP(...a)), B = toS(MP(...b)), mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2 - Math.hypot(B[0] - A[0], B[1] - A[1]) * .2, p = E.io(prog(t, t0, 1.2));
+    s += pen(`M${f1(A[0])} ${f1(A[1])} Q${f1(mx)} ${f1(my)} ${f1(B[0])} ${f1(B[1])}`, p, 9, col);
+    if (p > .1) { const q = p, x = (1 - q) * (1 - q) * A[0] + 2 * (1 - q) * q * mx + q * q * B[0], y = (1 - q) * (1 - q) * A[1] + 2 * (1 - q) * q * my + q * q * B[1]; s += `<circle cx="${f1(x)}" cy="${f1(y)}" r="12" fill="#f6eedb" stroke="${col}" stroke-width="5"/>`; }
+    if (lab && p > .4) s += `<text x="${f1(mx)}" y="${f1(my - 18)}" text-anchor="middle" font-family="TYPE" font-size="34" fill="#f6eedb" filter="url(#shadow)">${esc(lab)}</text>`; }
+  for (const [lon, lat, lab, t0] of (st.cities || [])) { if (t < t0) continue; const [x, y] = toS(MP(lon, lat)), p = prog(t, t0, .35), pulse = (t * 1.1) % 1;
+    s += `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(12 + 46 * pulse)}" fill="none" stroke="${RED}" stroke-width="4" opacity="${(1 - pulse).toFixed(2)}"/><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(12 * p)}" fill="${RED}" filter="url(#glow)"/>` + typed(lab, f1(x), f1(y - 34), t, t0 + .1, 38, 20, '#f6eedb'); }
+  // nomes dos países (datilografados quando acendem)
+  for (const [id, t0, txt, size] of (st.labels || [])) { if (t < t0) continue; const [x, y] = toS(MAPC[id]); s += typed(txt || MAPN[id], f1(x), f1(y), t, t0, size || 40, 24, '#f6eedb'); }
+  if (st.pin != null && t >= st.pin) { const [x, y] = toS(MAPDATA.sarajevo), p = prog(t, st.pin, .4), pulse = (t * 1.2) % 1;
+    s += `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(14 + 60 * pulse)}" fill="none" stroke="${RED}" stroke-width="4" opacity="${(1 - pulse).toFixed(2)}"/><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(13 * p)}" fill="${RED}" filter="url(#glow)"/>` + (st.pinLabel ? typed(st.pinLabel, f1(x), f1(y - 40), t, st.pin + .2, 46, 16, '#f6eedb') : ''); }
+  if (st.spark != null && t >= st.spark) { const [x, y] = toS(MAPDATA.sarajevo), p = prog(t, st.spark, 1.2); s += `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(40 + 900 * E.out(p))}" fill="url(#flash)" opacity="${(1 - p).toFixed(2)}"/>`; }
+  if (st.legend != null && t >= st.legend) { const o = prog(t, st.legend, .4).toFixed(2); s += `<g opacity="${o}"><rect x="90" y="1150" width="900" height="130" fill="#0b0907" opacity=".8"/><rect x="130" y="1185" width="40" height="26" fill="${CENTRAL}"/><text x="190" y="1208" font-family="TYPE" font-size="32" fill="#f0e6cc">IMPÉRIOS CENTRAIS</text><rect x="130" y="1230" width="40" height="26" fill="${ENTENTE}"/><text x="190" y="1253" font-family="TYPE" font-size="32" fill="#f0e6cc">TRÍPLICE ENTENTE + ALIADOS</text></g>`; }
+  return s;
+}
+function mixC(a, b, p) { const h = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16)); const A = h(a), B = h(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * clamp(p)).toString(16).padStart(2, '0')).join(''); }
+const mcam = (t, keys) => kf(t, keys.map(k => [k[0], [k[1], k[2], k[3]], k[4] || 'io']));
+
+// ═════════════ PLANOS ═════════════
+// câmera 2D viva: etapas sincronizadas com palavras (tempo absoluto), câmera na mão e "socos" de zoom nas palavras-chave
+function kbCam(name, t, stages, punches = [], cy = 900) {
+  const keys = stages.map(([ta, fx, fy, z, e]) => [ta, fx, fy, z, e || 'io']);
+  const X = kbXform(name, t, keys, cy);
+  const hand = [6 * Math.sin(t * .83) + 3 * Math.sin(t * 2.1), 5 * Math.sin(t * .67 + 1) + 2.5 * Math.sin(t * 1.7)];
+  const punch = punches.reduce((a, p) => a + (t > p ? (1 - Math.exp(-(t - p) * 28)) * Math.exp(-(t - p) * 2.6) : 0), 0);
+  const k = 1 + .09 * punch, cx = 540, cyy = cy; X.x = cx + (X.x - cx) * k + hand[0]; X.y = cyy + (X.y - cyy) * k + hand[1]; X.W *= k; X.H *= k; X.z *= k; return X;
+}
+// ficha de dossiê (desliza da lateral; campos datilografados)
+function dossier(title, rows, x, y, t, t0, opts = {}) {
+  if (t < t0) return ''; const p = E.out(prog(t, t0, .35)), dx = (1 - p) * (opts.from === 'left' ? -700 : 700), w = opts.w || 620, lh = 52, h = 110 + rows.length * lh;
+  let s = `<rect x="0" y="0" width="${w}" height="${h}" fill="${PAPER}" filter="url(#shadow)"/><rect x="0" y="0" width="${w}" height="70" fill="#2a2420"/>` +
+    `<text x="28" y="48" font-family="TYPE" font-size="34" fill="#e9dfc6" letter-spacing="3">DOSSIÊ · ${esc(title)}</text>`;
+  let left = Math.floor((t - t0 - .25) * 30);
+  rows.forEach(([k, v], i) => { const line = `${k}: ${v}`, n = clamp(left, 0, line.length); left -= line.length;
+    s += `<text x="28" y="${118 + i * lh}" font-family="TYPE" font-size="32" fill="${INKT}"><tspan fill="${RED}">${esc(line.slice(0, Math.min(n, k.length + 1)))}</tspan>${esc(line.slice(k.length + 1, n))}</text>`; });
+  return g(`translate(${f1(x - w / 2 + dx)},${f1(y)}) rotate(${opts.rot ?? -1.5})`, s);
+}
+// linha do tempo da crise de julho (barra inferior)
+const CRISIS = () => [['28 JUN', 'ATENTADO', 0], ['28 JUL', 'ÁUSTRIA × SÉRVIA', S('s17') + .9], ['30 JUL', 'RÚSSIA MOBILIZA', wt('s18', 'russia') + .2], ['1 AGO', 'ALEMANHA × RÚSSIA', wt('s18', 'alemanha') + .3], ['3 AGO', '× FRANÇA', wt('s18', 'franca') + .2], ['4 AGO', 'BÉLGICA · GRÃ-BRETANHA', wt('s18', 'gra') + .2]];
+function crisisBar(t, t0) {
+  if (t < t0) return ''; const o = prog(t, t0, .4), items = CRISIS(), x0 = 90, x1 = 990, y = 1330; let s = `<rect x="40" y="${y - 70}" width="1000" height="150" fill="#0b0907" opacity=".72"/><path d="M${x0} ${y} H${x1}" stroke="#6b5a48" stroke-width="4"/>`;
+  let lastOn = 0; items.forEach(([d, lab, ta], i) => { const x = x0 + (x1 - x0) * i / (items.length - 1), on = t >= ta; if (on) lastOn = x;
+    s += `<circle cx="${x}" cy="${y}" r="${on ? 13 : 8}" fill="${on ? RED : '#6b5a48'}"/><text x="${x}" y="${y - 26}" text-anchor="middle" font-family="TYPE" font-size="26" fill="${on ? '#f0e6cc' : '#7a6a58'}">${d}</text>` +
+      (on && i === items.filter(it => t >= it[2]).length - 1 ? `<text x="${Math.min(880, Math.max(200, x))}" y="${y + 52}" text-anchor="middle" font-family="TYPE" font-size="28" fill="#e8483c">${esc(lab)}</text>` : ''); });
+  s += `<path d="M${x0} ${y} H${f1(lastOn)}" stroke="${RED}" stroke-width="6"/>`;
+  return `<g opacity="${o.toFixed(2)}">${s}</g>`;
+}
+// legenda de chamada (rótulo com linha apontando um ponto da foto)
+function callout(txt, px, py, lx, ly, t, t0) { if (t < t0) return ''; const p = E.out(prog(t, t0, .35)); return pen(`M${f1(px)} ${f1(py)} L${f1(lx)} ${f1(ly)}`, p, 5) + `<circle cx="${f1(px)}" cy="${f1(py)}" r="${f1(9 * p)}" fill="${RED}"/>` + note([txt], lx, ly - 10, t, t0 + .25, { size: 32, rot: 0 }); }
+const SH = [];
+const shot = (t0, f, name) => SH.push({ t0, f, name });
+const W = (id, w, n = 0) => wt(id, w, n);
+// ── recursos visuais deste vídeo ──
+// a Mona Lisa numa moldura dourada, numa parede de museu; op = opacidade do quadro (0 → parede vazia)
+function frameScene(t, op = 1, z = 1, cy = 860, extra = '') {
+  const w = 600 * z, h = w * 1908 / 1280, x = 540 - w / 2, y = cy - h / 2, fw = 46 * z;
+  let s = `<rect width="1080" height="1920" fill="#3b1a18"/><rect width="1080" height="1920" fill="url(#vig)" opacity=".4"/>`;
+  for (let i = 0; i < 24; i++) s += `<rect x="${i * 46}" y="0" width="2" height="1920" fill="#2c1210" opacity=".5"/>`;
+  s += `<ellipse cx="540" cy="${f1(cy - h * .2)}" rx="${f1(w * 1.1)}" ry="${f1(h * .9)}" fill="url(#flash)" opacity=".18"/>`;
+  s += `<rect x="${f1(x - fw)}" y="${f1(y - fw)}" width="${f1(w + 2 * fw)}" height="${f1(h + 2 * fw)}" fill="none" stroke="#a8823a" stroke-width="${f1(fw)}" opacity="${op < .02 ? .0 : 1}"/>`;
+  s += `<image href="${imgURL('monalisa')}" x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${f1(h)}" preserveAspectRatio="none" opacity="${op.toFixed(3)}"/>`;
+  if (op < .98) { const o = (1 - op); s += `<rect x="${f1(x - 6)}" y="${f1(y - 6)}" width="${f1(w + 12)}" height="${f1(h + 12)}" fill="#4a2321" opacity="${(o * .9).toFixed(2)}"/>`;
+    for (const [hx, hy] of [[x + 30, y - 10], [x + w - 30, y - 10], [x + 30, y + h + 10], [x + w - 30, y + h + 10]]) s += `<circle cx="${f1(hx)}" cy="${f1(hy)}" r="${f1(9 * z)}" fill="#1a1110" stroke="#8a7a5a" stroke-width="3" opacity="${o.toFixed(2)}"/>`;
+    s += `<rect x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${f1(h)}" fill="none" stroke="#2a1312" stroke-width="5" stroke-dasharray="14 10" opacity="${o.toFixed(2)}"/>`; }
+  return s + extra;
+}
+const MLX = (px, py, X) => toScr(X, px, py);
+// ── m1 · os olhos → o quadro inteiro → "pouca gente sabia"
+shot(0, (lt, t) => { const X = kbCam('monalisa', t, [[0, .5, .265, 5.2], [W('m1', 'mundo') + .3, .5, .4, 1.25], [W('m1', 'mas'), .5, .42, 1.15]], [W('m1', 'famoso')]);
+  return kbPhoto('monalisa', X) + typed('O QUADRO MAIS FAMOSO DO MUNDO', 540, 300, t, W('m1', 'famoso') - .2, 40, 26, '#f0e6cc'); }, 'olhos');
+shot(W('m1', 'mas') - .1, (lt, t) => frameScene(t, 1, lerp(1, .85, prog(t, W('m1', 'mas'), 6))) + `<rect width="1080" height="1920" fill="#000" opacity="${(.15 + .35 * prog(t, W('m1', 'pouca'), 1)).toFixed(2)}"/>` +
+  typed('1503 ··· 1911', 540, 320, t, W('m1', 'quatrocentos'), 72, 12, '#e8483c') + note(['FORA DO MUNDO DA ARTE,', 'POUCA GENTE A CONHECIA'], 540, 1330, t, W('m1', 'pouca'), { size: 36 }), 'moldura');
+// ── m2 · Florença → Leonardo → Lisa
+shot(S('m2') - .15, (lt, t) => { const X = kbCam('florence', t, [[S('m2') - .15, .3, .5, 1.6], [W('m2', 'leonardo') - .1, .62, .5, 2.4]], [W('m2', 'florenca')]);
+  return kbPhoto('florence', X) + typed('FLORENÇA', 540, 420, t, W('m2', 'florenca'), 96, 10, '#f0e6cc') + stamp('c. 1503', 540, 1180, t, W('m2', 'volta'), { size: 70 }); }, 'florenca');
+shot(W('m2', 'leonardo') - .1, (lt, t) => { const t0 = W('m2', 'leonardo') - .1, X = kbCam('leonardo', t, [[t0, .5, .35, 1.6], [t0 + 3, .5, .3, 2.0]], [t0 + .1]);
+  return kbPhoto('leonardo', X) + dossier('ARTISTA', [['NOME', 'LEONARDO DA VINCI'], ['IDADE', '51 ANOS'], ['OFÍCIO', 'PINTOR, ENGENHEIRO']], 540, 1110, t, t0 + .3); }, 'leonardo');
+shot(W('m2', 'jovem') - .2, (lt, t) => { const t0 = W('m2', 'jovem') - .2, X = kbCam('monalisa', t, [[t0, .5, .3, 2.8], [t0 + 2.5, .5, .32, 2.2]], [W('m2', 'lisa')]);
+  return kbPhoto('monalisa', X) + dossier('MODELO', [['NOME', 'LISA GHERARDINI'], ['IDADE', '24 ANOS'], ['CIDADE', 'FLORENÇA']], 540, 1120, t, W('m2', 'lisa') - .1, { from: 'left' }); }, 'lisa');
+// ── m3 · seda → La Gioconda
+shot(S('m3') - .15, (lt, t) => { const X = kbCam('monalisa', t, [[S('m3') - .15, .62, .72, 2.6], [W('m3', 'francesco'), .4, .78, 2.8], [W('m3', 'gioconda'), .5, .5, 1.2]], [W('m3', 'seda')]);
+  return kbPhoto('monalisa', X) + note(['MARIDO: COMERCIANTE DE SEDA'], 540, 300, t, W('m3', 'seda'), { size: 36 }) + dossier('MARIDO', [['NOME', 'FRANCESCO DEL GIOCONDO']], 540, 1130, t, W('m3', 'francesco')) +
+    (t > W('m3', 'gioconda', 1) - .2 ? `<rect width="1080" height="1920" fill="#000" opacity=".45"/>` + typed('LA GIOCONDA', 540, 880, t, W('m3', 'gioconda', 1) - .2, 104, 14, '#f0e6cc') + note(['GIOCONDA = "A ALEGRE"', 'EM FRANCÊS: LA JOCONDE'], 540, 1060, t, W('m3', 'gioconda', 1) + .6, { size: 34 }) : ''); }, 'gioconda');
+// ── m4 · nunca entregou → cadernos → sfumato no sorriso
+shot(S('m4') - .15, (lt, t) => { const X = kbCam('monalisa', t, [[S('m4') - .15, .5, .5, 1.15], [W('m4', 'passou'), .5, .45, 1.3]], [W('m4', 'nunca')]);
+  return kbPhoto('monalisa', X) + stamp('NUNCA ENTREGUE', 540, 900, t, W('m4', 'nunca'), { size: 74, rot: -9 }); }, 'nunca');
+shot(W('m4', 'passou') - .15, (lt, t) => { const t0 = W('m4', 'passou') - .15, X = kbCam('notebook1', t, [[t0, .4, .3, 1.6], [t0 + 2.5, .6, .7, 1.9]]);
+  return kbPhoto('notebook1', X) + note(['ANOS DE RETOQUES', '~1503 → ~1517'], 540, 300, t, t0 + .3, { size: 38 }); }, 'cadernos');
+shot(W('m4', 'camada') - .15, (lt, t) => { const t0 = W('m4', 'camada') - .15, X = kbCam('monalisa', t, [[t0, .5, .36, 3.0], [t0 + 3, .52, .355, 4.2]], [W('m4', 'sfumato')]);
+  const sharp = 1 - prog(t, W('m4', 'sfumato') - .3, 1.2), [mx, my] = toScr(X, 640, 690), k = X.W / 1280;
+  return kbPhoto('monalisa', X) + (sharp > 0 ? pen(`M${f1(mx - 130 * k)} ${f1(my - 8 * k)} Q${f1(mx)} ${f1(my + 26 * k)} ${f1(mx + 130 * k)} ${f1(my - 14 * k)}`, 1, 6, '#1d1a17', sharp.toFixed(2)) : '') +
+    note(['SFUMATO:', 'CAMADAS FINÍSSIMAS', 'SEM CONTORNOS'], 540, 1250, t, W('m4', 'sfumato'), { size: 36, red: true }) + note(['CAMADA POR CAMADA'], 540, 300, t, W('m4', 'camada'), { size: 38 }); }, 'sfumato');
+// ── m5 · para a França (mapa) → Francisco I
+shot(S('m5') - .15, (lt, t) => { const t0 = S('m5') - .15, cam = mcam(t, [[t0, MP(12, 43)[0], MP(12, 43)[1], 2.6], [W('m5', 'franca') + .3, MP(6, 45.5)[0], MP(6, 45.5)[1], 2.2]]);
+  return mapScene(t, cam, { lit: { IT: [t0, '#6a5a3c', false], FR: [W('m5', 'franca'), ENTENTE] }, labels: [['FR', W('m5', 'franca'), 'FRANÇA']], routes: [[[12.5, 41.9], [0.98, 47.41], W('m5', 'franca'), RED, '1516']], cities: [[12.5, 41.9, 'ROMA', t0], [0.98, 47.41, 'AMBOISE', W('m5', 'franca') + .9]], dim: true }); }, 'mapa-franca');
+shot(W('m5', 'convite') - .1, (lt, t) => { const t0 = W('m5', 'convite') - .1, X = kbCam('francis', t, [[t0, .5, .3, 2.0], [t0 + 2.5, .5, .4, 1.5]], [W('m5', 'rei')]);
+  return kbPhoto('francis', X) + dossier('ANFITRIÃO', [['NOME', 'FRANCISCO I'], ['CARGO', 'REI DA FRANÇA']], 540, 1140, t, W('m5', 'rei')); }, 'francisco');
+// ── m6 · morte de Leonardo → o rei → Louvre → Napoleão
+shot(S('m6') - .15, (lt, t) => { const X = kbCam('leonardo_eng', t, [[S('m6') - .15, .5, .4, 1.5], [W('m6', 'quadro') - .1, .5, .35, 1.9]]);
+  return kbPhoto('leonardo_eng', X) + stamp('† 1519 · AMBOISE', 540, 1180, t, W('m6', 'morre'), { size: 56, rot: -6 }); }, 'morte');
+shot(W('m6', 'quadro') - .1, (lt, t) => { const t0 = W('m6', 'quadro') - .1, X = kbCam('francis', t, [[t0, .5, .55, 1.6], [t0 + 2.5, .5, .4, 1.9]]);
+  return kbPhoto('francis', X) + stamp('COLEÇÃO REAL', 540, 1200, t, W('m6', 'rei'), { size: 62 }); }, 'colecao-real');
+shot(W('m6', 'seculos') - .2, (lt, t) => { const t0 = W('m6', 'seculos') - .2, cam = mcam(t, [[t0, MP(1.5, 47.5)[0], MP(1.5, 47.5)[1], 3.0], [t0 + 1.5, MP(2.35, 48.86)[0], MP(2.35, 48.86)[1], 4.2]]);
+  return mapScene(t, cam, { lit: { FR: [0, ENTENTE] }, cities: [[0.98, 47.41, 'AMBOISE', 0], [2.35, 48.86, 'PARIS · LOUVRE', t0 + .2]], routes: [[[0.98, 47.41], [2.35, 48.86], t0 + .1, RED, '1797']], dim: true }); }, 'mapa-louvre');
+shot(W('m6', 'napoleao') - .1, (lt, t) => { const t0 = W('m6', 'napoleao') - .1, X = kbCam('napoleon', t, [[t0, .5, .3, 1.8], [t0 + 3, .5, .45, 1.3]], [W('m6', 'quarto')]);
+  return kbPhoto('napoleon', X) + note(['NO QUARTO DE NAPOLEÃO', 'PALÁCIO DAS TULHERIAS · c.1800'], 540, 1250, t, W('m6', 'quarto') - .2, { size: 34, red: true }); }, 'napoleao');
+// ── m7 · 21/08/1911: ela desaparece (some da moldura)
+shot(S('m7') - .15, (lt, t) => { const td = W('m7', 'desaparece'), op = 1 - E.io(prog(t, td, 1.6));
+  return frameScene(t, op, 1) + typed('21 · 08 · 1911', 540, 300, t, W('m7', 'vinte'), 82, 12, '#f0e6cc') + (t > td + 1.4 ? stamp('DESAPARECIDA', 540, 1500 - 260, t, td + 1.4, { size: 70, rot: -8 }) : ''); }, 'desaparece');
+// ── m8 · o avental: a capa do Excelsior
+shot(S('m8') - .15, (lt, t) => { const X = kbCam('newspaper', t, [[S('m8') - .15, .2, .55, 2.6], [W('m8', 'homem'), .78, .7, 2.6], [W('m8', 'avental') - .4, .5, .11, 2.2]], [W('m8', 'homem'), W('m8', 'avental')]);
+  const [hx, hy] = toScr(X, 640, 205), k = X.W / 1280;
+  return kbPhoto('newspaper', X) + note(['SEGUNDA-FEIRA', 'MUSEU FECHADO'], 330, 300, t, W('m8', 'segunda'), { size: 36 }) + redCircle(hx, hy, 620 * k, 70 * k, t, W('m8', 'avental') - .2, .6, 2) +
+    note(['"FOI SOB UM AVENTAL QUE', 'A MONA LISA FOI LEVADA"', '— EXCELSIOR'], 540, 1240, t, W('m8', 'avental'), { size: 34, red: true }); }, 'avental');
+// ── m9 · ninguém percebe → "onde está a Mona Lisa?"
+shot(S('m9') - .15, (lt, t) => frameScene(t, 0, 1) + stamp('22 · 08 · 1911', 540, 300, t, W('m9', 'seguinte'), { size: 58, rot: -4 }) + typed('ONDE ESTÁ', 540, 1290, t, W('m9', 'onde'), 70, 16, '#f0e6cc') + typed('A MONA LISA?', 540, 1380, t, W('m9', 'mona'), 70, 16, '#e8483c'), 'onde');
+// ── m10 · Louvre fechado → parede dos suspeitos → Apollinaire preso
+shot(S('m10') - .15, (lt, t) => { const X = kbCam('puck1911b', t, [[S('m10') - .15, .5, .5, 1.4], [W('m10', 'policia') - .1, .6, .5, 1.7]]);
+  return kbPhoto('puck1911b', X) + stamp('FECHADO · 1 SEMANA', 540, 1200, t, W('m10', 'semana'), { size: 54 }) + note(['PUCK · 18 · 10 · 1911'], 540, 300, t, S('m10') + .3, { size: 30 }); }, 'louvre-fechado');
+shot(W('m10', 'policia') - .2, (lt, t) => { wallFrame(t, [[0, [0, -4, 13]], [1.2, [7.4, -8, 9], 'io'], [W('m10', 'poeta') - W('m10', 'policia') + .2, [-8, -10, 10], 'io'], [6, [-6, -9, 13]]], [[0, [0, -4.4]], [1.2, [7.4, -8]], [W('m10', 'poeta') - W('m10', 'policia') + .2, [-8.2, -9]]], lt); return stamp('PRESO', 760, 1250, t, W('m10', 'preso'), { size: 76 }); }, 'parede-suspeitos');
+// ── m11 · os jornais → o espaço vazio na parede
+shot(S('m11') - .15, (lt, t) => { const X = kbCam('puck1911a', t, [[S('m11') - .15, .5, .3, 1.7], [W('m11', 'multidoes') - .1, .5, .55, 1.4]], [W('m11', 'rosto')]);
+  return kbPhoto('puck1911a', X) + note(['O ROSTO DELA', 'NOS JORNAIS DO MUNDO'], 540, 1260, t, W('m11', 'estampam'), { size: 36 }); }, 'jornais');
+shot(W('m11', 'multidoes') - .15, (lt, t) => { const t0 = W('m11', 'multidoes') - .15; let crowd = '';
+  for (let i = 0; i < 14; i++) { const x = 30 + i * 80 + 12 * Math.sin(t * 1.3 + i), h = 260 + (i % 3) * 40; crowd += `<path d="M${f1(x)} 1920 L${f1(x)} ${1920 - h + 60} Q${f1(x + 35)} ${1920 - h - 10} ${f1(x + 70)} ${1920 - h + 60} L${f1(x + 70)} 1920Z" fill="#0d0807" opacity=".95"/><circle cx="${f1(x + 35)}" cy="${1920 - h - 40}" r="34" fill="#0d0807"/>`; }
+  return frameScene(t, 0, lerp(.95, .8, prog(t, t0, 4))) + `<g transform="translate(0,${f1(-120 * E.out(prog(t, t0, 1.5)))})">${crowd}</g>` + note(['FILAS PARA VER', 'O ESPAÇO VAZIO'], 540, 300, t, W('m11', 'vazio') - .3, { size: 40, red: true }); }, 'vazio');
+// ── m12 · mais de dois anos: contador de dias
+shot(S('m12') - .15, (lt, t) => { const n = Math.floor(842 * E.io(prog(t, S('m12'), Ee('m12') - S('m12') + .3)));
+  return `<rect width="1080" height="1920" fill="#070605"/>` + frameScene(t, 0, .55, 760).replace('<rect width="1080" height="1920" fill="#3b1a18"/>', '<rect width="1080" height="1920" fill="#1c0d0c"/>') +
+    `<text x="540" y="1250" text-anchor="middle" font-family="TYPE" font-size="150" fill="#e8483c" letter-spacing="6">${n}</text>` + typed('DIAS DESAPARECIDA', 540, 1340, t, S('m12') + .2, 44, 24, '#f0e6cc'); }, 'contador');
+// ── m13 · o baú, Peruggia (parede + dossiê)
+shot(S('m13') - .15, (lt, t) => { const t0 = S('m13') - .15; wallFrame(t, [[0, [1.5, -12, 16]], [1.5, [1.5, -15, 10], 'io'], [W('m13', 'vidraceiro') - t0, [-4, -16.5, 11], 'io'], [9, [-3, -15, 15]]], [[0, [1.5, -15.4]], [W('m13', 'vidraceiro') - t0, [-9, -18.4]]], lt);
+  return note(['UM BAÚ DE FUNDO FALSO', 'NUM QUARTO EM PARIS'], 540, 300, t, W('m13', 'bau'), { size: 36, red: true }) + dossier('LADRÃO', [['NOME', 'VINCENZO PERUGGIA'], ['IDADE', '30 ANOS (1911)'], ['OFÍCIO', 'VIDRACEIRO']], 540, 1120, t, W('m13', 'vincenzo') + .2); }, 'parede-peruggia');
+// ── m14 · Paris → Florença (mapa) → preso no hotel
+shot(S('m14') - .15, (lt, t) => { const t0 = S('m14') - .15, tf = W('m14', 'florenca'), P = MP(2.35, 48.86), F = MP(11.25, 43.77), cam = mcam(t, [[t0, P[0], P[1], 3.0], [tf + .3, (P[0] + F[0]) / 2, (P[1] + F[1]) / 2, 2.0], [tf + 2.5, F[0], F[1], 3.6]]);
+  return mapScene(t, cam, { lit: { FR: [0, '#4a4036', false], IT: [tf - .3, '#6a5a3c'] }, cities: [[2.35, 48.86, 'PARIS', t0], [11.25, 43.77, 'FLORENÇA', tf]], routes: [[[2.35, 48.86], [11.25, 43.77], W('m14', 'vende') - .2, RED, 'DEZ 1913']], dim: true }) +
+    (t > W('m14', 'preso') ? stamp('PRESO', 540, 1180, t, W('m14', 'preso'), { size: 90 }) + note(['ALBERGO TRIPOLI-ITALIA'], 540, 1320, t, W('m14', 'hotel'), { size: 34 }) : ''); }, 'mapa-florenca');
+// ── m15 · "devolver à Itália" → 7 meses
+shot(S('m15') - .15, (lt, t) => { const X = kbCam('newspaper', t, [[S('m15') - .15, .5, .5, 2.4], [S('m15') + 3.5, .5, .48, 3.0]], [W('m15', 'sete')]); const [cx, cy] = toScr(X, 640, 930), k = X.W / 1280;
+  return kbPhoto('newspaper', X) + redCircle(cx, cy, 230 * k, 280 * k, t, S('m15') + .2) + note(['"QUERIA DEVOLVER', 'O QUADRO À ITÁLIA"'], 540, 300, t, W('m15', 'devolver'), { size: 36 }) + stamp('~7 MESES DE PRISÃO', 540, 1230, t, W('m15', 'sete'), { size: 56 }); }, 'peruggia');
+// ── m16 · a volta ao Louvre (foto real, 1914)
+shot(S('m16') - .15, (lt, t) => { const X = kbCam('lisahome', t, [[S('m16') - .15, .5, .4, 2.2], [Ee('m16') + .4, .5, .5, 1.4]], [W('m16', 'famosa')]);
+  return kbPhoto('lisahome', X) + stamp('04 · 01 · 1914', 540, 330, t, S('m16') + .3, { size: 56, rot: -5 }) + typed('MAIS FAMOSA DO QUE NUNCA', 540, 1260, t, W('m16', 'famosa'), 46, 26, '#e8483c'); }, 'volta');
+// ── m17 · os ataques, um a um → o vidro à prova de balas
+const ATTACKS = () => [['ÁCIDO', '1956', W('m17', 'acido')], ['PEDRA', '1956', W('m17', 'pedra')], ['TINTA', '1974', W('m17', 'tinta')], ['XÍCARA', '2009', W('m17', 'xicara')], ['BOLO', '2022', W('m17', 'bolo')], ['SOPA', '2024', W('m17', 'sopa')]];
+shot(S('m17') - .15, (lt, t) => { const tv = W('m17', 'vidro'), z = lerp(1, .82, prog(t, S('m17'), 3)); let s = frameScene(t, 1, z, 820);
+  ATTACKS().forEach(([a, y, ta], i) => { if (t < ta) return; const sh = Math.exp(-(t - ta) * 7) * 18, [hx, hy] = shake(t, sh, 50); s = g(`translate(${f1(hx)},${f1(hy)})`, s); s += note([`${a} · ${y}`], i % 2 ? 820 : 260, 360 + i * 120, t, ta, { size: 36, red: true, rot: i % 2 ? 4 : -4 }); });
+  if (t > tv - .2) { const p = E.out(prog(t, tv - .2, .6)); s += `<g opacity="${p.toFixed(2)}"><rect x="210" y="${f1(820 - 470 * z)}" width="660" height="${f1(940 * z)}" fill="#bfd8e8" opacity=".10"/><path d="M260 ${f1(820 - 400 * z)} L520 ${f1(820 - 470 * z)} L420 ${f1(820 + 470 * z)} L210 ${f1(820 + 300 * z)}Z" fill="#ffffff" opacity=".10"/></g>` + typed('VIDRO À PROVA DE BALAS', 540, 1400, t, tv, 44, 26, '#f0e6cc'); }
+  return s; }, 'ataques');
+// ── m18 · a pergunta: obra-prima? (o quadro) ou roubada? (a parede vazia) → parede inteira
+shot(S('m18') - .15, (lt, t) => { const tr = W('m18', 'roubada'), op = 1 - E.io(prog(t, tr - .1, .8));
+  return frameScene(t, op, lerp(.9, 1.1, prog(t, S('m18'), 4))) + typed('OBRA-PRIMA?', 540, 300, t, W('m18', 'obra') - .1, 76, 14, '#f0e6cc') + typed('OU ROUBADA?', 540, 1500 - 120, t, tr - .1, 76, 14, '#e8483c'); }, 'pergunta-final');
+shot(Ee('m18') + .6, (lt, t) => { wallFrame(t, [[0, [0, 6, 18]], [3.2, [0, -2, 56], 'io']], [[0, [0, 12.5]], [3.2, [0, 0]]], lt); return ''; }, 'parede-final');
+SH.forEach((s, i) => s.t1 = SH[i + 1] ? SH[i + 1].t0 : TL.duration);
+const SHT = Object.fromEntries(SH.map(s => [s.name, s]));
+
+// cronologia da parede (o que aparece quando)
+function wallTimeline() {
+  WALL.built.sc.updateMatrixWorld(true); const it = WALL.items;
+  for (const k of Object.keys(it)) if (it[k].g) it[k].t0 = 0;
+  it.roubo.t0 = S('m7') + .3; it.fechado.t0 = W('m8', 'segunda'); it.susp.t0 = W('m10', 'policia'); it.picasso.t0 = W('m10', 'picasso'); it.apollc.t0 = W('m10', 'apollinaire');
+  it.perug.t0 = W('m13', 'vincenzo'); it.volta.t0 = S('m16');
+  const A = WALL.addString;
+  A('monalisa', 'roubo', S('m7') + .5, .7); A('roubo', 'fechado', W('m8', 'segunda') + .2, .6); A('roubo', 'louvrec', S('m10') + .2, .6);
+  A('roubo', 'susp', W('m10', 'policia') + .1, .6); A('susp', 'picasso', W('m10', 'picasso') + .1, .6); A('susp', 'apoll', W('m10', 'apollinaire') + .1, .6);
+  A('roubo', 'jornal', W('m13', 'vincenzo') - .2, .8, 1.5); A('jornal', 'perug', W('m13', 'vidraceiro'), .6); A('jornal', 'volta', S('m16'), .6);
+  A('leonardo', 'monalisa', S('m18'), .5); A('francis', 'monalisa', S('m18') + .2, .5);
+  WALL.addMark('perugC', 'jornal', 'circle', W('m13', 'vincenzo'), { s: 3.2, x: 0, y: -.5 }); WALL.addMark('apollX', 'apoll', 'x', W('m10', 'preso'), { s: 3.4 });
+}
+
+// ═════════════ quadro ═════════════
+const svg = document.getElementById('v');
+function renderAt(t) {
+  let sh = SH[0]; for (const s of SH) if (t >= s.t0) sh = s;
+  const lt = t - sh.t0, wall = sh.name.startsWith('parede');
+  canvas.style.visibility = wall ? 'visible' : 'hidden';
+  const wp = clamp(lt / .16), dir = (SH.indexOf(sh) % 2 ? 1 : -1);
+  let body = sh.f(lt, t);
+  if (sh.t0 > 0 && wp < 1 && !wall) body = `<g transform="translate(${f1(dir * 140 * Math.pow(1 - wp, 2))},0)" filter="url(#whip)" opacity="${(.6 + .4 * wp).toFixed(2)}">${body}</g>`;
+  canvas.style.filter = wall && sh.t0 > 0 && wp < 1 ? `blur(${f1(10 * (1 - wp))}px)` : 'none';
+  canvas.style.transform = wall && sh.t0 > 0 && wp < 1 ? `translateX(${f1(dir * 120 * Math.pow(1 - wp, 2))}px)` : 'none';
+  let out = DEFS + body;
+  out += post(t) + subtitle(t);
+  const fin = Math.min(prog(t, 0, 1.2), 1 - prog(t, TL.duration - 2.2, 2.2)); if (fin < 1) out += `<rect width="1080" height="1920" fill="#000" opacity="${(1 - fin).toFixed(3)}"/>`;
+  svg.innerHTML = out;
+}
+// som: efeitos, sons reais e trilha
+function collectSFX() {
+  const st = n => SHT[n].t0, sp = n => [SHT[n].t0, SHT[n].t1 - SHT[n].t0];
+  SH.slice(1).forEach(s => sfx('whoosh', s.t0 - .15));
+  sfx('projector', 0, TL.duration); sfx('sub', S('m1') - .1);
+  sfx('file', 0, 0, { name: 'clock', off: 0, d: S('m2'), gain: -28 });
+  sfx('bells', st('florenca') + .2, 6);
+  const typeAt = (t, d = 1.1) => sfx('file', t, 0, { name: 'typewriter', off: 5 + rnd(t) * 15, d, gain: -22 });
+  [W('m1', 'famoso') - .2, W('m1', 'quatrocentos'), W('m1', 'pouca'), W('m2', 'florenca'), W('m2', 'leonardo') + .2, W('m2', 'lisa') - .1, W('m3', 'seda'), W('m3', 'francesco'), W('m3', 'gioconda', 1) - .2, W('m4', 'passou'), W('m4', 'sfumato'), W('m5', 'rei'), W('m6', 'quarto') - .2, W('m7', 'vinte'), W('m8', 'segunda'), W('m8', 'avental'), W('m9', 'onde'), W('m11', 'estampam'), S('m12') + .2, W('m13', 'bau'), W('m13', 'vincenzo') + .2, W('m14', 'hotel'), W('m15', 'devolver'), W('m16', 'famosa'), W('m17', 'vidro'), W('m18', 'obra') - .1, W('m18', 'roubada') - .1].forEach(t => typeAt(t));
+  [W('m2', 'volta'), W('m4', 'nunca'), W('m6', 'morre'), W('m7', 'desaparece') + 1.4, W('m9', 'seguinte'), W('m10', 'semana'), W('m10', 'preso'), W('m14', 'preso'), W('m15', 'sete'), S('m16') + .3].forEach(t => sfx('stamp', t));
+  ['parede-suspeitos', 'parede-peruggia', 'parede-final'].forEach(n => { sfx('flashlight', st(n) + .05); sfx('file', st(n), 0, { name: 'clock', off: 3, d: SHT[n].t1 - st(n), gain: -30 }); });
+  WALL.strings.forEach(s => { sfx('pin', s.t0 - .05); sfx('string', s.t0 + .05); });
+  sfx('sub', W('m5', 'franca')); sfx('whoosh', W('m5', 'franca') + .2); sfx('sub', W('m14', 'florenca')); sfx('whoosh', W('m14', 'vende'));
+  sfx('riser', S('m7') - .2, W('m7', 'desaparece') - S('m7') + .4); sfx('sub', W('m7', 'desaparece')); sfx('file', W('m7', 'desaparece'), 0, { name: 'heartbeat', off: 0, d: 4.5, gain: -16 });
+  sfx('crowd', ...sp('vazio')); sfx('crowd', ...sp('louvre-fechado'));
+  sfx('file', S('m12'), 0, { name: 'clock', off: 2, d: Ee('m12') - S('m12') + .8, gain: -18 });
+  ATTACKS().forEach(([a, y, ta], i) => { sfx('impact', ta); if (a === 'PEDRA' || a === 'XÍCARA') sfx('clank', ta + .05); });
+  sfx('crowd', st('volta'), SHT['volta'].t1 - st('volta')); sfx('sub', W('m18', 'roubada')); sfx('riser', S('m18'), Ee('m18') - S('m18'));
+  // trilha: Kevin MacLeod (incompetech.com), CC BY 4.0
+  sfx('music', .3, 0, { name: 'Suonatore_di_Liuto', off: 0, d: S('m7') + .2, gain: -24, fin: 2.5, fout: 1.5 });
+  sfx('music', S('m7') - .2, 0, { name: 'Vanishing', off: 0, d: S('m13') - S('m7') + .6, gain: -23, fin: 1.5, fout: 1.5 });
+  sfx('music', S('m13') - .4, 0, { name: 'Spy_Glass', off: 6, d: S('m16') - S('m13') + .5, gain: -24, fin: 1.2, fout: 1.0 });
+  sfx('music', S('m16') - .5, 0, { name: 'Tempting_Secrets', off: 0, d: TL.duration - S('m16') + .5, gain: -22, fin: 1.5, fout: 4 });
+  return SFX;
+}
+// carregamento: fotos (texturas da parede) e fontes antes do primeiro quadro
+window.READY_P = (async () => {
+  await document.fonts.load('64px TYPE'); await document.fonts.load('56px EBG'); await document.fonts.ready;
+  const loader = new THREE.TextureLoader(), tex = {};
+  await Promise.all(Object.keys(PH).map(n => new Promise((ok, no) => loader.load(imgURL(n), tx => { tx.encoding = THREE.sRGBEncoding; tx.anisotropy = 8; tex[n] = tx; ok(); }, undefined, no))));
+  await Promise.all(Object.keys(PH).map(n => new Promise(ok => { const im = new Image(); im.onload = () => im.decode().then(ok, ok); im.onerror = ok; im.src = imgURL(n); })));
+  WALL.built = buildWall(tex); wallTimeline(); return true;
+})();
+window.renderAt = renderAt; window.getSFX = collectSFX; window.DURATION = TL.duration;
+window.SHOTLIST = () => SH.map(s => ({ name: s.name, t0: +s.t0.toFixed(2), t1: +s.t1.toFixed(2) }));
+</script>
+</body>
+</html>
