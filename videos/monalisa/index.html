@@ -38,7 +38,7 @@ const SFX = []; const sfx = (k, t, d = 0, extra = {}) => SFX.push({ k, t: +t.toF
 const RED = '#c0281f', PAPER = '#e9dfc6', INKT = '#1d1a17';
 
 // ═════════════ fotos (dimensões dos arquivos tratados) ═════════════
-const PH = { apollinaire: [1280, 1806], florence: [1280, 554], francis: [1280, 1656], leonardo: [1280, 1994], leonardo_eng: [512, 640], lisahome: [1280, 912], monalisa: [1280, 1908], napoleon: [512, 842], newspaper: [1280, 1866], notebook1: [514, 640], notebook2: [516, 640], puck1911a: [428, 640], puck1911b: [640, 416] };
+const PH = { uffizi: [516,640], apollinaire: [1280, 1806], florence: [1280, 554], francis: [1280, 1656], leonardo: [1280, 1994], leonardo_eng: [512, 640], lisahome: [1280, 912], monalisa: [1280, 1908], napoleon: [512, 842], newspaper: [1280, 1866], notebook1: [514, 640], notebook2: [516, 640], puck1911a: [428, 640], puck1911b: [640, 416] };
 const imgURL = n => `photos/${n}.jpg`;
 
 // ═════════════ SVG: defs ═════════════
@@ -303,7 +303,7 @@ shot(W('m4', 'camada') - .15, (lt, t) => { const t0 = W('m4', 'camada') - .15, X
 // ── m5 · para a França (mapa) → Francisco I
 shot(S('m5') - .15, (lt, t) => { const t0 = S('m5') - .15, cam = mcam(t, [[t0, MP(12, 43)[0], MP(12, 43)[1], 2.6], [W('m5', 'franca') + .3, MP(6, 45.5)[0], MP(6, 45.5)[1], 2.2]]);
   return mapScene(t, cam, { lit: { IT: [t0, '#6a5a3c', false], FR: [W('m5', 'franca'), ENTENTE] }, labels: [['FR', W('m5', 'franca'), 'FRANÇA']], routes: [[[12.5, 41.9], [0.98, 47.41], W('m5', 'franca'), RED, '1516']], cities: [[12.5, 41.9, 'ROMA', t0], [0.98, 47.41, 'AMBOISE', W('m5', 'franca') + .9]], dim: true }); }, 'mapa-franca');
-shot(W('m5', 'convite') - .1, (lt, t) => { const t0 = W('m5', 'convite') - .1, X = kbCam('francis', t, [[t0, .5, .3, 2.0], [t0 + 2.5, .5, .4, 1.5]], [W('m5', 'rei')]);
+shot(W('m5', 'francisco') - .15, (lt, t) => { const t0 = W('m5', 'francisco') - .15, X = kbCam('francis', t, [[t0, .5, .3, 2.0], [t0 + 2.5, .5, .4, 1.5]], [W('m5', 'rei')]);
   return kbPhoto('francis', X) + dossier('ANFITRIÃO', [['NOME', 'FRANCISCO I'], ['CARGO', 'REI DA FRANÇA']], 540, 1140, t, W('m5', 'rei')); }, 'francisco');
 // ── m6 · morte de Leonardo → o rei → Louvre → Napoleão
 shot(S('m6') - .15, (lt, t) => { const X = kbCam('leonardo_eng', t, [[S('m6') - .15, .5, .4, 1.5], [W('m6', 'quadro') - .1, .5, .35, 1.9]]);
@@ -327,7 +327,7 @@ shot(S('m9') - .15, (lt, t) => frameScene(t, 0, 1) + stamp('22 · 08 · 1911', 5
 // ── m10 · Louvre fechado → parede dos suspeitos → Apollinaire preso
 shot(S('m10') - .15, (lt, t) => { const X = kbCam('puck1911b', t, [[S('m10') - .15, .5, .5, 1.4], [W('m10', 'policia') - .1, .6, .5, 1.7]]);
   return kbPhoto('puck1911b', X) + stamp('FECHADO · 1 SEMANA', 540, 1200, t, W('m10', 'semana'), { size: 54 }) + note(['PUCK · 18 · 10 · 1911'], 540, 300, t, S('m10') + .3, { size: 30 }); }, 'louvre-fechado');
-shot(W('m10', 'policia') - .2, (lt, t) => { wallFrame(t, [[0, [0, -4, 13]], [1.2, [7.4, -8, 9], 'io'], [W('m10', 'poeta') - W('m10', 'policia') + .2, [-8, -10, 10], 'io'], [6, [-6, -9, 13]]], [[0, [0, -4.4]], [1.2, [7.4, -8]], [W('m10', 'poeta') - W('m10', 'policia') + .2, [-8.2, -9]]], lt); return stamp('PRESO', 760, 1250, t, W('m10', 'preso'), { size: 76 }); }, 'parede-suspeitos');
+shot(W('m10', 'policia') - .2, (lt, t) => { wallFrame(t, [[0, [0, -4, 18]], [1.2, [5.5, -7.5, 15], 'io'], [W('m10', 'poeta') - W('m10', 'policia') + .2, [-7, -10, 15], 'io'], [6, [-4, -8, 19]]], [[0, [0, -4.4]], [1.2, [7.4, -8]], [W('m10', 'poeta') - W('m10', 'policia') + .2, [-8.2, -9]]], lt); return stamp('PRESO', 760, 1250, t, W('m10', 'preso'), { size: 76 }); }, 'parede-suspeitos');
 // ── m11 · os jornais → o espaço vazio na parede
 shot(S('m11') - .15, (lt, t) => { const X = kbCam('puck1911a', t, [[S('m11') - .15, .5, .3, 1.7], [W('m11', 'multidoes') - .1, .5, .55, 1.4]], [W('m11', 'rosto')]);
   return kbPhoto('puck1911a', X) + note(['O ROSTO DELA', 'NOS JORNAIS DO MUNDO'], 540, 1260, t, W('m11', 'estampam'), { size: 36 }); }, 'jornais');
@@ -346,8 +346,12 @@ shot(S('m14') - .15, (lt, t) => { const t0 = S('m14') - .15, tf = W('m14', 'flor
   return mapScene(t, cam, { lit: { FR: [0, '#4a4036', false], IT: [tf - .3, '#6a5a3c'] }, cities: [[2.35, 48.86, 'PARIS', t0], [11.25, 43.77, 'FLORENÇA', tf]], routes: [[[2.35, 48.86], [11.25, 43.77], W('m14', 'vende') - .2, RED, 'DEZ 1913']], dim: true }) +
     (t > W('m14', 'preso') ? stamp('PRESO', 540, 1180, t, W('m14', 'preso'), { size: 90 }) + note(['ALBERGO TRIPOLI-ITALIA'], 540, 1320, t, W('m14', 'hotel'), { size: 34 }) : ''); }, 'mapa-florenca');
 // ── m15 · "devolver à Itália" → 7 meses
+shot(W('m15', 'italia') - .3, (lt, t) => { const t0 = W('m15', 'italia') - .3, X = kbCam('uffizi', t, [[t0, .5, .45, 1.9], [t0 + 2, .5, .5, 1.5]], [W('m15', 'italia')]);
+  return kbPhoto('uffizi', X) + note(['FLORENÇA · DEZ 1913', 'EXPOSTA NA GALERIA UFFIZI'], 540, 300, t, t0 + .2, { size: 34 }); }, 'uffizi');
 shot(S('m15') - .15, (lt, t) => { const X = kbCam('newspaper', t, [[S('m15') - .15, .5, .5, 2.4], [S('m15') + 3.5, .5, .48, 3.0]], [W('m15', 'sete')]); const [cx, cy] = toScr(X, 640, 930), k = X.W / 1280;
   return kbPhoto('newspaper', X) + redCircle(cx, cy, 230 * k, 280 * k, t, S('m15') + .2) + note(['"QUERIA DEVOLVER', 'O QUADRO À ITÁLIA"'], 540, 300, t, W('m15', 'devolver'), { size: 36 }) + stamp('~7 MESES DE PRISÃO', 540, 1230, t, W('m15', 'sete'), { size: 56 }); }, 'peruggia');
+shot(W('m15', 'cumpriu') - .15, (lt, t) => { const t0 = W('m15', 'cumpriu') - .15, X = kbCam('newspaper', t, [[t0, .5, .5, 2.6], [t0 + 2.5, .5, .48, 3.1]]); const [cx, cy] = toScr(X, 640, 930), k = X.W / 1280;
+  return kbPhoto('newspaper', X) + redCircle(cx, cy, 230 * k, 280 * k, t, t0) + stamp('~7 MESES DE PRISÃO', 540, 1230, t, W('m15', 'sete'), { size: 56 }); }, 'prisao');
 // ── m16 · a volta ao Louvre (foto real, 1914)
 shot(S('m16') - .15, (lt, t) => { const X = kbCam('lisahome', t, [[S('m16') - .15, .5, .4, 2.2], [Ee('m16') + .4, .5, .5, 1.4]], [W('m16', 'famosa')]);
   return kbPhoto('lisahome', X) + stamp('04 · 01 · 1914', 540, 330, t, S('m16') + .3, { size: 56, rot: -5 }) + typed('MAIS FAMOSA DO QUE NUNCA', 540, 1260, t, W('m16', 'famosa'), 46, 26, '#e8483c'); }, 'volta');
@@ -361,6 +365,7 @@ shot(S('m17') - .15, (lt, t) => { const tv = W('m17', 'vidro'), z = lerp(1, .82,
 shot(S('m18') - .15, (lt, t) => { const tr = W('m18', 'roubada'), op = 1 - E.io(prog(t, tr - .1, .8));
   return frameScene(t, op, lerp(.9, 1.1, prog(t, S('m18'), 4))) + typed('OBRA-PRIMA?', 540, 300, t, W('m18', 'obra') - .1, 76, 14, '#f0e6cc') + typed('OU ROUBADA?', 540, 1500 - 120, t, tr - .1, 76, 14, '#e8483c'); }, 'pergunta-final');
 shot(Ee('m18') + .6, (lt, t) => { wallFrame(t, [[0, [0, 6, 18]], [3.2, [0, -2, 56], 'io']], [[0, [0, 12.5]], [3.2, [0, 0]]], lt); return ''; }, 'parede-final');
+SH.sort((a, b) => a.t0 - b.t0);
 SH.forEach((s, i) => s.t1 = SH[i + 1] ? SH[i + 1].t0 : TL.duration);
 const SHT = Object.fromEntries(SH.map(s => [s.name, s]));
 
