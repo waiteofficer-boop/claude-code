@@ -3,3 +3,4 @@ build/*
 !build/mix_*.m4a
 frames/
 __pycache__/
+photos_raw/
