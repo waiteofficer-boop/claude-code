@@ -343,12 +343,6 @@ def render(events, total):
     return out[:int(total * SR)]
 
 
-if __name__ == '__main__':
-    ev = json.load(open(sys.argv[1])); total = float(sys.argv[3])
-    y = render(ev, total)
-    sf.write(sys.argv[2], y.astype(np.float32), SR, subtype='FLOAT')
-    print(f'{len(ev)} eventos → {sys.argv[2]} ({total:.1f}s, pico {np.abs(y).max():.2f})')
-
 
 # ───────────────────────── documentário (v4) ─────────────────────────
 def doc(kind, d=0):
@@ -418,3 +412,9 @@ def from_file(name, off=0.0, d=None, gain_db=0.0, fade=.08):
     f = min(int(fade * SR), len(s) // 2); r = np.linspace(0, 1, f)
     s[:f] *= r[:, None]; s[-f:] *= r[::-1, None]
     return s / (np.abs(s).max() + 1e-9) * 10 ** (gain_db / 20)
+
+if __name__ == '__main__':
+    ev = json.load(open(sys.argv[1])); total = float(sys.argv[3])
+    y = render(ev, total)
+    sf.write(sys.argv[2], y.astype(np.float32), SR, subtype='FLOAT')
+    print(f'{len(ev)} eventos → {sys.argv[2]} ({total:.1f}s, pico {np.abs(y).max():.2f})')
