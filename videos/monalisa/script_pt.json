@@ -1,0 +1,30 @@
+{
+ "lang": "pt",
+ "gap": 0.55,
+ "lead_in": 1.4,
+ "tail": 4.0,
+ "clockFmt": "pt",
+ "keywords": ["famoso", "ninguem", "leonardo", "lisa", "gioconda", "nunca", "sfumato", "franca", "louvre", "napoleao", "desaparece", "avental", "picasso", "preso", "vazio", "bau", "peruggia", "florenca", "famosa", "vidro", "roubada"],
+ "segments": [
+  {"id": "m1", "text": "Ela é o quadro mais famoso do mundo. Mas, por quase quatrocentos anos, fora do mundo da arte, pouca gente sabia quem ela era."},
+  {"id": "m2", "text": "Florença, por volta de mil quinhentos e três. Leonardo da Vinci começa o retrato de uma jovem de vinte e poucos anos: Lisa Gherardini.", "say": "Florença, por volta de mil quinhentos e três. Leonardo da Vinci começa o retrato de uma jovem de vinte e poucos anos: Lisa Gherardíni."},
+  {"id": "m3", "text": "Esposa de um rico comerciante de seda, Francesco del Giocondo. Por isso, o quadro também se chama La Gioconda.", "say": "Esposa de um rico comerciante de seda, Francesco del Djocôndo. Por isso, o quadro também se chama La Djocônda."},
+  {"id": "m4", "text": "Mas Leonardo nunca entregou a encomenda. Passou anos retocando a pintura, camada por camada, numa técnica chamada sfumato.", "say": "Mas Leonardo nunca entregou a encomenda. Passou anos retocando a pintura, camada por camada, numa técnica chamada esfumáto."},
+  {"id": "m5", "text": "Quando se mudou para a França, a convite do rei Francisco Primeiro, levou o quadro com ele."},
+  {"id": "m6", "text": "Leonardo morre em mil quinhentos e dezenove. O quadro fica com o rei da França. Séculos depois, vai para o Louvre. Napoleão chegou a pendurá-lo no próprio quarto."},
+  {"id": "m7", "text": "Até que, em vinte e um de agosto de mil novecentos e onze, ela desaparece."},
+  {"id": "m8", "text": "Numa segunda-feira, com o museu fechado, um homem sai pela porta com a Mona Lisa escondida debaixo do avental."},
+  {"id": "m9", "text": "Ninguém percebe. Só no dia seguinte alguém pergunta: onde está a Mona Lisa?"},
+  {"id": "m10", "text": "O Louvre fecha por uma semana. A polícia interroga até Pablo Picasso. O poeta Guillaume Apollinaire chega a ser preso.", "say": "O Luvre fecha por uma semana. A polícia interroga até Pablo Picasso. O poeta Guiôme Apolinér chega a ser preso."},
+  {"id": "m11", "text": "Os jornais do mundo inteiro estampam o rosto dela. E multidões fazem fila para ver o espaço vazio na parede."},
+  {"id": "m12", "text": "Por mais de dois anos, ninguém sabe onde ela está."},
+  {"id": "m13", "text": "Ela estava num baú, num quarto em Paris, com Vincenzo Peruggia: um vidraceiro italiano que tinha trabalhado no próprio Louvre.", "say": "Ela estava num baú, num quarto em Paris, com Vincênzo Perúdja: um vidraceiro italiano que tinha trabalhado no próprio Luvre."},
+  {"id": "m14", "text": "Em dezembro de mil novecentos e treze, ele tenta vendê-la a um negociante de arte em Florença. E é preso no hotel."},
+  {"id": "m15", "text": "Disse que queria devolver o quadro à Itália. Cumpriu cerca de sete meses de prisão."},
+  {"id": "m16", "text": "E a Mona Lisa voltou ao Louvre muito mais famosa do que quando saiu.", "say": "E a Mona Lisa voltou ao Luvre muito mais famosa do que quando saiu."},
+  {"id": "m17", "text": "Desde então, já levou ácido, pedra, tinta, uma xícara, bolo e sopa. Hoje, vive atrás de um vidro à prova de balas."},
+  {"id": "m18", "text": "Então, ela é famosa por ser uma obra-prima? Ou por ter sido roubada?"}
+ ],
+ "strings": {},
+ "cues": {}
+}
