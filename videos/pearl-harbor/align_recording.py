@@ -23,8 +23,9 @@ def main(script, rec, outdir, lead=.6, tail=3.0):
     a, _ = sf.read(wav, dtype='float32')
     a = np.concatenate([np.zeros(int(lead * SR), np.float32), a, np.zeros(int(tail * SR), np.float32)])
     wm = WhisperModel('small', device='cpu', compute_type='int8')
-    res, _ = wm.transcribe(resample_poly(a, 1, 3).astype(np.float32), language=cfg['lang'], word_timestamps=True, vad_filter=False,
-                           initial_prompt=' '.join(s['text'] for s in cfg['segments'])[:800])
+    # sem initial_prompt (provoca alucinação em trechos sussurrados) e com VAD
+    res, _ = wm.transcribe(resample_poly(a, 1, 3).astype(np.float32), language=cfg['lang'], word_timestamps=True, vad_filter=True,
+                           condition_on_previous_text=False)
     wh = [{"w": w.word.strip(), "s": w.start, "e": w.end} for seg in res for w in seg.words]
     script_words = [(s['id'], w) for s in cfg['segments'] for w in s['text'].split()]
     words = align([w for _, w in script_words], wh, 0.0, len(a) / SR)

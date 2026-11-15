@@ -311,10 +311,10 @@ def extra(kind, d=0):
 BED_RMS = {'waves': -27, 'crickets': -33, 'flame': -40, 'drone': -31, 'wind': -30, 'engines': -27, 'cockpit': -25, 'teletype': -30,
            'radarhum': -37, 'roomtone': -42, 'crowd': -32, 'siren': -29, 'dive': -23, 'drone_low': -34,
            'servo': -36, 'crtwhine': -40, 'gulls': -34, 'flag': -33, 'static': -33, 'fire': -28, 'bubbles': -30,
-           'projector': -36, 'oldcar': -30, 'bells': -32, 'artillery': -28, 'riser': -26}
+           'projector': -36, 'oldcar': -30, 'bells': -32, 'artillery': -28, 'riser': -26, 'screams': -21}
 HIT_PEAK = {'boom': -2, 'impact': -4, 'gunburst': -5, 'splash': -8, 'whistle': -11, 'ping': -19, 'ring': -13, 'click': -15,
             'bugle': -9, 'morse': -17, 'tock': -32, 'cut': -20, 'whoosh': -18, 'pop': -21, 'low': -8, 'shimmer': -18,
-            'horn': -8, 'shipbell': -16, 'flyby': -5, 'pistol': -1, 'grenade': -2, 'pin': -18, 'flashlight': -20, 'stamp': -10, 'string': -20, 'sub': -6, 'enginestart': -8, 'debris': -10, 'clank': -9, 'casings': -16, 'paper': -20, 'scribble': -12, 'static': -18}
+            'horn': -8, 'shipbell': -16, 'flyby': -5, 'pistol': -1, 'grenade': -2, 'shout': -9, 'pin': -18, 'flashlight': -20, 'stamp': -10, 'string': -20, 'sub': -6, 'enginestart': -8, 'debris': -10, 'clank': -9, 'casings': -16, 'paper': -20, 'scribble': -12, 'static': -18}
 def level(s, kind, is_bed):
     if is_bed:
         r = np.sqrt((s ** 2).mean()) + 1e-12; return s * 10 ** (BED_RMS.get(kind, -30) / 20) / r
@@ -396,10 +396,39 @@ def doc(kind, d=0):
         m = int(max(d, 1) * SR); tt = t_(m / SR)[:m]; p = tt / tt[-1]
         tone = sum(np.sin(2 * np.pi * f * (1 + .5 * p) * tt + k) for k, f in enumerate((110, 164.8, 220, 261.6))) * .1
         return space(stereo((tone + filt(pink(m), 'band', [300, 6000]) * .3) * p ** 2, 0, .6), 'hall', .4)
+    if kind == 'screams':
+        return screams(max(d, 2))
+    if kind == 'shout':  # um homem grita (aviso)
+        v = np.concatenate([voice(.55, 300, 260, 'e', .35, 7), np.zeros(int(.08 * SR)), voice(.8, 330, 220, 'a', .35, 8)])
+        return space(stereo(v, -.4, .2), 'outdoor', .4)
     if kind == 'sub':  # golpe grave de corte
         m = int(2.5 * SR); tt = t_(2.5)[:m]
         return space(stereo(np.sin(2 * np.pi * (55 * np.exp(-tt * 1.8) + 22) * tt) * expdecay(m, .9), 0), 'hall', .3)
     return None
+
+
+def voice(dur, f0, f_end, vowel='a', breath=.25, seed=0):
+    """voz sintética por fonte-filtro: pulsos glotais com jitter/vibrato → formantes da vogal."""
+    rng = np.random.default_rng(seed); n = int(dur * SR); tt = t_(dur)[:n]
+    f = np.interp(tt, [0, .08 * dur, .35 * dur, dur], [f0 * .8, f0 * 1.15, f0, f_end]) * (1 + .03 * np.sin(2 * np.pi * rng.uniform(5, 7) * tt) + .01 * rng.standard_normal(n).cumsum() / np.sqrt(n))
+    ph = np.cumsum(f) / SR; src = (ph % 1.0) * 2 - 1                      # dente de serra ≈ pulso glotal
+    src = src + breath * filt(rng.standard_normal(n), 'band', [1500, 6000])  # aspereza / ar
+    F = {'a': [(800, 90), (1250, 110), (2600, 160), (3400, 250)], 'e': [(550, 80), (1900, 120), (2600, 160), (3500, 250)], 'o': [(500, 80), (900, 100), (2500, 160), (3300, 250)]}[vowel]
+    out = sum(filt(src, 'band', [fc - bw, fc + bw], 2) * g for (fc, bw), g in zip(F, (1, .7, .35, .2)))
+    env = np.clip(tt / .05, 0, 1) * np.clip((dur - tt) / (.35 * dur), 0, 1) ** 1.3
+    return sat(out * env * 3, 1.8)
+
+
+def screams(d):
+    """multidão em pânico: gritos femininos e masculinos escalonados + murmúrio que cresce."""
+    n = int(d * SR); out = np.zeros((n, 2)); rng = np.random.default_rng(1914)
+    for k in range(9):
+        st = rng.uniform(0, d * .55); du = rng.uniform(.6, 1.4); fem = k % 3 != 2
+        f0 = rng.uniform(520, 820) if fem else rng.uniform(260, 380)
+        v = voice(du, f0, f0 * rng.uniform(.55, .8), rng.choice(['a', 'e', 'o']), .3, k) * rng.uniform(.5, 1)
+        i = int(st * SR); j = min(n, i + len(v)); out[i:j] += stereo(v[:j - i], rng.uniform(-.9, .9), .3)
+    murm = bed('crowd', d); out[:len(murm)] += murm[:n] * 1.6 * np.clip(t_(d)[:n, None] / .4, 0, 1)
+    return space(out, 'outdoor', .45)
 
 
 FILE_CACHE = {}

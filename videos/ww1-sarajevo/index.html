@@ -48,6 +48,7 @@ const DEFS = `<defs>
 <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity=".75"/></filter>
 <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 <filter id="ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter>
+<filter id="whip" x="-20%" y="0" width="140%" height="100%"><feGaussianBlur stdDeviation="38 0"/></filter>
 <filter id="redtint"><feColorMatrix type="matrix" values="1.1 .3 .1 0 .05  .1 .3 .1 0 0  .05 .15 .2 0 0  0 0 0 1 0"/></filter>
 <radialGradient id="vig" cx="50%" cy="48%" r="72%"><stop offset=".38" stop-color="#000" stop-opacity="0"/><stop offset=".78" stop-color="#000" stop-opacity=".72"/><stop offset="1" stop-color="#000" stop-opacity=".97"/></radialGradient>
 <linearGradient id="vigTB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".85"/><stop offset=".14" stop-color="#000" stop-opacity="0"/><stop offset=".82" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".9"/></linearGradient>
@@ -179,70 +180,120 @@ function wallFrame(t, camKeys, lightKeys, lt) {
 }
 
 // ═════════════ PLANOS ═════════════
+// câmera 2D viva: etapas sincronizadas com palavras (tempo absoluto), câmera na mão e "socos" de zoom nas palavras-chave
+function kbCam(name, t, stages, punches = [], cy = 900) {
+  const keys = stages.map(([ta, fx, fy, z, e]) => [ta, fx, fy, z, e || 'io']);
+  const X = kbXform(name, t, keys, cy);
+  const hand = [6 * Math.sin(t * .83) + 3 * Math.sin(t * 2.1), 5 * Math.sin(t * .67 + 1) + 2.5 * Math.sin(t * 1.7)];
+  const punch = punches.reduce((a, p) => a + (t > p ? (1 - Math.exp(-(t - p) * 28)) * Math.exp(-(t - p) * 2.6) : 0), 0);
+  const k = 1 + .09 * punch, cx = 540, cyy = cy; X.x = cx + (X.x - cx) * k + hand[0]; X.y = cyy + (X.y - cyy) * k + hand[1]; X.W *= k; X.H *= k; X.z *= k; return X;
+}
+// ficha de dossiê (desliza da lateral; campos datilografados)
+function dossier(title, rows, x, y, t, t0, opts = {}) {
+  if (t < t0) return ''; const p = E.out(prog(t, t0, .35)), dx = (1 - p) * (opts.from === 'left' ? -700 : 700), w = opts.w || 620, lh = 52, h = 110 + rows.length * lh;
+  let s = `<rect x="0" y="0" width="${w}" height="${h}" fill="${PAPER}" filter="url(#shadow)"/><rect x="0" y="0" width="${w}" height="70" fill="#2a2420"/>` +
+    `<text x="28" y="48" font-family="TYPE" font-size="34" fill="#e9dfc6" letter-spacing="3">DOSSIÊ · ${esc(title)}</text>`;
+  let left = Math.floor((t - t0 - .25) * 30);
+  rows.forEach(([k, v], i) => { const line = `${k}: ${v}`, n = clamp(left, 0, line.length); left -= line.length;
+    s += `<text x="28" y="${118 + i * lh}" font-family="TYPE" font-size="32" fill="${INKT}"><tspan fill="${RED}">${esc(line.slice(0, Math.min(n, k.length + 1)))}</tspan>${esc(line.slice(k.length + 1, n))}</text>`; });
+  return g(`translate(${f1(x - w / 2 + dx)},${f1(y)}) rotate(${opts.rot ?? -1.5})`, s);
+}
+// linha do tempo da crise de julho (barra inferior)
+const CRISIS = () => [['28 JUN', 'ATENTADO', 0], ['28 JUL', 'ÁUSTRIA × SÉRVIA', S('s17') + .9], ['30 JUL', 'RÚSSIA MOBILIZA', wt('s18', 'russia') + .2], ['1 AGO', 'ALEMANHA × RÚSSIA', wt('s18', 'alemanha') + .3], ['3 AGO', '× FRANÇA', wt('s18', 'franca') + .2], ['4 AGO', 'BÉLGICA · GRÃ-BRETANHA', wt('s18', 'gra') + .2]];
+function crisisBar(t, t0) {
+  if (t < t0) return ''; const o = prog(t, t0, .4), items = CRISIS(), x0 = 90, x1 = 990, y = 1330; let s = `<rect x="40" y="${y - 70}" width="1000" height="150" fill="#0b0907" opacity=".72"/><path d="M${x0} ${y} H${x1}" stroke="#6b5a48" stroke-width="4"/>`;
+  let lastOn = 0; items.forEach(([d, lab, ta], i) => { const x = x0 + (x1 - x0) * i / (items.length - 1), on = t >= ta; if (on) lastOn = x;
+    s += `<circle cx="${x}" cy="${y}" r="${on ? 13 : 8}" fill="${on ? RED : '#6b5a48'}"/><text x="${x}" y="${y - 26}" text-anchor="middle" font-family="TYPE" font-size="26" fill="${on ? '#f0e6cc' : '#7a6a58'}">${d}</text>` +
+      (on && i === items.filter(it => t >= it[2]).length - 1 ? `<text x="${Math.min(880, Math.max(200, x))}" y="${y + 52}" text-anchor="middle" font-family="TYPE" font-size="28" fill="#e8483c">${esc(lab)}</text>` : ''); });
+  s += `<path d="M${x0} ${y} H${f1(lastOn)}" stroke="${RED}" stroke-width="6"/>`;
+  return `<g opacity="${o.toFixed(2)}">${s}</g>`;
+}
+// legenda de chamada (rótulo com linha apontando um ponto da foto)
+function callout(txt, px, py, lx, ly, t, t0) { if (t < t0) return ''; const p = E.out(prog(t, t0, .35)); return pen(`M${f1(px)} ${f1(py)} L${f1(lx)} ${f1(ly)}`, p, 5) + `<circle cx="${f1(px)}" cy="${f1(py)}" r="${f1(9 * p)}" fill="${RED}"/>` + note([txt], lx, ly - 10, t, t0 + .25, { size: 32, rot: 0 }); }
 const SH = [];
 const shot = (t0, f, name) => SH.push({ t0, f, name });
-// 1 · abertura: Sarajevo hoje, escurecida, com data datilografada
-shot(0, (lt, t) => { const X = kbXform('latin', lt, [[0, .45, .62, 1.9], [Ee('s1') + 1, .35, .7, 2.3]]);
-  return kbPhoto('latin', X) + `<rect width="1080" height="1920" fill="#000" opacity="${(.35 + .5 * (1 - prog(t, .3, 2))).toFixed(2)}"/>` + typed('28 · 06 · 1914', 540, 760, t, S('s1') + .2, 82, 12) + typed('SARAJEVO', 540, 880, t, wt('s1', 'sarajevo'), 110, 9, '#e8483c'); }, 'abertura');
-// 2 · retrato do arquiduque: do peito (medalhas) até os olhos
-shot(S('s2') - .2, (lt, t) => { const X = kbXform('ff', lt, [[0, .55, .72, 2.3], [3.2, .52, .32, 1.6], [7, .5, .24, 1.9]]);
-  return kbPhoto('ff', X) + note(['ÚLTIMO DIA'], 300, 330, t, wt('s2', 'ultimo'), { size: 44, rot: -4 }) + note(['HERDEIRO DO', 'IMPÉRIO'], 760, 1260, t, wt('s2', 'herdeiro'), { size: 40, rot: 3 }); }, 'retrato');
-// 3 · Sofia (foto de família): zoom nela
-shot(wt('s3', 'sofia') - .9, (lt, t) => { const X = kbXform('family', lt, [[0, .45, .3, 1.2], [2.2, .61, .36, 2.1]]); const [cx, cy] = toScr(X, 985, 680), k = X.W / 1600;
-  return kbPhoto('family', X) + redCircle(cx, cy, 160 * k, 200 * k, t, wt('s3', 'sofia') - .1) + note(['SOFIA', 'DUQUESA DE HOHENBERG'], 540, 380, t, wt('s3', 'sofia'), { size: 36, red: true }); }, 'sofia');
-// 4 · parede: os conspiradores (câmera percorre, lanterna revela, barbantes ligam à Mão Negra)
-shot(S('s4') - .15, (lt, t) => { wallFrame(t, [[0, [-8, 1.5, 11]], [2.2, [-2, 2.5, 11], 'sine'], [4.2, [6.5, 2, 13], 'sine'], [6.3, [5, -4, 16], 'sine'], [9.5, [2, -2, 30], 'io']], [[0, [-8.2, 1.4]], [2.2, [-1.6, 2.8]], [4.2, [7, 2.4]], [6.3, [7.5, -7.4]], [9.5, [2, -3]]], lt);
+// 1 · abertura: Sarajevo hoje → data datilografada, câmera atravessando a rua até a ponte
+shot(0, (lt, t) => { const X = kbCam('latin', t, [[0, .15, .55, 2.2], [3.5, .3, .85, 2.6], [S('s2'), .3, .86, 2.9]], [wt('s1', 'sarajevo')]);
+  return kbPhoto('latin', X) + `<rect width="1080" height="1920" fill="#000" opacity="${(.35 + .5 * (1 - prog(t, .3, 2))).toFixed(2)}"/>` + typed('28 · 06 · 1914', 540, 760, t, S('s1') + .2, 82, 12) + typed('SARAJEVO', 540, 880, t, wt('s1', 'sarajevo'), 110, 9, '#e8483c') + typed('BÓSNIA · ÁUSTRIA-HUNGRIA', 540, 960, t, wt('s1', 'sarajevo') + .8, 34, 30); }, 'abertura');
+// 2 · retrato: olhos → medalhas → recua; ficha do herdeiro
+shot(S('s2') - .2, (lt, t) => { const X = kbCam('ff', t, [[S('s2') - .2, .5, .25, 2.3], [wt('s2', 'herdeiro') - .2, .56, .7, 2.3], [Ee('s2') + .4, .5, .45, 1.15]], [wt('s2', 'ultimo'), wt('s2', 'herdeiro')]);
+  return kbPhoto('ff', X) + note(['ÚLTIMO DIA'], 300, 330, t, wt('s2', 'ultimo'), { size: 44, rot: -4 }) + callout('ORDEM DO TOSÃO DE OURO', ...toScr(X, 540, 1000), 640, 1220, t, wt('s2', 'herdeiro') + .5); }, 'retrato');
+// 3 · o casal chega a Sarajevo (cortejo) + dossiê do arquiduque
+shot(S('s3') - .15, (lt, t) => { const X = kbCam('arrival', t, [[S('s3') - .15, .2, .45, 2.0], [wt('s3', 'sofia') - .4, .62, .5, 2.2]], [wt('s3', 'arquiduque')]);
+  return kbPhoto('arrival', X) + dossier('ALVO', [['NOME', 'FRANCISCO FERDINANDO'], ['IDADE', '50 ANOS'], ['CARGO', 'HERDEIRO DO TRONO'], ['VISITA', 'MANOBRAS MILITARES']], 540, 1080, t, wt('s3', 'arquiduque') + .1); }, 'chegada');
+// 4 · Sofia (foto de família) + dossiê
+shot(wt('s3', 'lado') - .35, (lt, t) => { const X = kbCam('family', t, [[wt('s3', 'lado') - .35, .45, .3, 1.25], [wt('s3', 'sofia') + .6, .61, .36, 2.1]]); const [cx, cy] = toScr(X, 985, 680), k = X.W / 1600;
+  return kbPhoto('family', X) + redCircle(cx, cy, 160 * k, 200 * k, t, wt('s3', 'sofia') + .1) + dossier('ESPOSA', [['NOME', 'SOFIA CHOTEK'], ['TÍTULO', 'DUQUESA DE HOHENBERG'], ['IDADE', '46 ANOS']], 540, 1120, t, wt('s3', 'sofia') + .3, { from: 'left' }); }, 'sofia');
+// 5 · parede: os conspiradores (movimentos rápidos de item em item)
+shot(S('s4') - .15, (lt, t) => { wallFrame(t, [[0, [-8, 1.5, 9]], [1.5, [-8.2, 1.2, 8]], [2.6, [-1.6, 2.8, 8], 'io'], [3.8, [-1.6, 2.6, 7.5]], [4.9, [7, 2.4, 11], 'io'], [6.2, [2.2, -3.6, 10], 'io'], [7.4, [6, -6, 18], 'io'], [9, [4, -4, 24], 'sine']],
+    [[0, [-8.2, 1.2]], [2.6, [-1.6, 2.8]], [4.9, [7, 2.4]], [6.2, [2.2, -3.6]], [7.4, [7.5, -7.4]], [9, [5, -5]]], lt);
   return note(['JOVENS NACIONALISTAS', 'TODOS ARMADOS'], 540, 1260, t, wt('s4', 'armados'), { size: 38, rot: 2 }); }, 'parede-conspiradores');
-// 5 · mapa: o cortejo pelo cais e a granada (10h10)
+// 6 · Apis, o chefe da Mão Negra
+shot(wt('s5', 'sociedade') - .2, (lt, t) => { const t0 = wt('s5', 'sociedade') - .2, X = kbCam('apis', t, [[t0, .5, .3, 1.9], [t0 + 2, .5, .4, 1.4]], [t0 + .4]);
+  return kbPhoto('apis', X) + dossier('MÃO NEGRA', [['LÍDER', 'DRAGUTIN DIMITRIJEVIĆ'], ['APELIDO', '"APIS"'], ['CARGO', 'INTELIGÊNCIA MILITAR SÉRVIA']], 540, 1120, t, wt('s5', 'negra') - .2); }, 'apis');
+// 7 · mapa da manhã: visão geral → segue o cortejo pelo cais → granada
 const MORNING = [[60, 812], [140, 780], [230, 742], [292, 720]], AFTERNOON = [[1600, 300], [1420, 336], [1300, 352], [1222, 362], [1212, 340], [1205, 318]];
 const pathD = pts => 'M' + pts.map(p => p.join(' ')).join(' L');
 function mapRoute(X, pts, p, w = 12) { const sp = pts.map(([px, py]) => toScr(X, px, py)); return pen(pathD(sp.map(v => v.map(f1))), p, w); }
-shot(S('s6') - .15, (lt, t) => { const tg = wt('s6', 'granada'), X = kbXform('routemap', lt, [[0, .5, .5, 1.0], [1.6, .2, .66, 2.4], [5, .17, .68, 2.7]]);
-  const [gx, gy] = toScr(X, 292, 720), fl = Math.max(0, 1 - Math.abs(t - tg - .25) / .3);
-  return kbPhoto('routemap', X) + mapRoute(X, MORNING, E.io(prog(t, S('s6') + .9, tg - S('s6') - .6))) + (t > tg + .2 ? `<circle cx="${f1(gx)}" cy="${f1(gy)}" r="${f1(30 + 220 * E.out(prog(t, tg + .2, .5)))}" fill="url(#flash)" opacity="${(1 - prog(t, tg + .3, 1)).toFixed(2)}"/>` + redCircle(gx, gy, 70, 60, t, tg + .35) : '') +
-    stamp('10:10', 260, 420, t, wt('s6', 'dez'), { size: 86 }) + note(['GRANADA'], 700, 1250, t, tg + .3, { size: 46, red: true, rot: -3 }) + (fl > 0 ? `<rect width="1080" height="1920" fill="#fff4dc" opacity="${(fl * .5).toFixed(2)}"/>` : ''); }, 'mapa-manha');
-// 6 · a explosão sob o carro de trás (foto do cortejo, tremor)
-shot(S('s7') - .1, (lt, t) => { const te = wt('s7', 'explode'), sk = t > te ? Math.exp(-(t - te) * 3) : 0, [hx, hy] = shake(t, 34 * sk, 40), X = kbXform('arrival', lt, [[0, .55, .55, 1.6], [4, .45, .6, 1.85]]);
-  return g(`translate(${f1(hx)},${f1(hy)})`, kbPhoto('arrival', X)) + (sk > .02 ? `<rect width="1080" height="1920" fill="#ffcf8a" opacity="${(sk * .45).toFixed(2)}" style="mix-blend-mode:screen"/>` : '') + note(['20 FERIDOS', 'NO CARRO DE TRÁS'], 540, 1240, t, te + .6, { size: 38 }); }, 'explosao');
-// 7 · o atirador da granada: veneno velho, rio raso
-shot(S('s8') - .1, (lt, t) => { const X = kbXform('cabrinovic', lt, [[0, .5, .45, 1.25], [6.5, .5, .38, 1.55]]);
-  return kbPhoto('cabrinovic', X) + note(['NEDELJKO ČABRINOVIĆ'], 540, 300, t, S('s8') + .6, { size: 40, red: true }) + stamp('VENENO VENCIDO', 540, 1120, t, wt('s8', 'velho'), { size: 52, rot: -6 }) + note(['RIO MILJACKA:', '~13 cm DE ÁGUA'], 600, 1300, t, wt('s8', 'seco'), { size: 38, rot: 3 }); }, 'cabrinovic');
-// 8 · "Era para terminar aí."
+shot(S('s6') - .15, (lt, t) => { const tg = wt('s6', 'granada'), X = kbCam('routemap', t, [[S('s6') - .15, .5, .5, 1.0], [wt('s6', 'cortejo'), .12, .74, 2.2], [tg, .19, .67, 2.9], [tg + 2, .18, .68, 3.1]], [wt('s6', 'dez'), tg + .2]);
+  const [gx, gy] = toScr(X, 292, 720), fl = Math.max(0, 1 - Math.abs(t - tg - .25) / .3), [rx, ry] = toScr(X, 520, 600);
+  return kbPhoto('routemap', X) + mapRoute(X, MORNING, E.io(prog(t, wt('s6', 'cortejo'), tg - wt('s6', 'cortejo') + .2))) + (t > wt('s6', 'cortejo') ? callout('CAIS APPEL', ...toScr(X, 150, 780), 330, 560, t, wt('s6', 'cortejo') + .2) : '') +
+    (t > tg + .2 ? `<circle cx="${f1(gx)}" cy="${f1(gy)}" r="${f1(30 + 220 * E.out(prog(t, tg + .2, .5)))}" fill="url(#flash)" opacity="${(1 - prog(t, tg + .3, 1)).toFixed(2)}"/>` + redCircle(gx, gy, 70, 60, t, tg + .35) : '') +
+    stamp('10:10', 760, 400, t, wt('s6', 'dez'), { size: 86 }) + note(['GRANADA', 'NEDELJKO ČABRINOVIĆ'], 620, 1250, t, tg + .3, { size: 38, red: true, rot: -3 }) + (fl > 0 ? `<rect width="1080" height="1920" fill="#fff4dc" opacity="${(fl * .5).toFixed(2)}"/>` : ''); }, 'mapa-manha');
+// 8 · a explosão sob o carro de trás
+shot(S('s7') - .1, (lt, t) => { const te = wt('s7', 'explode'), sk = t > te ? Math.exp(-(t - te) * 3) : 0, [hx, hy] = shake(t, 34 * sk, 40), X = kbCam('arrival', t, [[S('s7') - .1, .75, .55, 2.2], [wt('s7', 'quica'), .55, .55, 1.9], [te, .3, .6, 1.7]], [wt('s7', 'bate'), te]);
+  return g(`translate(${f1(hx)},${f1(hy)})`, kbPhoto('arrival', X)) + (sk > .02 ? `<rect width="1080" height="1920" fill="#ffcf8a" opacity="${(sk * .45).toFixed(2)}" style="mix-blend-mode:screen"/>` : '') + note(['~20 FERIDOS', 'NO CARRO DE TRÁS'], 540, 1240, t, te + .6, { size: 38 }); }, 'explosao');
+// 9 · o atirador da granada
+shot(S('s8') - .1, (lt, t) => { const X = kbCam('cabrinovic', t, [[S('s8') - .1, .5, .3, 1.5], [wt('s8', 'veneno'), .5, .5, 1.3], [Ee('s8'), .5, .4, 1.45]], [wt('s8', 'veneno'), wt('s8', 'rio')]);
+  return kbPhoto('cabrinovic', X) + dossier('ATIRADOR 1', [['NOME', 'NEDELJKO ČABRINOVIĆ'], ['IDADE', '19 ANOS']], 540, 220, t, S('s8') + .4) + stamp('VENENO VENCIDO', 540, 1120, t, wt('s8', 'velho'), { size: 52, rot: -6 }) + note(['RIO MILJACKA:', '~13 cm DE ÁGUA'], 600, 1300, t, wt('s8', 'seco'), { size: 38, rot: 3 }); }, 'cabrinovic');
+// 10 · "Era para terminar aí."
 shot(S('s9') - .15, (lt, t) => `<rect width="1080" height="1920" fill="#060504"/>` + typed('ERA PARA TERMINAR AÍ.', 540, 900, t, S('s9') + .05, 54, 22) + stamp('NÃO TERMINOU', 540, 1060, t, wt('s9', 'terminou', 1), { size: 70, rot: -7 }), 'pausa');
-// 9 · a última foto: o casal saindo da prefeitura
-shot(S('s10') - .1, (lt, t) => { const X = kbXform('couple', lt, [[0, .5, .5, 1.3], [7, .33, .55, 2.4]]);
-  return kbPhoto('couple', X) + stamp('10:45', 820, 420, t, S('s10') + 1.2, { size: 70 }) + note(['A ÚLTIMA FOTO'], 360, 1250, t, wt('s10', 'hospital') - .6, { size: 42, red: true }); }, 'ultima-foto');
-// 10 · mapa: a rota muda, o motorista não sabe, a curva errada
-shot(S('s11') - .1, (lt, t) => { const tc = wt('s12', 'errada'), tp = wt('s12', 'para'), X = kbXform('routemap', lt, [[0, .6, .4, 1.3], [2.5, .76, .33, 2.6], [8, .76, .32, 3.2]]);
-  const pr = E.io(prog(t, S('s11') + .4, tc - S('s11') - .2)), [px, py] = toScr(X, 1186, 386), [cx, cy] = toScr(X, 1210, 335);
-  return kbPhoto('routemap', X) + mapRoute(X, AFTERNOON, pr) + note(['MOTORISTA:', 'NINGUÉM AVISOU'], 380, 360, t, wt('s11', 'motorista'), { size: 40, red: true }) +
-    (t > tc ? redX(cx, cy, 40, t, tc + .1) + note(['RUA ERRADA'], 760, 560, t, tc + .2, { size: 40 }) : '') + (t > tp ? redCircle(px, py, 70, 70, t, tp + .1, .5, 7) : ''); }, 'mapa-tarde');
-// 11 · Princip: aproximação lenta até os olhos, coração acelerando
-shot(S('s13') - .1, (lt, t) => { const X = kbXform('princip', lt, [[0, .5, .55, 1.15], [4.5, .5, .36, 2.3, 'in']]);
-  return kbPhoto('princip', X) + note(['GAVRILO PRINCIP', '19 ANOS'], 540, 300, t, wt('s13', 'gavrilo'), { size: 44, red: true }) + note(['A 1,5 METRO'], 760, 1270, t, S('s13') + .4, { size: 38, rot: 4 }); }, 'princip');
-// 12 · "Dois tiros." — escuro, dois clarões revelando a ilustração do atentado
+// 11 · a última foto: prédio → carro → rostos
+shot(S('s10') - .1, (lt, t) => { const X = kbCam('couple', t, [[S('s10') - .1, .75, .3, 1.8], [wt('s10', 'francisco'), .55, .5, 1.6], [wt('s10', 'hospital'), .33, .55, 2.5]], [wt('s10', 'hospital')]);
+  return kbPhoto('couple', X) + stamp('10:45', 820, 420, t, S('s10') + .8, { size: 70 }) + callout('PREFEITURA', ...toScr(X, 1000, 250), 760, 640, t, wt('s10', 'prefeitura')) + note(['A ÚLTIMA FOTO'], 360, 1250, t, wt('s10', 'hospital') - .3, { size: 42, red: true }); }, 'ultima-foto');
+// 12 · mapa da tarde: a rota nova, o motorista sem aviso
+shot(S('s11') - .1, (lt, t) => { const tc = wt('s12', 'errada'), X = kbCam('routemap', t, [[S('s11') - .1, .5, .45, 1.0], [wt('s11', 'motorista'), .85, .3, 2.2], [wt('s12', 'latina'), .77, .37, 2.6], [tc + .8, .76, .33, 3.2]], [wt('s11', 'motorista'), tc]);
+  const pr = E.io(prog(t, S('s11') + .3, tc - S('s11') - .1)), [cx, cy] = toScr(X, 1210, 335), [bx, by] = toScr(X, 1245, 470);
+  return kbPhoto('routemap', X) + mapRoute(X, AFTERNOON, pr) + dossier('MOTORISTA', [['NOME', 'LEOPOLD LOJKA'], ['AVISADO?', 'NÃO']], 540, 220, t, wt('s11', 'motorista') - .1) +
+    (t > wt('s12', 'latina') ? callout('PONTE LATINA', bx, by, 760, 1150, t, wt('s12', 'latina')) : '') + (t > tc ? redX(cx, cy, 40, t, tc + .1) + note(['RUA FRANCISCO JOSÉ', 'RUA ERRADA'], 360, 1250, t, tc + .2, { size: 36 }) : ''); }, 'mapa-tarde');
+// 13 · a esquina hoje: o carro para
+shot(wt('s12', 'grita') - .2, (lt, t) => { const t0 = wt('s12', 'grita') - .2, X = kbCam('latin', t, [[t0, .3, .82, 2.4], [t0 + 2.5, .24, .84, 3.3]], [wt('s12', 'grita'), wt('s12', 'para')]); const [cx, cy] = toScr(X, 400, 830);
+  return kbPhoto('latin', X) + redCircle(cx, cy, 170, 110, t, wt('s12', 'para'), .5, 4) + note(['O CARRO PARA AQUI'], 540, 1250, t, wt('s12', 'para') + .2, { size: 40, red: true }); }, 'esquina');
+// 14 · Princip: aproximação lenta até os olhos + dossiê
+shot(S('s13') - .1, (lt, t) => { const X = kbCam('princip', t, [[S('s13') - .1, .5, .55, 1.15], [Ee('s13') + .8, .5, .34, 2.4, 'in']]);
+  return kbPhoto('princip', X) + dossier('ATIRADOR 2', [['NOME', 'GAVRILO PRINCIP'], ['IDADE', '19 ANOS'], ['GRUPO', 'JOVEM BÓSNIA'], ['DISTÂNCIA', '1,5 METRO']], 540, 1110, t, wt('s13', 'gavrilo') - .2); }, 'princip');
+// 15 · "Dois tiros." — escuro, dois clarões revelando a ilustração; gritos
 const SHOTS2 = () => [wt('s14', 'tiros') - .05, wt('s14', 'tiros') + .55];
-shot(S('s14') - .5, (lt, t) => { const [a, b] = SHOTS2(), fl = Math.max(...[a, b].map(x => t > x ? Math.exp(-(t - x) * 5) : 0)), X = kbXform('petitjournal', lt, [[0, .45, .55, 1.6], [3, .45, .5, 1.75]]);
-  return `<rect width="1080" height="1920" fill="#000"/>` + `<g opacity="${clamp(fl * 1.4).toFixed(2)}">${kbPhoto('petitjournal', X, { filter: 'redtint' })}</g>` + `<rect width="1080" height="1920" fill="#fff" opacity="${(fl * .35).toFixed(2)}"/>` + (t > b + .3 ? typed('10:50', 540, 950, t, b + .3, 90, 10, '#e8483c') : ''); }, 'tiros');
-// 13 · a ilustração da época, devagar
-shot(S('s15') - .1, (lt, t) => { const X = kbXform('petitjournal', lt, [[0, .5, .62, 1.75], [7.5, .5, .45, 1.25]]);
-  return kbPhoto('petitjournal', X) + note(['LE PETIT JOURNAL', '12 · 07 · 1914'], 540, 280, t, S('s15') + .4, { size: 34 }) + stamp('MORTOS', 540, 1230, t, wt('s15', 'mortos'), { size: 80, rot: -9 }); }, 'ilustracao');
-// 14 · parede: a foto famosa não é Princip
-shot(S('s16') - .1, (lt, t) => { wallFrame(t, [[0, [-6.8, -7, 13]], [3.5, [-6.8, -7.2, 10]], [6.5, [-7.4, -3, 17], 'sine'], [10, [-7.6, -3, 19]]], [[0, [-6.8, -7.2]], [5, [-6.8, -7.2]], [6.5, [-8.2, 1.2]], [10, [-7.5, -3]]], lt);
-  return note(['FERDINAND BEHR', 'ESPECTADOR'], 540, 1270, t, wt('s16', 'ferdinand'), { size: 40, red: true }); }, 'parede-behr');
-// 15 · o telegrama da declaração de guerra
-shot(S('s17') - .1, (lt, t) => { const X = kbXform('telegram', lt, [[0, .5, .3, 1.5], [5.5, .5, .55, 1.25]]);
-  return kbPhoto('telegram', X) + stamp('28 · 07 · 1914', 540, 380, t, wt('s17', 'mes') + .2, { size: 58, rot: -5 }) + note(['DECLARAÇÃO DE GUERRA', 'POR TELEGRAMA'], 540, 1260, t, wt('s17', 'telegrama') - .3, { size: 38, red: true }); }, 'telegrama');
-// 16 · parede: o dominó das alianças
-shot(S('s18') - .1, (lt, t) => { wallFrame(t, [[0, [-2, -12, 16]], [3, [2, -14, 15]], [7, [-1, -16, 17]], [10.5, [0, -15.5, 22]]], [[0, [2.5, -12.2]], [1.5, [7.2, -16.8]], [4, [-8.6, -17.4]], [6, [1.6, -15.9]], [7.6, [-3.4, -19.6]], [9, [4.9, -19.6]], [11, [0, -15]]], lt); return ''; }, 'parede-dominos');
-// 17 · mobilização: multidões em 1914
-shot(S('s19') - .1, (lt, t) => { const X = kbXform('crowd', lt, [[0, .4, .55, 1.9], [6.5, .62, .5, 2.2]]);
-  return kbPhoto('crowd', X) + note(['BERLIM', 'AGOSTO DE 1914'], 330, 330, t, S('s19') + .5, { size: 40 }) + stamp('5 SEMANAS', 700, 1240, t, wt('s19', 'cinco'), { size: 60 }); }, 'mobilizacao');
-// 18 · trincheiras
-shot(S('s20') - .1, (lt, t) => { const X = kbXform('trench2', lt, [[0, .3, .5, 2.0], [4.5, .6, .55, 2.3]]);
-  return kbPhoto('trench2', X) + `<rect width="1080" height="1920" fill="#000" opacity=".25"/>` + typed('≈ 20.000.000', 540, 960, t, wt('s20', 'vinte'), 104, 12, '#e8483c') + typed('DE MORTOS', 540, 1070, t, wt('s20', 'mortos'), 60, 14); }, 'trincheiras');
-// 19 · parede inteira: a pergunta
-shot(S('s21') - .1, (lt, t) => { wallFrame(t, [[0, [0, -6, 24]], [7.5, [0, -1, 58], 'io']], [[0, [-1, 3]], [2.5, [5.5, 15.5]], [4.5, [-8.2, 1.2]], [6.5, [2.5, -12.2]], [8, [0, 0]]], lt);
+shot(S('s14') - .5, (lt, t) => { const [a, b] = SHOTS2(), fl = Math.max(...[a, b].map(x => t > x ? Math.exp(-(t - x) * 5) : 0)), X = kbCam('petitjournal', t, [[a, .6, .55, 1.9], [b, .4, .5, 2.1], [b + 1.5, .45, .5, 1.75]], [a, b]);
+  const [hx, hy] = shake(t, 26 * fl, 45);
+  return `<rect width="1080" height="1920" fill="#000"/>` + g(`translate(${f1(hx)},${f1(hy)})`, `<g opacity="${clamp(fl * 1.4 + prog(t, b + .3, .8) * .5).toFixed(2)}">${kbPhoto('petitjournal', X, { filter: 'redtint' })}</g>`) + `<rect width="1080" height="1920" fill="#fff" opacity="${(fl * .35).toFixed(2)}"/>` + (t > b + .3 ? typed('10:50', 540, 950, t, b + .3, 90, 10, '#e8483c') : ''); }, 'tiros');
+// 16 · a ilustração da época, percorrendo a cena
+shot(S('s15') - .1, (lt, t) => { const X = kbCam('petitjournal', t, [[S('s15') - .1, .35, .6, 2.3], [wt('s15', 'francisco'), .62, .55, 2.3], [wt('s15', 'minutos'), .5, .45, 1.3]], [wt('s15', 'sofia'), wt('s15', 'francisco')]);
+  return kbPhoto('petitjournal', X) + note(['LE PETIT JOURNAL', '12 · 07 · 1914'], 540, 260, t, S('s15') + .3, { size: 32 }) + note(['SOFIA · ABDÔMEN'], 300, 1180, t, wt('s15', 'abdomen'), { size: 34 }) + note(['F. FERDINANDO · PESCOÇO'], 680, 1290, t, wt('s15', 'pescoco'), { size: 34 }) + stamp('MORTOS', 540, 820, t, wt('s15', 'mortos'), { size: 90, rot: -9 }); }, 'ilustracao');
+// 17 · parede: a foto famosa não é Princip
+shot(S('s16') - .1, (lt, t) => { wallFrame(t, [[0, [-6.8, -7, 15]], [2.5, [-6.8, -7.2, 9.5], 'io'], [5, [-6.4, -7.2, 8.5]], [6.8, [-8.2, 1.2, 9], 'io'], [8.4, [-7.5, -3, 18], 'io'], [11, [-7.6, -3, 20]]], [[0, [-6.8, -7.2]], [5.5, [-6.8, -7.2]], [6.8, [-8.2, 1.2]], [8.4, [-7.5, -3]]], lt);
+  return note(['FERDINAND BEHR', 'ESPECTADOR · NÃO É PRINCIP'], 540, 1270, t, wt('s16', 'ferdinand'), { size: 36, red: true }); }, 'parede-behr');
+// 18 · o telegrama: a câmera "lê" o documento de cima a baixo
+shot(S('s17') - .1, (lt, t) => { const X = kbCam('telegram', t, [[S('s17') - .1, .3, .12, 2.6], [wt('s17', 'austria'), .5, .35, 2.0], [wt('s17', 'telegrama'), .5, .6, 1.35]], [wt('s17', 'guerra'), wt('s17', 'telegrama')]);
+  return kbPhoto('telegram', X) + stamp('28 · 07 · 1914', 540, 380, t, wt('s17', 'mes') + .2, { size: 58, rot: -5 }) + note(['DECLARAÇÃO DE GUERRA', 'POR TELEGRAMA'], 540, 1130, t, wt('s17', 'telegrama') - .3, { size: 36, red: true }) + crisisBar(t, S('s17') + .6); }, 'telegrama');
+// 19 · parede: o dominó das alianças + linha do tempo
+shot(S('s18') - .1, (lt, t) => { const at = w => wt('s18', w) - S('s18') + .1;
+  wallFrame(t, [[0, [-2, -12, 15]], [at('russia'), [5, -14.5, 12], 'io'], [at('alemanha'), [-6, -15, 13], 'io'], [at('franca'), [-1, -16, 12], 'io'], [at('belgica'), [-3, -18, 12], 'io'], [at('gra'), [3, -18.5, 13], 'io'], [11, [0, -15.5, 24], 'io']],
+    [[0, [2.5, -12.2]], [at('russia'), [7.2, -16.8]], [at('alemanha'), [-8.6, -17.4]], [at('franca'), [1.6, -15.9]], [at('belgica'), [-3.4, -19.6]], [at('gra'), [4.9, -19.6]], [11, [0, -15]]], lt);
+  return crisisBar(t, S('s18') - .1); }, 'parede-dominos');
+// 20 · Berlim: o anúncio da mobilização
+shot(S('s19') - .1, (lt, t) => { const X = kbCam('mobil', t, [[S('s19') - .1, .5, .25, 1.9], [wt('s19', 'aliancas'), .5, .5, 1.4]], [wt('s19', 'cinco')]);
+  return kbPhoto('mobil', X) + note(['BERLIM · 1º AGO 1914', 'ORDEM DE MOBILIZAÇÃO'], 540, 280, t, S('s19') + .3, { size: 34 }) + stamp('5 SEMANAS', 700, 1180, t, wt('s19', 'cinco'), { size: 60 }) + crisisBar(t, S('s19') - .1); }, 'mobilizacao');
+// 21 · a multidão comemora a guerra
+shot(wt('s19', 'transformaram') - .1, (lt, t) => { const t0 = wt('s19', 'transformaram') - .1, X = kbCam('crowd', t, [[t0, .3, .55, 2.0], [t0 + 3, .65, .5, 2.3]], [wt('s19', 'mundial')]);
+  return kbPhoto('crowd', X) + stamp('GUERRA MUNDIAL', 540, 1180, t, wt('s19', 'mundial'), { size: 64, rot: -6 }); }, 'multidao');
+// 22 · trincheiras (dois planos)
+shot(S('s20') - .3, (lt, t) => { const X = kbCam('trench2', t, [[S('s20') - .3, .25, .5, 2.2], [S('s20') + 1.6, .55, .55, 2.5]]);
+  return kbPhoto('trench2', X) + `<rect width="1080" height="1920" fill="#000" opacity=".25"/>` + typed('≈ 20.000.000', 540, 960, t, wt('s20', 'vinte'), 104, 12, '#e8483c'); }, 'trincheiras');
+shot(wt('s20', 'mortos') - .1, (lt, t) => { const t0 = wt('s20', 'mortos') - .1, X = kbCam('trench', t, [[t0, .6, .5, 2.4], [t0 + 2, .4, .55, 2.1]]);
+  return kbPhoto('trench', X) + `<rect width="1080" height="1920" fill="#000" opacity=".3"/>` + typed('≈ 20.000.000', 540, 960, t, -9, 104, 99, '#e8483c') + typed('DE MORTOS', 540, 1070, t, t0, 60, 14); }, 'trincheiras2');
+// 23 · parede inteira: a pergunta
+shot(S('s21') - .1, (lt, t) => { wallFrame(t, [[0, [-8, 1, 12]], [2, [5.5, 15, 14], 'io'], [3.8, [-7.5, 14.5, 12], 'io'], [5.2, [2.5, -12, 16], 'io'], [8, [0, -1, 58], 'io']], [[0, [-8.2, 1.2]], [2, [5.5, 15.5]], [3.8, [-7.5, 14.5]], [5.2, [2.5, -12.2]], [8, [0, 0]]], lt);
   return (t > wt('s21', 'europa') - .2 ? typed('A FAÍSCA?', 540, 380, t, wt('s21', 'faisca') - .2, 96, 10, '#e8483c') : ''); }, 'pergunta');
 SH.forEach((s, i) => s.t1 = SH[i + 1] ? SH[i + 1].t0 : TL.duration);
 const SHT = Object.fromEntries(SH.map(s => [s.name, s]));
@@ -269,9 +320,13 @@ function renderAt(t) {
   let sh = SH[0]; for (const s of SH) if (t >= s.t0) sh = s;
   const lt = t - sh.t0, wall = sh.name.startsWith('parede') || sh.name === 'pergunta';
   canvas.style.visibility = wall ? 'visible' : 'hidden';
-  let out = DEFS + sh.f(lt, t);
+  const wp = clamp(lt / .16), dir = (SH.indexOf(sh) % 2 ? 1 : -1);
+  let body = sh.f(lt, t);
+  if (sh.t0 > 0 && wp < 1 && !wall) body = `<g transform="translate(${f1(dir * 140 * Math.pow(1 - wp, 2))},0)" filter="url(#whip)" opacity="${(.6 + .4 * wp).toFixed(2)}">${body}</g>`;
+  canvas.style.filter = wall && sh.t0 > 0 && wp < 1 ? `blur(${f1(10 * (1 - wp))}px)` : 'none';
+  canvas.style.transform = wall && sh.t0 > 0 && wp < 1 ? `translateX(${f1(dir * 120 * Math.pow(1 - wp, 2))}px)` : 'none';
+  let out = DEFS + body;
   out += post(t) + subtitle(t);
-  const cut = clamp((t - sh.t0) / .1); if (sh.t0 > 0 && cut < 1) out += `<rect width="1080" height="1920" fill="#000" opacity="${(.8 * (1 - cut)).toFixed(2)}"/>`;
   const fin = Math.min(prog(t, 0, 1.2), 1 - prog(t, TL.duration - 2.2, 2.2)); if (fin < 1) out += `<rect width="1080" height="1920" fill="#000" opacity="${(1 - fin).toFixed(3)}"/>`;
   svg.innerHTML = out;
 }
@@ -300,7 +355,8 @@ function collectSFX() {
   sfx('riser', S('s13') - .3, S('s14') - S('s13') + .2);
   sfx('file', S('s13') - .1, 0, { name: 'heartbeat', off: 6, d: S('s14') - S('s13') + 1.3, gain: -12 });
   SHOTS2().forEach(x => sfx('pistol', x)); sfx('sub', SHOTS2()[0]);
-  sfx('fx_shock', SHOTS2()[1] + .1, 2.6);
+  sfx('screams', SHOTS2()[1] + .25, 4.5); sfx('screams', SHOTS2()[0] + .35, 1.2); sfx('shout', wt('s12', 'grita') - .05);
+  sfx('fx_shock', SHOTS2()[1] + .1, 2.2);
   sfx('file', S('s17') + .2, 0, { name: 'typewriter', off: 8, d: 2.2, gain: -20 });
   sfx('morse', st('telegrama') + .4); sfx('morse', st('telegrama') + 1.0); sfx('morse', st('telegrama') + 1.6);
   [wt('s18', 'russia'), wt('s18', 'alemanha'), wt('s18', 'franca'), wt('s18', 'belgica'), wt('s18', 'gra')].forEach(x => sfx('sub', x + .3));

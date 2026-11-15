@@ -23,7 +23,7 @@ Arquivo: `o-estopim-sarajevo-1914.mp4`.
 - *Le Petit Journal* (12/07/1914), *New York Times* (29/06/1914), telegrama da declaração de guerra (28/07/1914), mapa oficial do atentado (Arquivo do Estado da BiH);
 - fotos do casal em Sarajevo, retratos, julgamento, Berlim em agosto de 1914 e trincheiras.
 
-**Narração:** provisória, com voz sintética (Kokoro). Para usar a sua, grave o texto de `script_pt.json` e rode `align_recording.py`.
+**Narração:** do usuário, gerada no ElevenLabs v3 com audio tags. Está em `narration/narracao_pt_elevenlabs.mp3` e foi alinhada pelo Whisper com 93 % de concordância.
 
 ## Por que não Splice
 
@@ -57,3 +57,17 @@ python3 mix.py build/narration.wav build/sfx.wav build/mix_pt.m4a frames/sfx_eve
 ffmpeg -framerate 25 -i frames/f_%05d.jpg -i build/mix_pt.m4a -c:v libx264 -crf 23 -pix_fmt yuv420p -shortest o-estopim-sarajevo-1914.mp4
 ```
 As trilhas precisam estar em `build/<Nome_Da_Faixa>.wav` (48 kHz), convertidas a partir de `music/*.mp3`.
+
+## v2: câmera mais informativa e o drama dos tiros
+
+- **Câmera viva:** cada foto tem várias etapas de movimento sincronizadas com palavras da narração, além de câmera na mão (deriva suave) e "socos" de zoom nas palavras-chave. Os cortes entram em chicote, com desfoque horizontal e deslocamento. São 24 planos.
+- **Mais informação na tela:**
+  - fichas de **dossiê** datilografadas: arquiduque, Sofia, Apis, Čabrinović, o motorista Leopold Lojka e Princip;
+  - **chamadas** com linha apontando detalhes: Ordem do Tosão de Ouro, cais Appel, prefeitura, Ponte Latina;
+  - a **linha do tempo da crise de julho** (28 jun → 4 ago), que se acende a cada declaração de guerra.
+- **Os tiros:**
+  - dois disparos com tremor e clarão vermelho sobre a ilustração;
+  - **multidão gritando em pânico**, com vozes sintetizadas por formantes (`sound_design.voice`/`screams`) e o murmúrio crescendo;
+  - um homem gritando no "Alguém grita";
+  - os sons do mundo ficam abafados com zumbido no ouvido, e a narração continua limpa.
+- **Gritos reais:** o Commons só tem o "Wilhelm Scream", um clichê cômico, ou gritos CC BY-SA, licença que contaminaria o vídeo. Para gritos realistas, gere no **ElevenLabs Sound Effects** e coloque em `sfx/` como `{k:'file'}`.
