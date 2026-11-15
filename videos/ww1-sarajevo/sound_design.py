@@ -328,7 +328,9 @@ def render(events, total):
         if k == 'file':  # som gravado real (sfx/<nome>.wav)
             s = from_file(e['name'], e.get('off', 0), e.get('d') or None, e.get('gain', -12))
             if 'pan' in e: s = stereo(s.mean(1), e['pan'], .2)
-            i = int(t0 * SR); j = min(i + len(s), len(out)); out[i:j] += s[:j - i]; continue
+            i = max(0, int(t0 * SR)); j = min(i + len(s), len(out))
+            if j > i: out[i:j] += s[:j - i]
+            continue
         if k == 'music': continue
         if d < 0 or (d and d < .25) or k.startswith('fx_'): continue   # trechos inválidos e efeitos de mixagem
         s = bed(k, d) if d else hit(k)
@@ -339,7 +341,8 @@ def render(events, total):
         if d:  # entrada e saída suaves das ambiências
             f = min(.8, d / 3); fade = np.clip(t_(len(s) / SR)[:len(s)] / f, 0, 1) * np.clip((d - t_(len(s) / SR)[:len(s)]) / f, 0, 1); s = s * fade[:, None]
         if 'pan' in e: s = stereo(s.mean(1), e['pan'], .2)
-        i = int(t0 * SR); j = min(i + len(s), len(out)); out[i:j] += s[:j - i]
+        i = max(0, int(t0 * SR)); j = min(i + len(s), len(out))
+        if j > i: out[i:j] += s[:j - i]
     return out[:int(total * SR)]
 
 
