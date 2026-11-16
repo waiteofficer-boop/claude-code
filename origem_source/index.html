@@ -230,9 +230,12 @@ function charSVG(id,o={}){o=Object.assign({coat:"#4a3020",coat2:"#3a2416",hair:"
  return `<svg viewBox="0 0 600 900" width="100%" height="100%" style="overflow:visible;--skin:#f0c99e;--skin2:#e0b083;--skin3:#dda070" id="${id}_svg"><g>
  <ellipse cx="300" cy="895" rx="230" ry="22" fill="rgba(0,0,0,.25)"/>
  <g id="${id}_bob">
+ <path d="M238 400 L362 400 L372 640 L228 640z" style="fill:var(--skin2)"/>
+ <path d="M238 470 C 270 510, 330 510, 362 470 L362 520 C 330 548, 270 548, 238 520z" fill="rgba(120,60,20,.18)"/>
  <path d="M110 900 C110 700 180 600 300 600 C420 600 490 700 490 900z" fill="${o.coat}"/>
  <path d="M300 600 C420 600 490 700 490 900 L400 900 C410 760 380 650 300 640z" fill="${o.coat2}"/>
- <path d="M245 606 L300 730 L355 606z" fill="#f2ede4"/><path d="M285 640 L300 700 L315 640z" fill="#6b1d22"/>
+ <path d="M232 598 C 250 590, 350 590, 368 598 L355 640 L300 730 L245 640z" fill="#f2ede4"/>
+ <path d="M232 598 L300 650 L262 690z M368 598 L300 650 L338 690z" fill="#fff"/><path d="M278 652 L300 700 L322 652 L300 640z" fill="#6b1d22"/>
  <g id="${id}_head">
   <circle cx="152" cy="345" r="30" style="${sk2}"/><circle cx="448" cy="345" r="30" style="${sk2}"/>
   <ellipse cx="300" cy="330" rx="150" ry="172" style="${sk}"/>
