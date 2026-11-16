@@ -1,0 +1,315 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Special+Elite&family=Montserrat:wght@800;900&display=block" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:#000}
+.scene{position:absolute;inset:0;overflow:hidden;display:none;transform-origin:50% 50%}
+.fill{position:absolute;inset:0}
+.paperbg{background:radial-gradient(circle at 50% 35%,#f1e2bd,#d4b77c 65%,#8a6532)}
+.redbg{background:radial-gradient(circle at 50% 40%,#c4402f,#5b130e 80%)}
+.night{background:radial-gradient(circle at 50% 45%,#1d2466,#0d1238 55%,#060820)}
+.halftone{position:absolute;inset:0;background-image:radial-gradient(rgba(60,35,10,.3) 1.6px,transparent 2px);background-size:9px 9px;mix-blend-mode:multiply;opacity:.45}
+.paper{position:absolute;background:linear-gradient(160deg,#f6ead0,#dcc28b 70%,#c09a5a);box-shadow:0 18px 40px rgba(0,0,0,.45);
+ clip-path:polygon(2% 4%,12% 0,26% 3%,41% 0,55% 2%,70% 0,86% 3%,100% 1%,98% 18%,100% 35%,97% 52%,100% 70%,98% 86%,100% 100%,84% 97%,68% 100%,50% 97%,33% 100%,17% 97%,0 100%,2% 82%,0 63%,3% 44%,0 26%)}
+.glow{filter:drop-shadow(0 0 8px currentColor) drop-shadow(0 0 24px currentColor)}
+.star{position:absolute;border-radius:50%;background:#fff}
+.stamp{position:absolute;font-family:'Alfa Slab One';color:#c0262d;border:10px solid #c0262d;padding:4px 26px;background:rgba(246,234,208,.75);box-shadow:0 8px 20px rgba(0,0,0,.35)}
+#cap{position:absolute;left:50px;right:50px;bottom:270px;text-align:center;font-family:'Montserrat';font-weight:900;font-size:72px;line-height:1.1;text-transform:uppercase;z-index:50}
+#cap span{display:inline-block;margin:0 16px;color:#fff;-webkit-text-stroke:11px #120a20;paint-order:stroke fill;text-shadow:0 10px 24px rgba(0,0,0,.6);opacity:.0;transform-origin:50% 80%}
+#cap span.k{color:#ffd24a}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 52%,rgba(0,0,0,.7) 100%);z-index:40}
+#warm{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 70% 50% at 50% 35%,rgba(255,200,120,.28),transparent 65%);mix-blend-mode:screen;z-index:41}
+#grain{position:absolute;inset:-50%;pointer-events:none;opacity:.12;mix-blend-mode:overlay;z-index:42;
+ background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>")}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:60}
+.ink{fill:none;stroke:#3b2a1a;stroke-linecap:round;stroke-linejoin:round}
+</style></head><body><div id="stage">
+
+<!-- 1 HOOK: Darwin shh + secret -->
+<div class="scene" id="S1"><div class="fill paperbg"></div><div class="halftone"></div>
+ <div id="d1" style="position:absolute;left:240px;top:470px;width:600px;height:900px"></div>
+ <div class="stamp" id="s1stamp" style="left:90px;top:200px;font-size:100px;transform:rotate(-10deg)">SEGREDO</div>
+ <div id="s1num" style="position:absolute;right:70px;top:300px;font-family:'Alfa Slab One';font-size:150px;color:#2b1d10;text-shadow:0 8px 0 rgba(0,0,0,.15)">21<span style="font-size:70px"> anos</span></div>
+</div>
+
+<!-- 2 CONFLICT: angry crowd + torn newspaper, worried Darwin -->
+<div class="scene" id="S2"><div class="fill redbg"></div><div class="halftone"></div>
+ <div class="paper" id="s2news" style="left:110px;top:170px;width:860px;height:560px;padding:40px 50px">
+  <div style="font-family:'Special Elite';font-size:40px;color:#3b2a1a;border-bottom:6px double #3b2a1a;padding-bottom:10px;text-align:center">THE LONDON GAZETTE · 18??</div>
+  <div style="font-family:'Alfa Slab One';font-size:96px;line-height:.95;color:#2b1d10;margin-top:26px;text-align:center">HERESIA!</div>
+  <div style="font-family:'Special Elite';font-size:34px;color:#5a4128;text-align:center;margin-top:14px">"uma afronta à criação"</div>
+ </div>
+ <div id="crowd" style="position:absolute;left:0;right:0;top:900px;height:900px"></div>
+ <div id="d2" style="position:absolute;left:330px;top:760px;width:420px;height:630px"></div>
+</div>
+
+<!-- 3 ORIGIN: island, finch character, Darwin with magnifier -->
+<div class="scene" id="S3"><div class="fill paperbg"></div><div class="halftone"></div>
+ <svg viewBox="0 0 1080 1920" width="1080" height="1920" style="position:absolute;inset:0">
+  <ellipse cx="540" cy="1380" rx="560" ry="150" fill="#c6a46a"/><ellipse cx="540" cy="1360" rx="470" ry="110" fill="#a9c06e"/>
+  <path d="M760 1300 C 770 1150, 800 1080, 860 1020" stroke="#6b4a2a" stroke-width="22" fill="none" stroke-linecap="round"/>
+  <g fill="#5d8f3a"><ellipse cx="860" cy="1000" rx="110" ry="40" transform="rotate(-20 860 1000)"/><ellipse cx="900" cy="1030" rx="100" ry="34" transform="rotate(25 900 1030)"/><ellipse cx="830" cy="1040" rx="90" ry="30" transform="rotate(-50 830 1040)"/></g>
+  <path d="M0 1500 Q 270 1460 540 1500 T 1080 1500 V1920 H0z" fill="#5c8fb0" opacity=".85"/>
+ </svg>
+ <div id="f3" style="position:absolute;left:330px;top:930px;width:420px;height:420px"></div>
+ <div id="d3" style="position:absolute;left:-60px;top:640px;width:480px;height:720px"></div>
+ <div style="position:absolute;left:600px;top:320px;font-family:'Special Elite';font-size:52px;color:#3b2a1a;transform:rotate(4deg)">Galápagos, 1835</div>
+</div>
+
+<!-- 4 NEON finches -->
+<div class="scene" id="S4"><div class="fill night"></div><div class="stars"></div>
+ <div id="nf" style="position:absolute;inset:0"></div>
+</div>
+
+<!-- 5 tree ink -> neon -->
+<div class="scene" id="S5"><div class="fill night"></div><div class="stars"></div>
+ <div class="paper" id="s5paper" style="left:70px;top:200px;width:940px;height:1260px"></div>
+ <svg id="tree" viewBox="0 0 1080 1920" width="1080" height="1920" style="position:absolute;inset:0"></svg>
+ <div id="s5think" style="position:absolute;left:150px;top:280px;font-family:'Special Elite';font-size:96px;color:#3b2a1a;transform:rotate(-4deg)">I think</div>
+</div>
+
+<!-- 6 Earth + YOU -->
+<div class="scene" id="S6"><div class="fill night"></div><div class="stars"></div>
+ <svg viewBox="0 0 1080 1920" width="1080" height="1920" style="position:absolute;inset:0">
+  <defs><radialGradient id="earth" cx="38%" cy="35%"><stop offset="0" stop-color="#5ff0ff"/><stop offset=".55" stop-color="#2a7bd6"/><stop offset="1" stop-color="#132a7a"/></radialGradient></defs>
+  <g id="earthG"><circle cx="540" cy="1000" r="300" fill="url(#earth)" class="glow" style="color:#3fa9ff"/>
+   <path d="M400 860c70-35 140-12 165 47s-35 94-94 106-106-47-106-82 12-53 35-71zM610 1030c60-12 118 24 118 82s-70 94-118 82-47-70-35-106 12-53 35-58z" fill="#3fe08f"/></g>
+ </svg>
+ <div id="you" style="position:absolute;left:390px;top:330px;width:300px;height:450px"></div>
+ <div id="youLbl" style="position:absolute;left:660px;top:250px;font-family:'Montserrat';font-weight:900;font-size:80px;color:#ff3b5c;text-shadow:0 0 20px #ff3b5c">VOCÊ</div>
+ <svg id="youArrow" viewBox="0 0 200 200" width="170" height="170" style="position:absolute;left:640px;top:350px;color:#ff3b5c" class="glow"><path d="M170 20 C 120 40, 80 80, 50 150" fill="none" stroke="#ff3b5c" stroke-width="18" stroke-linecap="round"/><path d="M30 100 L45 160 L100 140" fill="none" stroke="#ff3b5c" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+
+<!-- 7 PUBLISHED: happy Darwin with book, ESGOTADO -->
+<div class="scene" id="S7"><div class="fill paperbg"></div><div class="halftone"></div>
+ <div class="paper" id="s7news" style="left:80px;top:190px;width:920px;height:420px;padding:36px 46px">
+  <div style="font-family:'Special Elite';font-size:38px;color:#3b2a1a;border-bottom:6px double #3b2a1a;padding-bottom:10px;text-align:center">24 DE NOVEMBRO DE 1859</div>
+  <div style="font-family:'Alfa Slab One';font-size:78px;line-height:1;color:#2b1d10;margin-top:24px;text-align:center">A ORIGEM DAS ESPÉCIES</div>
+ </div>
+ <div id="d7" style="position:absolute;left:240px;top:600px;width:600px;height:900px"></div>
+ <div class="stamp" id="s7stamp" style="left:560px;top:600px;font-size:76px;transform:rotate(-14deg)">ESGOTADO</div>
+</div>
+
+<!-- 8 CLIFFHANGER: glowing last paragraph, shocked Darwin -->
+<div class="scene" id="S8"><div class="fill night"></div><div class="stars"></div>
+ <div class="paper" id="s8book" style="left:110px;top:170px;width:860px;height:640px;padding:50px 70px">
+  <div style="font-family:'Special Elite';font-size:34px;color:#7a6040;line-height:1.5">…and as natural selection works solely by and for the good of each being, all corporeal and mental endowments will tend to progress towards perfection.</div>
+  <div id="s8last" style="margin-top:34px;font-family:'Special Elite';font-size:40px;color:#3b2a1a;line-height:1.45;padding:14px;border-radius:12px">"There is grandeur in this view of life…"</div>
+ </div>
+ <div id="d8" style="position:absolute;left:300px;top:800px;width:480px;height:720px"></div>
+ <div id="s8end" style="position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center;font-family:'Montserrat';font-weight:900;font-size:120px;color:#fff;opacity:0;z-index:30">PARTE 2 <span style="color:#ffd24a;margin-left:20px">→</span></div>
+</div>
+
+<div id="cap"></div>
+<div id="warm"></div><div id="vig"></div><div id="grain"></div><div id="flash"></div>
+</div>
+<script src="lines.js"></script>
+<script>
+const FPS=30, DURATION=27.06;
+const $=i=>document.getElementById(i), clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const ease=t=>1-Math.pow(1-clamp(t),3), eio=t=>{t=clamp(t);return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2};
+const back=t=>{t=clamp(t);const c=1.9;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2)};
+const lerp=(a,b,t)=>a+(b-a)*t;
+let seed=11;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+document.querySelectorAll(".stars").forEach(s=>{let h="";for(let i=0;i<90;i++){const r=rnd()*4+1;h+=`<div class="star" data-p="${rnd()*6}" style="left:${rnd()*1080}px;top:${rnd()*1920}px;width:${r}px;height:${r}px"></div>`}s.innerHTML=h;});
+
+/* ================= CHARACTER RIGS ================= */
+// DARWIN: flat-vector, 3 tones, no outlines. viewBox 600x900
+function darwinSVG(id,coat){const c=coat||"#4a3020",cs="#3a2416";return `
+<svg viewBox="0 0 600 900" width="100%" height="100%" style="overflow:visible"><g id="${id}_root">
+ <ellipse cx="300" cy="895" rx="230" ry="22" fill="rgba(0,0,0,.25)"/>
+ <g id="${id}_bob">
+ <path d="M110 900 C110 700 180 600 300 600 C420 600 490 700 490 900z" fill="${c}"/>
+ <path d="M300 600 C420 600 490 700 490 900 L400 900 C410 760 380 650 300 640z" fill="${cs}"/>
+ <path d="M245 606 L300 730 L355 606z" fill="#f2ede4"/><path d="M285 640 L300 700 L315 640z" fill="#6b1d22"/>
+ <g id="${id}_head">
+  <circle cx="152" cy="345" r="30" fill="#e3b58a"/><circle cx="448" cy="345" r="30" fill="#d7a679"/>
+  <ellipse cx="300" cy="330" rx="150" ry="172" fill="#f0c99e"/>
+  <path d="M300 158 C 390 160, 452 240, 450 330 C 448 420, 400 470, 340 480 C 400 420, 420 330, 400 250 C 385 200, 350 170, 300 158z" fill="#e0b083"/>
+  <ellipse cx="250" cy="215" rx="55" ry="26" fill="#fff" opacity=".35" transform="rotate(-20 250 215)"/>
+  <path d="M150 300 C 130 240, 160 200, 200 230 C 180 250, 175 280, 178 320z" fill="#f4f0e8"/><path d="M450 300 C 470 240, 440 200, 400 230 C 420 250, 425 280, 422 320z" fill="#e2dccf"/>
+  <path d="M150 360 C 138 520, 200 690, 300 750 C 400 690, 462 520, 450 360 C 420 440, 380 460, 300 460 C 220 460, 180 440, 150 360z" fill="#f4f0e8"/>
+  <path d="M300 750 C 370 700, 430 560, 450 360 C 440 500, 400 640, 300 750z" fill="#d9d2c4"/>
+  <path d="M230 560 q20 60 50 110 M300 580 v120 M370 560 q-20 60 -50 110" stroke="#dcd4c4" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <ellipse id="${id}_mouth" cx="300" cy="458" rx="34" ry="6" fill="#4a1520"/>
+  <path d="M300 418 C 268 400, 214 408, 200 452 C 238 438, 270 448, 300 438 C 330 448, 362 438, 400 452 C 386 408, 332 400, 300 418z" fill="#fbf8f1"/>
+  <ellipse cx="300" cy="385" rx="28" ry="34" fill="#dda070"/><ellipse cx="292" cy="372" rx="9" ry="12" fill="#f4cfa8"/>
+  <g id="${id}_eyes">
+   <ellipse cx="240" cy="318" rx="34" ry="38" fill="#fff"/><ellipse cx="360" cy="318" rx="34" ry="38" fill="#fff"/>
+   <g id="${id}_pup"><circle cx="240" cy="322" r="17" fill="#2a1a10"/><circle cx="360" cy="322" r="17" fill="#2a1a10"/><circle cx="246" cy="315" r="6" fill="#fff"/><circle cx="366" cy="315" r="6" fill="#fff"/></g>
+   <rect id="${id}_lid" x="200" y="278" width="200" height="0" fill="#f0c99e"/>
+  </g>
+  <g id="${id}_browL"><path d="M195 268 C 215 240, 260 236, 285 258" stroke="#f4f0e8" stroke-width="26" fill="none" stroke-linecap="round"/></g>
+  <g id="${id}_browR"><path d="M315 258 C 340 236, 385 240, 405 268" stroke="#f4f0e8" stroke-width="26" fill="none" stroke-linecap="round"/></g>
+  <path id="${id}_sweat" d="M455 230 C 470 255, 478 270, 466 284 C 452 296, 436 284, 440 268 C 443 256, 450 245, 455 230z" fill="#7fd3ff" opacity="0"/>
+ </g>
+ <g id="${id}_armL" transform="rotate(10 170 660)"><g><rect x="142" y="650" width="56" height="200" rx="28" fill="${c}"/><circle cx="170" cy="865" r="34" fill="#f0c99e"/>
+   <g id="${id}_mag" opacity="0"><rect x="160" y="880" width="20" height="90" rx="8" fill="#5a3a1c"/><circle cx="170" cy="1020" r="62" fill="rgba(190,230,255,.35)" stroke="#7a5a2c" stroke-width="14"/></g></g></g>
+ <g id="${id}_armR" transform="rotate(-10 430 660)"><g><rect x="402" y="650" width="56" height="200" rx="28" fill="${cs}"/><circle cx="430" cy="865" r="34" fill="#e8bd92"/>
+   <rect id="${id}_finger" x="420" y="870" width="22" height="70" rx="11" fill="#e8bd92" opacity="0"/></g></g>
+ <g id="${id}_book" opacity="0"><rect x="190" y="700" width="220" height="150" rx="10" fill="#6b1d22"/><rect x="200" y="708" width="200" height="134" rx="6" fill="#8a2a2e"/><rect x="230" y="740" width="140" height="10" fill="#e9c46a"/><rect x="250" y="760" width="100" height="8" fill="#e9c46a"/>
+   <circle cx="200" cy="790" r="34" fill="#f0c99e"/><circle cx="400" cy="790" r="34" fill="#e8bd92"/></g>
+ </g></g></svg>`}
+function rigDarwin(id,s){
+ const g=k=>$(id+"_"+k);
+ g("bob").setAttribute("transform",`translate(0 ${s.bob||0}) rotate(${s.tilt||0} 300 900)`);
+ g("head").setAttribute("transform",`rotate(${s.head||0} 300 520)`);
+ const lx=(s.look||[0,0])[0],ly=(s.look||[0,0])[1];g("pup").setAttribute("transform",`translate(${lx*12} ${ly*12}) scale(1)`);
+ const pupS=s.pupil||1; g("pup").querySelectorAll("circle").forEach((c,i)=>{if(i<2)c.setAttribute("r",17*pupS)});
+ g("lid").setAttribute("height",80*(s.blink||0));
+ const b=s.brow||0; // -1 worried/angry inward, +1 surprised up
+ g("browL").setAttribute("transform",`translate(0 ${-b*26}) rotate(${b<0?b*-14:0} 240 260)`);
+ g("browR").setAttribute("transform",`translate(0 ${-b*26}) rotate(${b<0?b*14:0} 360 260)`);
+ g("mouth").setAttribute("ry",6+38*(s.mouth||0)); g("mouth").setAttribute("rx",34-8*(s.mouth||0)+(s.smile||0)*14);
+ g("sweat").setAttribute("opacity",s.sweat?1:0); g("sweat").setAttribute("transform",`translate(0 ${(s.sweat||0)*60})`);
+ g("armL").setAttribute("transform",`rotate(${s.armL??10} 170 660)`); g("armR").setAttribute("transform",`rotate(${s.armR??-10} 430 660) scale(1)`);
+ g("finger").setAttribute("opacity",s.shh?1:0); g("mag").setAttribute("opacity",s.mag?1:0);
+ g("book").setAttribute("opacity",s.book?1:0); g("armL").style.display=s.book?"none":""; g("armR").style.display=s.book?"none":"";
+}
+function blinkAt(t,ph=0){const x=(t+ph)%3.1;return x>2.95?Math.sin((x-2.95)/0.15*Math.PI):0}
+
+// FINCH character: viewBox 400x400
+function finchSVG(id,o={}){const body=o.body||"#8a5a34",belly=o.belly||"#d9b07a",line=o.line||"none",lw=o.lw||0,beak=o.beak||[60,18,0],bc=o.bc||"#2b1d10";
+ const st=`stroke="${line}" stroke-width="${lw}"`;return `
+<svg viewBox="0 0 400 400" width="100%" height="100%" style="overflow:visible"><g id="${id}_root">
+ <ellipse cx="200" cy="385" rx="110" ry="14" fill="rgba(0,0,0,.25)"/>
+ <g id="${id}_hop">
+  <path d="M170 330 v45 M220 330 v45" stroke="${o.leg||'#3b2a1a'}" stroke-width="10" stroke-linecap="round"/>
+  <path d="M90 250 L10 300 L40 230z" fill="${body}" ${st}/>
+  <ellipse cx="190" cy="250" rx="130" ry="100" fill="${body}" ${st}/>
+  <ellipse cx="205" cy="275" rx="85" ry="62" fill="${belly}"/>
+  <g id="${id}_head"><circle cx="270" cy="160" r="78" fill="${body}" ${st}/>
+   <path id="${id}_beak" d="M335 ${150-beak[1]} Q ${335+beak[0]} ${150+beak[2]} ${335+beak[0]} ${150+beak[2]} L 335 ${150+beak[1]+8}z" fill="${bc}"/>
+   <ellipse cx="290" cy="145" rx="28" ry="32" fill="#fff"/><circle id="${id}_pup" cx="298" cy="148" r="15" fill="#160e08"/><circle cx="303" cy="140" r="5" fill="#fff"/>
+   <rect id="${id}_lid" x="258" y="110" width="64" height="0" fill="${body}"/></g>
+  <g id="${id}_wing"><ellipse cx="160" cy="235" rx="80" ry="48" fill="${o.wing||'#6b4224'}" ${st}/></g>
+ </g></g></svg>`}
+function rigFinch(id,t,ph=0,s={}){const hop=Math.max(0,Math.sin((t+ph)*(s.hopF||5)))*(s.hop??24);
+ $(id+"_hop").setAttribute("transform",`translate(0 ${-hop})`);
+ $(id+"_wing").setAttribute("transform",`rotate(${Math.sin((t+ph)*20)*(s.flap||0)-((s.flap||0)?10:0)} 210 220)`);
+ $(id+"_head").setAttribute("transform",`rotate(${Math.sin((t+ph)*3)*6+(s.headTilt||0)} 250 200)`);
+ $(id+"_lid").setAttribute("height",70*blinkAt(t,ph));
+ $(id+"_pup").setAttribute("cx",298+(s.lookX||0)*8);
+}
+// CROWD person: viewBox 200x320
+function personSVG(id,col,skin){return `<svg viewBox="0 0 200 320" width="100%" height="100%" style="overflow:visible"><g id="${id}_b">
+ <path d="M30 320 C 30 210, 60 170, 100 170 C 140 170, 170 210, 170 320z" fill="${col}"/>
+ <g id="${id}_arm"><rect x="135" y="140" width="30" height="100" rx="15" fill="${col}"/><circle cx="150" cy="140" r="22" fill="${skin}"/></g>
+ <circle cx="100" cy="110" r="62" fill="${skin}"/>
+ <ellipse cx="80" cy="108" rx="11" ry="13" fill="#fff"/><ellipse cx="120" cy="108" rx="11" ry="13" fill="#fff"/><circle cx="82" cy="111" r="6" fill="#111"/><circle cx="118" cy="111" r="6" fill="#111"/>
+ <path d="M64 86 L94 98 M136 86 L106 98" stroke="#2a1a10" stroke-width="8" stroke-linecap="round"/>
+ <ellipse id="${id}_m" cx="100" cy="145" rx="16" ry="10" fill="#4a1520"/>
+</g></svg>`}
+
+/* ================= BUILD ================= */
+$("d1").innerHTML=darwinSVG("D1"); $("d2").innerHTML=darwinSVG("D2"); $("d3").innerHTML=darwinSVG("D3");
+$("d7").innerHTML=darwinSVG("D7"); $("d8").innerHTML=darwinSVG("D8","#2c2350");
+$("f3").innerHTML=finchSVG("F3");
+const NF=[{x:60,y:330,beak:[80,26,0],c:"#7dffb0"},{x:560,y:330,beak:[95,9,0],c:"#ff3b8d"},{x:60,y:900,beak:[70,22,30],c:"#3fd0ff"},{x:560,y:900,beak:[42,16,0],c:"#ffd24a"}];
+$("nf").innerHTML=NF.map((f,i)=>`<div class="nfw" style="position:absolute;left:${f.x}px;top:${f.y}px;width:460px;height:460px;color:${f.c}">
+ <div style="position:absolute;inset:0;border-radius:50%;border:6px solid ${f.c};box-shadow:0 0 30px ${f.c}, inset 0 0 30px ${f.c};opacity:.5"></div>
+ <div class="glow" style="position:absolute;left:30px;top:20px;width:400px;height:400px">${finchSVG("N"+i,{body:"#151a4a",belly:"#222a6a",wing:"#1b2160",line:f.c,lw:6,beak:f.beak,bc:f.c,leg:f.c})}</div></div>`).join("");
+const CROWD=[["#3d5a80","#f1c27d"],["#6d597a","#e0ac69"],["#2a9d8f","#8d5524"],["#b56576","#ffdbac"],["#e9c46a","#c68642"],["#577590","#f1c27d"],["#9d4edd","#e0ac69"]];
+$("crowd").innerHTML=CROWD.map((c,i)=>{const x=-40+i*170+(i%2)*30,y=(i%2)*120;return `<div style="position:absolute;left:${x}px;top:${y+220}px;width:220px;height:352px">${personSVG("P"+i,c[0],c[1])}</div>`}).join("");
+$("you").innerHTML=`<svg viewBox="0 0 200 300" width="100%" height="100%" style="overflow:visible" class="glow"><g style="color:#ff3b5c">
+ <path d="M40 300 C 40 200, 70 160, 100 160 C 130 160, 160 200, 160 300z" fill="#1b2160" stroke="#ff3b5c" stroke-width="6"/>
+ <circle cx="100" cy="100" r="56" fill="#1b2160" stroke="#ff3b5c" stroke-width="6"/>
+ <circle cx="82" cy="98" r="8" fill="#fff"/><circle cx="118" cy="98" r="8" fill="#fff"/><path d="M78 124 q22 20 44 0" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round"/>
+ <g id="youArm"><rect x="146" y="120" width="26" height="90" rx="13" fill="#1b2160" stroke="#ff3b5c" stroke-width="6" transform="rotate(180 159 165)"/></g></g></svg>`;
+// tree
+const BR=["M540 1360 C 540 1200, 560 1100, 560 980","M560 980 C 600 860, 700 760, 820 700","M560 980 C 500 860, 380 760, 260 720","M820 700 C 860 600, 900 520, 920 440","M820 700 C 760 600, 720 520, 700 440","M260 720 C 220 620, 190 540, 170 470","M260 720 C 320 620, 370 540, 400 470","M560 980 C 570 860, 560 700, 550 520"];
+const TIPS=[[920,440],[700,440],[170,470],[400,470],[550,520]];
+$("tree").innerHTML=`<g id="ink">${BR.map(d=>`<path class="ink br" stroke-width="7" d="${d}"/>`).join("")}</g><g class="glow" style="color:#7dffb0">${BR.map(d=>`<path class="nb" fill="none" stroke="#7dffb0" stroke-width="8" stroke-linecap="round" d="${d}"/>`).join("")}${TIPS.map(p=>`<circle class="tip" cx="${p[0]}" cy="${p[1]}" r="16" fill="#fff"/>`).join("")}</g>`;
+function setDash(el,p){const L=el.getTotalLength();el.style.strokeDasharray=`${L*p} ${L}`;}
+
+/* ================= TIMELINE ================= */
+// scenes start at narration line starts (LINES from lines.js: {s, d, text, keys})
+const SC=[["S1",0,"cut"],["S2",LINES[1].s-0.1,"cut"],["S3",LINES[2].s-0.1,"cut"],["S4",LINES[3].s-0.1,"iris"],["S5",LINES[4].s-0.1,"cut"],["S6",LINES[5].s-0.1,"zoom"],["S7",LINES[6].s-0.1,"cut"],["S8",LINES[7].s-0.1,"cut"]];
+function cur(t){let k=0;SC.forEach((s,i)=>{if(t>=s[1])k=i});return k}
+
+// captions: word-by-word karaoke with emphasis words
+let capLine=-1;
+function captions(t){
+ let li=-1;if(t>DURATION-0.75){$("cap").innerHTML="";capLine=-1;return;}LINES.forEach((L,i)=>{if(t>=L.s-0.05&&t<L.s+L.d+0.35)li=i});
+ const cap=$("cap");
+ if(li!==capLine){capLine=li;cap.innerHTML=li<0?"":LINES[li].words.map(w=>`<span class="${w.k?'k':''}">${w.w}</span>`).join(" ");}
+ if(li<0)return;const L=LINES[li];
+ cap.querySelectorAll("span").forEach((sp,i)=>{const w=L.words[i],lt=t-(L.s+w.t);const p=back(lt/0.18);
+  sp.style.opacity=lt>=0?1:0; sp.style.transform=`scale(${lt>=0?(w.k?0.5+0.7*p-0.2*clamp((lt-0.18)/0.2):0.7+0.3*p):0.7})`;});
+}
+
+function render(t){
+ const k=cur(t),[id,a,tr]=SC[k],lt=t-a;
+ SC.forEach(([sid],i)=>{$(sid).style.display=(i===k||(i===k-1&&(tr==="zoom"||tr==="iris")&&lt<0.8))?"block":"none";$(sid).style.zIndex=i});
+ $("flash").style.opacity=(tr==="cut"&&a>0)?0.55*(1-clamp(lt/0.12)):0;
+ const neon=["S4","S5","S6","S8"].includes(id)&&!(id==="S5"&&lt<1.9);
+ $("warm").style.opacity=neon?0.2:1; $("grain").style.opacity=neon?0.05:0.14;
+ $("grain").style.transform=`translate(${(Math.floor(t*24)*37)%120-60}px,${(Math.floor(t*24)*53)%120-60}px)`;
+ document.querySelectorAll(".star").forEach(s=>s.style.opacity=0.35+0.65*Math.abs(Math.sin(t*1.3+ +s.dataset.p)));
+ captions(t);
+ const el=$(id); el.style.transform=`scale(${(1+0.06*(1-ease(lt/0.25)))*(1+lt*0.012)})`;
+
+ if(id==="S1"){ // shh!
+  const lean=ease(lt/0.5);
+  rigDarwin("D1",{bob:Math.sin(lt*3)*4,tilt:-3*lean,head:-6*lean,look:[lerp(0,-1,ease((lt-0.8)/0.2))*(lt<2?1:0)+ (lt>=2?1:0)*ease((lt-2)/0.2),-0.2],blink:blinkAt(lt,1),brow:-0.5*lean,armR:lerp(-10,148,back((lt-0.25)/0.45)),shh:lt>0.55,mouth:0});
+  $("d1").style.transform=`translateY(${(1-ease(lt/0.45))*500}px)`;
+  const s=back((lt-1.0)/0.25);$("s1stamp").style.opacity=clamp((lt-1.0)/0.05);$("s1stamp").style.transform=`rotate(-10deg) scale(${2.6-1.6*s})`;
+  const n=back((lt-1.7)/0.3);$("s1num").style.opacity=clamp((lt-1.7)/0.05);$("s1num").style.transform=`scale(${n})`;
+ }
+ if(id==="S2"){
+  $("s2news").style.transform=`rotate(${-3+Math.sin(lt*12)*1.2*(lt<0.5?1:0.2)}deg) scale(${1.4-0.4*back(lt/0.3)})`;
+  CROWD.forEach((c,i)=>{const ph=i*0.7;$(`P${i}_arm`).setAttribute("transform",`rotate(${-150+Math.sin(lt*10+ph)*25} 150 160)`);
+   $(`P${i}_b`).setAttribute("transform",`translate(0 ${Math.abs(Math.sin(lt*7+ph))*-18})`);$(`P${i}_m`).setAttribute("ry",8+Math.abs(Math.sin(lt*9+ph))*16);});
+  $("crowd").style.transform=`translateY(${(1-ease(lt/0.5))*400}px)`;
+  rigDarwin("D2",{bob:Math.sin(lt*14)*3,look:[Math.sin(lt*4)>0?1:-1,0],pupil:0.6,brow:-1,mouth:0.25,sweat:clamp((lt-0.3)/1.5),armL:30,armR:-30,blink:blinkAt(lt,2)});
+  $("d2").style.transform=`scale(${0.6+0.4*back((lt-0.2)/0.3)})`;
+ }
+ if(id==="S3"){
+  rigFinch("F3",lt,0,{hop:lt<2.1?26:0,hopF:6,headTilt:lt>1.4?-14:0,lookX:-1});
+  $("f3").style.transform=`translateX(${(1-ease(lt/0.6))*500}px)`;
+  rigDarwin("D3",{bob:Math.sin(lt*2.5)*4,tilt:6,head:8,look:[1,0.3],brow:0.6*ease((lt-1.2)/0.3),blink:blinkAt(lt,0.5),armL:lerp(10,-78,ease((lt-0.3)/0.5)),mag:true,mouth:0.15*ease((lt-1.2)/0.3)});
+  $("d3").style.transform=`translateX(${(1-ease((lt-0.15)/0.6))*-400}px)`;
+  // zoom into finch eye at end: eye = f3(330,930)+ (290,145)*(420/400)
+  const z=eio((lt-2.35)/0.7);el.style.transformOrigin="635px 1082px";el.style.transform=`scale(${1+z*70})`;
+ }
+ if(id==="S4"){
+  const rv=eio(lt/0.7);el.style.clipPath=`circle(${8+1300*rv}px at 540px 960px)`;
+  el.style.transform=`scale(${1.2-0.2*ease(lt/1.2)})`;
+  NF.forEach((f,i)=>{rigFinch("N"+i,lt,i*0.9,{hop:14,hopF:4,flap:i%2?18:0});
+   const p=back((lt-0.3-i*0.35)/0.35);document.querySelectorAll(".nfw")[i].style.opacity=clamp((lt-0.3-i*0.35)/0.05);document.querySelectorAll(".nfw")[i].style.transform=`scale(${0.3+0.7*p})`;});
+ } else {$("S4").style.clipPath="";}
+ if(id==="S5"||(id==="S6"&&lt<0.8)){
+  const l5=t-SC[4][1];
+  document.querySelectorAll("#ink .br").forEach((e,i)=>setDash(e,ease((l5-0.1-i*0.12)/0.4)));
+  const turn=clamp((l5-1.7)/0.6);$("s5paper").style.opacity=1-turn;$("s5think").style.opacity=clamp(l5/0.3)*(1-turn);
+  document.querySelectorAll(".nb").forEach((e,i)=>setDash(e,ease((l5-1.7-i*0.05)/0.45)));
+  document.querySelectorAll(".tip").forEach(e=>{e.setAttribute("r",16+8*Math.sin(l5*5));e.style.opacity=clamp((l5-2.2)/0.3)});
+ }
+ if(id==="S6"){
+  // continuous zoom-out: tree shrinks into a star while Earth grows in
+  const z=eio(lt/0.8);$("S5").style.transformOrigin="540px 900px";$("S5").style.transform=`scale(${1-0.95*z})`;$("S5").style.opacity=1-z;
+  el.style.opacity=z;el.style.transform=`scale(${1.5-0.5*z})`;
+  $("earthG").style.transformOrigin="540px 1000px";$("earthG").style.transform=`rotate(${lt*6}deg)`;
+  const y=back((lt-0.35)/0.35);$("you").style.transform=`translateY(${(1-y)*120}px) scale(${y})`;
+  $("youArm").setAttribute("transform",`rotate(${-150+Math.sin(lt*12)*30} 159 130)`);
+  $("youLbl").style.opacity=clamp((lt-0.6)/0.1);$("youArrow").style.opacity=clamp((lt-0.6)/0.1);
+ } else {$("S5").style.opacity=1;$("S6").style.opacity=1;}
+ if(id==="S7"){
+  $("s7news").style.transform=`rotate(-2deg) scale(${1.4-0.4*back(lt/0.3)})`;
+  rigDarwin("D7",{bob:Math.abs(Math.sin(lt*5))*-14,book:true,brow:0.7,smile:1,mouth:0.35,look:[0,-0.3],blink:blinkAt(lt,1.3),head:Math.sin(lt*5)*3});
+  $("d7").style.transform=`translateY(${(1-ease(lt/0.4))*500}px)`;
+  const s=back((lt-2.3)/0.25);$("s7stamp").style.opacity=clamp((lt-2.3)/0.05);$("s7stamp").style.transform=`rotate(-14deg) scale(${2.6-1.6*s})`;
+ }
+ if(id==="S8"){
+  const g=clamp((lt-0.6)/0.6);$("s8last").style.background=`rgba(255,210,74,${0.55*g})`;$("s8last").style.boxShadow=`0 0 ${40*g}px rgba(255,210,74,${g})`;
+  $("s8book").style.transform=`rotate(${1-lt*0.4}deg)`;
+  const shock=ease((lt-1.3)/0.15);
+  rigDarwin("D8",{bob:-shock*30+Math.sin(lt*30)*shock*3,brow:lerp(0,1,shock),mouth:lerp(0.1,0.9,shock),pupil:lerp(1,0.55,shock),look:[0,-1],armL:lerp(10,-30,shock),armR:lerp(-10,30,shock),blink:shock?0:blinkAt(lt)});
+  $("d8").style.transform=`translateY(${(1-ease(lt/0.4))*400}px)`;
+  $("s8end").style.opacity=lt>DURATION-a-0.9?1:0;
+ }
+}
+window.render=render;window.DURATION=DURATION;window.FPS=FPS;render(0);
+</script></body></html>
