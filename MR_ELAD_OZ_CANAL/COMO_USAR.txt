@@ -1,0 +1,31 @@
+COMO USAR A PASTA DO CANAL MR. ELAD OZ
+======================================
+
+1) PREPARAR UM VÍDEO
+   - Crie uma pasta dentro de 01_PARA_POSTAR com o nome:
+       AAAA-MM-DD_HHMM_nome-curto
+     Exemplo: 2026-11-27_1200_mike-tyson-parte2
+   - Coloque dentro dela:
+       video.mp4   -> o vídeo pronto
+       capa.jpg    -> a miniatura (1280x720)
+       post.json   -> copie o da pasta de exemplo e troque título, descrição, tags e horário
+
+2) ABRIR A IA
+   - Abra a pasta MR_ELAD_OZ_CANAL no Claude Code.
+   - A IA lê o CLAUDE.md sozinha e já sabe as regras.
+
+3) DIGITAR UM COMANDO
+   /postar    -> programa os vídeos de 01_PARA_POSTAR e move para 02_PROGRAMADOS
+   /agenda    -> mostra os horários livres (07h, 12h e 18h) dos próximos 7 dias
+   /analisar  -> faz um relatório do canal em 05_ANALISES
+
+4) ATUALIZAR UM VÍDEO QUE JÁ ESTÁ NO AR
+   - Crie uma pasta em 04_ATUALIZAR_CANAL com o nome  IDDOVIDEO_nome-curto
+   - Coloque o atualizar.json (e a capa.jpg nova, se for trocar a capa).
+   - Peça: "atualize os vídeos de 04_ATUALIZAR_CANAL".
+
+5) DICAS
+   - Os horários são de Brasília.
+   - A IA nunca publica direto como público: ela programa ou deixa privado.
+   - Para postar sozinha, a IA precisa de acesso à API do YouTube (login OAuth).
+     Sem isso, ela gera o passo a passo e você cola no YouTube Studio.
