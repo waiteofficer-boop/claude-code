@@ -1,0 +1,2 @@
+Coloque aqui a capa.jpg nova (1280x720).
+Deixe "descricao_nova" vazia para manter a descrição atual.

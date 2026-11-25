@@ -1,0 +1,2 @@
+Coloque aqui o video.mp4 e a capa.jpg deste vídeo.
+Revise o título e a descrição em post.json antes de rodar /postar.
